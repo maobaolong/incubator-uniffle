@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.uniffle.common.web.resource;
+package org.apache.uniffle.server.common.web.resource;
 
 public class Response<T> {
   private static final int SUCCESS_CODE = 0;

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.uniffle.common.web;
+package org.apache.uniffle.server.common.web;
 
 import java.util.Enumeration;
 import java.util.Set;

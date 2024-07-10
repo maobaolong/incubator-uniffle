@@ -41,7 +41,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.uniffle</groupId>
-            <artifactId>rss-common</artifactId>
+            <artifactId>rss-server-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
