@@ -105,6 +105,12 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
     long timestamp = req.getTimestamp();
     int stageAttemptNumber = req.getStageAttemptNumber();
     ShuffleTaskInfo taskInfo = shuffleServer.getShuffleTaskManager().getShuffleTaskInfo(appId);
+    if (taskInfo == null) {
+      String responseMessage = "Can't find taskInfo for appId[" + appId + "]";
+      rpcResponse = new RpcResponse(req.getRequestId(), StatusCode.INTERNAL_ERROR, responseMessage);
+      client.getChannel().writeAndFlush(rpcResponse);
+      return;
+    }
     Integer latestStageAttemptNumber = taskInfo.getLatestStageAttemptNumber(shuffleId);
     // The Stage retry occurred, and the task before StageNumber was simply ignored and not
     // processed if the task was being sent.
