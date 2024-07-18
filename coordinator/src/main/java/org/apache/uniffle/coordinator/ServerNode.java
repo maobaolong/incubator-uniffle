@@ -43,6 +43,8 @@ public class ServerNode implements Comparable<ServerNode> {
   private Map<String, StorageInfo> storageInfo;
   private int nettyPort = -1;
   private int jettyPort = -1;
+  private String version;
+  private String gitCommitId;
 
   public ServerNode(String id) {
     this(id, "", 0, 0, 0, 0, 0, Sets.newHashSet(), ServerStatus.EXCLUDED);
@@ -160,6 +162,38 @@ public class ServerNode implements Comparable<ServerNode> {
       Map<String, StorageInfo> storageInfoMap,
       int nettyPort,
       int jettyPort) {
+    this(
+        id,
+        ip,
+        grpcPort,
+        usedMemory,
+        preAllocatedMemory,
+        availableMemory,
+        eventNumInFlush,
+        tags,
+        status,
+        storageInfoMap,
+        nettyPort,
+        jettyPort,
+        "",
+        "");
+  }
+
+  public ServerNode(
+      String id,
+      String ip,
+      int grpcPort,
+      long usedMemory,
+      long preAllocatedMemory,
+      long availableMemory,
+      int eventNumInFlush,
+      Set<String> tags,
+      ServerStatus status,
+      Map<String, StorageInfo> storageInfoMap,
+      int nettyPort,
+      int jettyPort,
+      String version,
+      String gitCommitId) {
     this.id = id;
     this.ip = ip;
     this.grpcPort = grpcPort;
@@ -178,6 +212,8 @@ public class ServerNode implements Comparable<ServerNode> {
     if (jettyPort > 0) {
       this.jettyPort = jettyPort;
     }
+    this.version = version;
+    this.gitCommitId = gitCommitId;
   }
 
   public ShuffleServerId convertToGrpcProto() {
@@ -260,12 +296,15 @@ public class ServerNode implements Comparable<ServerNode> {
         + eventNumInFlush
         + "], timestamp["
         + timestamp
-        + "], tags"
+        + "], tags["
         + tags.toString()
-        + ""
-        + ", status["
+        + "], status["
         + status
         + "], storages[num="
+        + storageInfo.size()
+        + "], version["
+        + version
+        + "], gitCommitId["
         + storageInfo.size()
         + "]";
   }
@@ -316,5 +355,13 @@ public class ServerNode implements Comparable<ServerNode> {
 
   public int getJettyPort() {
     return jettyPort;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public String getGitCommitId() {
+    return gitCommitId;
   }
 }
