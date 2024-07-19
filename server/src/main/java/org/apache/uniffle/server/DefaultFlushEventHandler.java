@@ -91,14 +91,9 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
     String appId = event.getAppId();
     ReentrantReadWriteLock.ReadLock readLock =
         shuffleServer.getShuffleTaskManager().getAppReadLock(appId);
+    readLock.lock();
     try {
-      readLock.lock();
-      try {
-        eventConsumer.accept(event);
-      } finally {
-        readLock.unlock();
-      }
-
+      eventConsumer.accept(event);
       if (storage != null) {
         ShuffleServerMetrics.incStorageSuccessCounter(storage.getStorageHost());
       }
@@ -147,6 +142,7 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
       // We need to release the memory when unexpected exceptions happened
       event.doCleanup();
     } finally {
+      readLock.unlock();
       if (storage != null) {
         if (storage instanceof HadoopStorage) {
           ShuffleServerMetrics.counterHadoopEventFlush.inc();
