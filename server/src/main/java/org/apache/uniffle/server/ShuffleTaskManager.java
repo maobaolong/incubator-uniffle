@@ -834,7 +834,7 @@ public class ShuffleTaskManager {
     Lock lock = getAppWriteLock(appId);
     lock.lock();
     try {
-      LOG.info("Start remove resource for appId[" + appId + "]");
+      LOG.info("Start remove resource for appId[{}] checkAppExpired={}.", appId, checkAppExpired);
       if (checkAppExpired && !isAppExpired(appId)) {
         LOG.info(
             "It seems that this appId[{}] has registered a new shuffle, just ignore this AppPurgeEvent event.",
