@@ -28,6 +28,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,6 @@ import org.apache.uniffle.storage.util.ShuffleStorageUtils;
 public class ShuffleServerNettyHandler implements BaseMessageHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(ShuffleServerNettyHandler.class);
-  private static final int RPC_TIMEOUT = 60000;
   private final ShuffleServer shuffleServer;
 
   public ShuffleServerNettyHandler(ShuffleServer shuffleServer) {
@@ -348,6 +348,18 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
   public void handleGetMemoryShuffleDataRequest(
       TransportClient client, GetMemoryShuffleDataRequest req) {
     String appId = req.getAppId();
+    StatusCode status = verifyRequest(appId);
+    if (status != StatusCode.SUCCESS) {
+      GetMemoryShuffleDataResponse response =
+          new GetMemoryShuffleDataResponse(
+              req.getRequestId(),
+              status,
+              status.toString(),
+              Lists.newArrayList(),
+              Unpooled.EMPTY_BUFFER);
+      client.getChannel().writeAndFlush(response);
+      return;
+    }
     int shuffleId = req.getShuffleId();
     int partitionId = req.getPartitionId();
     long blockId = req.getLastBlockId();
@@ -362,7 +374,6 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
             .recordTransportTime(GetMemoryShuffleDataRequest.class.getName(), transportTime);
       }
     }
-    StatusCode status = StatusCode.SUCCESS;
     String msg = "OK";
     GetMemoryShuffleDataResponse response;
     String requestInfo =
@@ -430,11 +441,18 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
   public void handleGetLocalShuffleIndexRequest(
       TransportClient client, GetLocalShuffleIndexRequest req) {
     String appId = req.getAppId();
+    StatusCode status = verifyRequest(appId);
+    if (status != StatusCode.SUCCESS) {
+      GetLocalShuffleIndexResponse response =
+          new GetLocalShuffleIndexResponse(
+              req.getRequestId(), status, status.toString(), Unpooled.EMPTY_BUFFER, 0L);
+      client.getChannel().writeAndFlush(response);
+      return;
+    }
     int shuffleId = req.getShuffleId();
     int partitionId = req.getPartitionId();
     int partitionNumPerRange = req.getPartitionNumPerRange();
     int partitionNum = req.getPartitionNum();
-    StatusCode status = StatusCode.SUCCESS;
     String msg = "OK";
     GetLocalShuffleIndexResponse response;
     String requestInfo =
@@ -514,7 +532,19 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
   }
 
   public void handleGetLocalShuffleData(TransportClient client, GetLocalShuffleDataRequest req) {
+    GetLocalShuffleDataResponse response;
     String appId = req.getAppId();
+    StatusCode status = verifyRequest(appId);
+    if (status != StatusCode.SUCCESS) {
+      response =
+          new GetLocalShuffleDataResponse(
+              req.getRequestId(),
+              status,
+              status.toString(),
+              new NettyManagedBuffer(Unpooled.EMPTY_BUFFER));
+      client.getChannel().writeAndFlush(response);
+      return;
+    }
     int shuffleId = req.getShuffleId();
     int partitionId = req.getPartitionId();
     int partitionNumPerRange = req.getPartitionNumPerRange();
@@ -532,9 +562,7 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
     }
     String storageType =
         shuffleServer.getShuffleServerConf().get(RssBaseConf.RSS_STORAGE_TYPE).name();
-    StatusCode status = StatusCode.SUCCESS;
     String msg = "OK";
-    GetLocalShuffleDataResponse response;
     String requestInfo =
         "appId["
             + appId
@@ -638,6 +666,14 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
       i++;
     }
     return Pair.of(size, ret);
+  }
+
+  private StatusCode verifyRequest(String appId) {
+    if (StringUtils.isNotBlank(appId)
+        && shuffleServer.getShuffleTaskManager().isAppExpired(appId)) {
+      return StatusCode.NO_REGISTER;
+    }
+    return StatusCode.SUCCESS;
   }
 
   class ReleaseMemoryAndRecordReadTimeListener implements ChannelFutureListener {
