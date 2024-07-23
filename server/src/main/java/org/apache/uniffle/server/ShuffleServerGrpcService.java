@@ -618,7 +618,7 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
         ShuffleServerMetrics.counterTotalHugePartitionExceedHardLimitNum.inc();
         ShuffleServerMetrics.counterTotalRequireBufferFailed.inc();
         responseMessage =
-            "ExceedPartitionSizeLimitException Error happened when requireBuffer for "
+            "ExceedHugePartitionHardLimitException Error happened when requireBuffer for "
                 + shuffleDataInfo
                 + ": "
                 + e.getMessage();
