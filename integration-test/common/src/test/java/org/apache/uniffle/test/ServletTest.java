@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections4.CollectionUtils;
@@ -72,6 +73,9 @@ public class ServletTest extends IntegrationTestBase {
   private static final String DECOMMISSION_SINGLENODE_URL = URL_PREFIX + "server/%s/decommission";
   private static final String CANCEL_DECOMMISSION_SINGLENODE_URL =
       URL_PREFIX + "server/%s/cancelDecommission";
+  private static final String AUTHORIZATION_CREDENTIALS = "dW5pZmZsZTp1bmlmZmxlMTIz";
+  private static final Map<String, String> authorizationHeader =
+      ImmutableMap.of("Authorization", "Basic " + AUTHORIZATION_CREDENTIALS);
   private static CoordinatorServer coordinatorServer;
   private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -86,6 +90,7 @@ public class ServletTest extends IntegrationTestBase {
     coordinatorConf.set(RssBaseConf.JETTY_HTTP_PORT, 12345);
     coordinatorConf.set(RssBaseConf.JETTY_CORE_POOL_SIZE, 128);
     coordinatorConf.set(RssBaseConf.RPC_SERVER_PORT, 12346);
+    coordinatorConf.set(RssBaseConf.REST_AUTHORIZATION_CREDENTIALS, AUTHORIZATION_CREDENTIALS);
     createCoordinatorServer(coordinatorConf);
 
     ShuffleServerConf shuffleServerConf = getShuffleServerConf(ServerType.GRPC);
@@ -254,7 +259,9 @@ public class ServletTest extends IntegrationTestBase {
     decommissionRequest.setServerIds(Sets.newHashSet("not_exist_serverId"));
     String content =
         TestUtils.httpPost(
-            CANCEL_DECOMMISSION_URL, objectMapper.writeValueAsString(decommissionRequest));
+            CANCEL_DECOMMISSION_URL,
+            objectMapper.writeValueAsString(decommissionRequest),
+            authorizationHeader);
     Response<?> response = objectMapper.readValue(content, Response.class);
     assertEquals(-1, response.getCode());
     assertNotNull(response.getErrMsg());
@@ -262,7 +269,9 @@ public class ServletTest extends IntegrationTestBase {
     cancelDecommissionRequest.setServerIds(Sets.newHashSet(shuffleServer.getId()));
     content =
         TestUtils.httpPost(
-            CANCEL_DECOMMISSION_URL, objectMapper.writeValueAsString(cancelDecommissionRequest));
+            CANCEL_DECOMMISSION_URL,
+            objectMapper.writeValueAsString(cancelDecommissionRequest),
+            authorizationHeader);
     response = objectMapper.readValue(content, Response.class);
     assertEquals(0, response.getCode());
 
@@ -273,7 +282,10 @@ public class ServletTest extends IntegrationTestBase {
             "testDecommissionServlet_appId", 0, Lists.newArrayList(new PartitionRange(0, 1)), ""));
     decommissionRequest.setServerIds(Sets.newHashSet(shuffleServer.getId()));
     content =
-        TestUtils.httpPost(DECOMMISSION_URL, objectMapper.writeValueAsString(decommissionRequest));
+        TestUtils.httpPost(
+            DECOMMISSION_URL,
+            objectMapper.writeValueAsString(decommissionRequest),
+            authorizationHeader);
     response = objectMapper.readValue(content, Response.class);
     assertEquals(0, response.getCode());
     assertEquals(ServerStatus.DECOMMISSIONING, shuffleServer.getServerStatus());
@@ -291,7 +303,9 @@ public class ServletTest extends IntegrationTestBase {
     // Cancel decommission.
     content =
         TestUtils.httpPost(
-            CANCEL_DECOMMISSION_URL, objectMapper.writeValueAsString(cancelDecommissionRequest));
+            CANCEL_DECOMMISSION_URL,
+            objectMapper.writeValueAsString(cancelDecommissionRequest),
+            authorizationHeader);
     response = objectMapper.readValue(content, Response.class);
     assertEquals(0, response.getCode());
     assertEquals(ServerStatus.ACTIVE, shuffleServer.getServerStatus());
@@ -302,13 +316,18 @@ public class ServletTest extends IntegrationTestBase {
     ShuffleServer shuffleServer = grpcShuffleServers.get(0);
     assertEquals(ServerStatus.ACTIVE, shuffleServer.getServerStatus());
     String content =
-        TestUtils.httpPost(String.format(CANCEL_DECOMMISSION_SINGLENODE_URL, "not_exist_serverId"));
+        TestUtils.httpPost(
+            String.format(CANCEL_DECOMMISSION_SINGLENODE_URL, "not_exist_serverId"),
+            null,
+            authorizationHeader);
     Response<?> response = objectMapper.readValue(content, Response.class);
     assertEquals(-1, response.getCode());
     assertNotNull(response.getErrMsg());
     content =
         TestUtils.httpPost(
-            String.format(CANCEL_DECOMMISSION_SINGLENODE_URL, shuffleServer.getId()));
+            String.format(CANCEL_DECOMMISSION_SINGLENODE_URL, shuffleServer.getId()),
+            null,
+            authorizationHeader);
     response = objectMapper.readValue(content, Response.class);
     assertEquals(0, response.getCode());
 
@@ -317,7 +336,11 @@ public class ServletTest extends IntegrationTestBase {
     shuffleServerClient.registerShuffle(
         new RssRegisterShuffleRequest(
             "testDecommissionServlet_appId", 0, Lists.newArrayList(new PartitionRange(0, 1)), ""));
-    content = TestUtils.httpPost(String.format(DECOMMISSION_SINGLENODE_URL, shuffleServer.getId()));
+    content =
+        TestUtils.httpPost(
+            String.format(DECOMMISSION_SINGLENODE_URL, shuffleServer.getId()),
+            null,
+            authorizationHeader);
     response = objectMapper.readValue(content, Response.class);
     assertEquals(0, response.getCode());
     assertEquals(ServerStatus.DECOMMISSIONING, shuffleServer.getServerStatus());
@@ -335,9 +358,27 @@ public class ServletTest extends IntegrationTestBase {
     // Cancel decommission.
     content =
         TestUtils.httpPost(
-            String.format(CANCEL_DECOMMISSION_SINGLENODE_URL, shuffleServer.getId()));
+            String.format(CANCEL_DECOMMISSION_SINGLENODE_URL, shuffleServer.getId()),
+            null,
+            authorizationHeader);
     response = objectMapper.readValue(content, Response.class);
     assertEquals(0, response.getCode());
     assertEquals(ServerStatus.ACTIVE, shuffleServer.getServerStatus());
+  }
+
+  @Test
+  public void testRequestWithWrongCredentials() throws Exception {
+    DecommissionRequest decommissionRequest = new DecommissionRequest();
+    decommissionRequest.setServerIds(Sets.newHashSet("not_exist_serverId"));
+    String wrongCredentials = "dW5pZmZsZTp1bmlmZmxlMTIz1";
+    String content =
+        TestUtils.httpPost(
+            CANCEL_DECOMMISSION_URL,
+            objectMapper.writeValueAsString(decommissionRequest),
+            ImmutableMap.of("Authorization", "Basic " + wrongCredentials));
+    for (int i = 0; i < 1000; i++) {
+      Thread.sleep(1000);
+    }
+    assertEquals("Authentication Failed", content);
   }
 }
