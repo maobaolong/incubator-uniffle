@@ -89,6 +89,45 @@
           label="GitCommitId"
           min-width="180"
         />
+        <el-table-column
+            prop="partitionNum"
+            label="PartitionNum"
+            min-width="180"
+        />
+        <el-table-column
+            prop="writeMemorySize"
+            label="writeMemorySize"
+            min-width="180"
+            :formatter="memFormatter"
+        />
+        <el-table-column
+            prop="flushedLocalFileNum"
+            label="flushedLocalFileNum"
+            min-width="180"
+        />
+        <el-table-column
+            prop="flushedLocalTotalSize"
+            label="flushedLocalTotalSize"
+            min-width="180"
+            :formatter="memFormatter"
+        />
+        <el-table-column
+            prop="flushedHadoopFileNum"
+            label="flushedHadoopFileNum"
+            min-width="180"
+        />
+        <el-table-column
+            prop="flushedHadoopTotalSize"
+            label="flushedHadoopTotalSize"
+            min-width="180"
+            :formatter="memFormatter"
+        />
+        <el-table-column
+            prop="writeTotalSize"
+            label="writeTotalSize"
+            min-width="180"
+            :formatter="memFormatter"
+        />
       </el-table>
     </div>
   </div>
@@ -97,7 +136,7 @@
 <script>
 import { getApplicationInfoList, getAppTotal, getTotalForUser } from '@/api/api'
 import { onMounted, reactive } from 'vue'
-import { dateFormatter } from '@/utils/common'
+import {dateFormatter, memFormatter} from '@/utils/common'
 import { useCurrentServerStore } from '@/store/useCurrentServerStore'
 
 export default {
@@ -164,6 +203,7 @@ export default {
       sortAppCollectChangeEvent,
       sortApp,
       sortAppChangeEvent,
+      memFormatter,
       dateFormatter
     }
   }

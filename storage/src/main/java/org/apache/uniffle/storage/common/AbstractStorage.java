@@ -17,6 +17,8 @@
 
 package org.apache.uniffle.storage.common;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -92,5 +94,14 @@ public abstract class AbstractStorage implements Storage {
   @VisibleForTesting
   public int getHandlerSize() {
     return writerHandlers.size();
+  }
+
+  @Override
+  public Collection<ShuffleWriteHandler> getWriteHandlerByAppId(String appId) {
+    Map<String, ShuffleWriteHandler> map = writerHandlers.getOrDefault(appId, null);
+    if (map == null) {
+      return new ArrayList<>();
+    }
+    return map.values();
   }
 }

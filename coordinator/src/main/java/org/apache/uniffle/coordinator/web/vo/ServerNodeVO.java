@@ -15,37 +15,49 @@
  * limitations under the License.
  */
 
-package org.apache.uniffle.coordinator;
+package org.apache.uniffle.coordinator.web.vo;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import org.apache.uniffle.common.ServerStatus;
 import org.apache.uniffle.common.storage.StorageInfo;
-import org.apache.uniffle.coordinator.web.vo.ServerNodeVO;
-import org.apache.uniffle.proto.RssProtos;
-import org.apache.uniffle.proto.RssProtos.ShuffleServerId;
 
-public class ServerNode implements Comparable<ServerNode> {
-  private final ServerNodeVO serverNodeVO;
-  private final Map<String, RssProtos.ApplicationInfo> appIdToInfos;
+@Data
+@Getter
+@Setter
+public class ServerNodeVO implements Comparable<ServerNodeVO> {
 
-  public Map<String, RssProtos.ApplicationInfo> getAppIdToInfos() {
-    return appIdToInfos;
-  }
+  private String id;
+  private String ip;
+  private int grpcPort;
+  private long usedMemory;
+  private long preAllocatedMemory;
+  private long availableMemory;
+  private int eventNumInFlush;
+  private long registrationTime;
+  private long timestamp;
+  private Set<String> tags;
+  private ServerStatus status;
+  private Map<String, StorageInfo> storageInfo;
+  private int nettyPort = -1;
+  private int jettyPort = -1;
+  private long startTime = -1;
+  private String version;
+  private String gitCommitId;
 
-  public ServerNode(String id) {
+  public ServerNodeVO(String id) {
     this(id, "", 0, 0, 0, 0, 0, Sets.newHashSet(), ServerStatus.EXCLUDED);
   }
 
   // Only for test
-  public ServerNode(
+  public ServerNodeVO(
       String id,
       String ip,
       int port,
@@ -67,7 +79,7 @@ public class ServerNode implements Comparable<ServerNode> {
         Maps.newHashMap());
   }
 
-  public ServerNode(
+  public ServerNodeVO(
       String id,
       String ip,
       int port,
@@ -90,7 +102,7 @@ public class ServerNode implements Comparable<ServerNode> {
         Maps.newHashMap());
   }
 
-  public ServerNode(
+  public ServerNodeVO(
       String id,
       String ip,
       int port,
@@ -117,7 +129,7 @@ public class ServerNode implements Comparable<ServerNode> {
         -1);
   }
 
-  public ServerNode(
+  public ServerNodeVO(
       String id,
       String ip,
       int grpcPort,
@@ -145,7 +157,7 @@ public class ServerNode implements Comparable<ServerNode> {
         -1L);
   }
 
-  public ServerNode(
+  public ServerNodeVO(
       String id,
       String ip,
       int grpcPort,
@@ -171,14 +183,13 @@ public class ServerNode implements Comparable<ServerNode> {
         status,
         storageInfoMap,
         nettyPort,
-        jettyPort,
-        startTime,
+        -1,
+        -1L,
         "",
-        "",
-        Collections.emptyList());
+        "");
   }
 
-  public ServerNode(
+  public ServerNodeVO(
       String id,
       String ip,
       int grpcPort,
@@ -193,142 +204,70 @@ public class ServerNode implements Comparable<ServerNode> {
       int jettyPort,
       long startTime,
       String version,
-      String gitCommitId,
-      List<RssProtos.ApplicationInfo> appInfos) {
-    this.serverNodeVO =
-        new ServerNodeVO(
-            id,
-            ip,
-            grpcPort,
-            usedMemory,
-            preAllocatedMemory,
-            availableMemory,
-            eventNumInFlush,
-            tags,
-            status,
-            storageInfoMap,
-            nettyPort,
-            jettyPort,
-            startTime,
-            version,
-            gitCommitId);
-    this.appIdToInfos = new ConcurrentHashMap<>();
-    for (RssProtos.ApplicationInfo app : appInfos) {
-      this.appIdToInfos.put(app.getAppId(), app);
+      String gitCommitId) {
+    this.id = id;
+    this.ip = ip;
+    this.grpcPort = grpcPort;
+    this.usedMemory = usedMemory;
+    this.preAllocatedMemory = preAllocatedMemory;
+    this.availableMemory = availableMemory;
+    this.eventNumInFlush = eventNumInFlush;
+    this.registrationTime = System.currentTimeMillis();
+    this.timestamp = registrationTime;
+    this.tags = tags;
+    this.status = status;
+    this.storageInfo = storageInfoMap;
+    if (nettyPort > 0) {
+      this.nettyPort = nettyPort;
     }
-  }
-
-  public ShuffleServerId convertToGrpcProto() {
-    return ShuffleServerId.newBuilder()
-        .setId(serverNodeVO.getId())
-        .setIp(serverNodeVO.getIp())
-        .setPort(serverNodeVO.getGrpcPort())
-        .setNettyPort(serverNodeVO.getNettyPort())
-        .setJettyPort(serverNodeVO.getJettyPort())
-        .build();
-  }
-
-  public String getId() {
-    return serverNodeVO.getId();
-  }
-
-  public String getIp() {
-    return serverNodeVO.getIp();
-  }
-
-  public int getGrpcPort() {
-    return serverNodeVO.getGrpcPort();
-  }
-
-  public long getTimestamp() {
-    return serverNodeVO.getTimestamp();
-  }
-
-  public long getPreAllocatedMemory() {
-    return serverNodeVO.getPreAllocatedMemory();
-  }
-
-  public long getAvailableMemory() {
-    return serverNodeVO.getAvailableMemory();
-  }
-
-  public int getEventNumInFlush() {
-    return serverNodeVO.getEventNumInFlush();
-  }
-
-  public long getUsedMemory() {
-    return serverNodeVO.getUsedMemory();
-  }
-
-  public Set<String> getTags() {
-    return serverNodeVO.getTags();
-  }
-
-  public ServerStatus getStatus() {
-    return serverNodeVO.getStatus();
-  }
-
-  public void setStatus(ServerStatus serverStatus) {
-    serverNodeVO.setStatus(serverStatus);
-  }
-
-  public Map<String, StorageInfo> getStorageInfo() {
-    return serverNodeVO.getStorageInfo();
+    if (jettyPort > 0) {
+      this.jettyPort = jettyPort;
+    }
+    this.startTime = startTime;
+    this.version = version;
+    this.gitCommitId = gitCommitId;
   }
 
   @Override
   public String toString() {
     return "ServerNode with id["
-        + serverNodeVO.getId()
+        + id
         + "], ip["
-        + serverNodeVO.getIp()
+        + ip
         + "], grpc port["
-        + serverNodeVO.getGrpcPort()
+        + grpcPort
         + "], netty port["
-        + serverNodeVO.getNettyPort()
+        + nettyPort
         + "], jettyPort["
-        + serverNodeVO.getJettyPort()
+        + jettyPort
         + "], usedMemory["
-        + serverNodeVO.getUsedMemory()
+        + usedMemory
         + "], preAllocatedMemory["
-        + serverNodeVO.getPreAllocatedMemory()
+        + preAllocatedMemory
         + "], availableMemory["
-        + serverNodeVO.getAvailableMemory()
+        + availableMemory
         + "], eventNumInFlush["
-        + serverNodeVO.getEventNumInFlush()
+        + eventNumInFlush
         + "], timestamp["
-        + serverNodeVO.getTimestamp()
+        + timestamp
         + "], tags["
-        + serverNodeVO.getTags().toString()
+        + tags.toString()
         + "], status["
-        + serverNodeVO.getStatus()
+        + status
         + "], storages[num="
-        + serverNodeVO.getStorageInfo().size()
+        + storageInfo.size()
         + "], version["
-        + serverNodeVO.getVersion()
+        + version
         + "], gitCommitId["
-        + serverNodeVO.getGitCommitId()
+        + gitCommitId
         + "]";
   }
 
-  /** Only for test case */
-  public void setTimestamp(long timestamp) {
-    serverNodeVO.setTimestamp(timestamp);
-  }
-
-  void setRegistrationTime(long registrationTime) {
-    serverNodeVO.setRegistrationTime(registrationTime);
-  }
-
-  public long getRegistrationTime() {
-    return serverNodeVO.getRegistrationTime();
-  }
-
   @Override
-  public int compareTo(ServerNode other) {
-    if (getAvailableMemory() > other.getAvailableMemory()) {
+  public int compareTo(ServerNodeVO other) {
+    if (availableMemory > other.getAvailableMemory()) {
       return -1;
-    } else if (getAvailableMemory() < other.getAvailableMemory()) {
+    } else if (availableMemory < other.getAvailableMemory()) {
       return 1;
     }
     return 0;
@@ -336,42 +275,14 @@ public class ServerNode implements Comparable<ServerNode> {
 
   @Override
   public int hashCode() {
-    return serverNodeVO.getId().hashCode();
+    return id.hashCode();
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof ServerNode) {
-      return serverNodeVO.getId().equals(((ServerNode) obj).getId());
+    if (obj instanceof ServerNodeVO) {
+      return id.equals(((ServerNodeVO) obj).getId());
     }
     return false;
-  }
-
-  public long getTotalMemory() {
-    return serverNodeVO.getAvailableMemory() + serverNodeVO.getUsedMemory();
-  }
-
-  public int getNettyPort() {
-    return serverNodeVO.getNettyPort();
-  }
-
-  public int getJettyPort() {
-    return serverNodeVO.getJettyPort();
-  }
-
-  public long getStartTime() {
-    return serverNodeVO.getStartTime();
-  }
-
-  public String getVersion() {
-    return serverNodeVO.getVersion();
-  }
-
-  public String getGitCommitId() {
-    return serverNodeVO.getGitCommitId();
-  }
-
-  public ServerNodeVO getServerNodeVO() {
-    return serverNodeVO;
   }
 }

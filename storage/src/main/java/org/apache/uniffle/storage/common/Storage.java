@@ -18,6 +18,7 @@
 package org.apache.uniffle.storage.common;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.uniffle.storage.handler.api.ServerReadHandler;
 import org.apache.uniffle.storage.handler.api.ShuffleWriteHandler;
@@ -46,4 +47,6 @@ public interface Storage {
   String getStoragePath();
 
   String getStorageHost();
+
+  Collection<ShuffleWriteHandler> getWriteHandlerByAppId(String appId);
 }

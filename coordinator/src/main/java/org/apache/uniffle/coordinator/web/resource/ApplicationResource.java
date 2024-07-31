@@ -36,9 +36,12 @@ import org.apache.uniffle.common.web.resource.BaseResource;
 import org.apache.uniffle.common.web.resource.Response;
 import org.apache.uniffle.coordinator.AppInfo;
 import org.apache.uniffle.coordinator.ApplicationManager;
+import org.apache.uniffle.coordinator.ClusterManager;
+import org.apache.uniffle.coordinator.ServerNode;
 import org.apache.uniffle.coordinator.metric.CoordinatorMetrics;
 import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
 import org.apache.uniffle.coordinator.web.vo.UserAppNumVO;
+import org.apache.uniffle.proto.RssProtos;
 
 @Produces({MediaType.APPLICATION_JSON})
 public class ApplicationResource extends BaseResource {
@@ -81,6 +84,7 @@ public class ApplicationResource extends BaseResource {
   public Response<List<AppInfoVO>> getAppInfoList() {
     return execute(
         () -> {
+          List<ServerNode> serverNodes = getClusterManager().list();
           List<AppInfoVO> userToAppList = new ArrayList<>();
           Map<String, Map<String, AppInfo>> currentUserAndApp =
               getApplicationManager().getCurrentUserAndApp();
@@ -89,20 +93,51 @@ public class ApplicationResource extends BaseResource {
             for (Map.Entry<String, AppInfo> appIdTimestampMap :
                 userAppIdTimestampMap.getValue().entrySet()) {
               AppInfo appInfo = appIdTimestampMap.getValue();
-              userToAppList.add(
+              AppInfoVO appInfoVO =
                   new AppInfoVO(
                       userAppIdTimestampMap.getKey(),
                       appInfo.getAppId(),
                       appInfo.getUpdateTime(),
                       appInfo.getRegistrationTime(),
                       appInfo.getVersion(),
-                      appInfo.getGitCommitId()));
+                      appInfo.getGitCommitId(),
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0);
+              for (ServerNode server : serverNodes) {
+                if (server.getAppIdToInfos().containsKey(appInfoVO.getAppId())) {
+                  RssProtos.ApplicationInfo app =
+                      server.getAppIdToInfos().get(appInfoVO.getAppId());
+                  appInfoVO.setPartitionNum(appInfoVO.getPartitionNum() + app.getPartitionNum());
+                  appInfoVO.setWriteMemorySize(
+                      appInfoVO.getWriteMemorySize() + app.getWriteMemorySize());
+                  appInfoVO.setFlushedLocalFileNum(
+                      appInfoVO.getFlushedLocalFileNum() + app.getFlushedLocalFileNum());
+                  appInfoVO.setFlushedLocalTotalSize(
+                      appInfoVO.getFlushedLocalTotalSize() + app.getFlushedLocalTotalSize());
+                  appInfoVO.setFlushedHadoopFileNum(
+                      appInfoVO.getFlushedHadoopFileNum() + app.getFlushedHadoopFileNum());
+                  appInfoVO.setFlushedHadoopTotalSize(
+                      appInfoVO.getFlushedHadoopTotalSize() + app.getFlushedHadoopTotalSize());
+                  appInfoVO.setWriteTotalSize(
+                      appInfoVO.getWriteTotalSize() + app.getWriteTotalSize());
+                }
+              }
+              userToAppList.add(appInfoVO);
             }
           }
           // Display is inverted by the submission time of the application.
           userToAppList.sort(Comparator.reverseOrder());
           return userToAppList;
         });
+  }
+
+  private ClusterManager getClusterManager() {
+    return (ClusterManager) servletContext.getAttribute(ClusterManager.class.getCanonicalName());
   }
 
   private ApplicationManager getApplicationManager() {

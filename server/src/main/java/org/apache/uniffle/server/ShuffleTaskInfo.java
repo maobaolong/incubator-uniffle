@@ -237,6 +237,10 @@ public class ShuffleTaskInfo {
     latestStageAttemptNumbers.put(shuffleId, stageAttemptNumber);
   }
 
+  public long getPartitionNum() {
+    return partitionDataSizes.values().stream().mapToLong(Map::size).sum();
+  }
+
   @Override
   public String toString() {
     return "ShuffleTaskInfo{"

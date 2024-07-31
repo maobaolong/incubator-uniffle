@@ -521,7 +521,8 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
         request.getServerId().getJettyPort(),
         request.getStartTimeMs(),
         request.getVersion(),
-        request.getGitCommitId());
+        request.getGitCommitId(),
+        request.getAppInfosList());
   }
 
   /**
