@@ -535,6 +535,7 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
         }
         commitCount =
             shuffleServer.getShuffleTaskManager().updateAndGetCommitCount(appId, shuffleId);
+        auditContext.setReturnValue("commitCount=" + commitCount);
         if (LOG.isDebugEnabled()) {
           LOG.debug(
               "Get commitShuffleTask request for appId["
@@ -679,6 +680,7 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
         LOG.error(responseMessage);
       }
       auditContext.setStatusCode(status);
+      auditContext.setReturnValue("requireBufferId=" + requireBufferId);
       RequireBufferResponse response =
           RequireBufferResponse.newBuilder()
               .setStatus(status.toProto())
@@ -1087,6 +1089,7 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
                 .build();
       }
       auditContext.setStatusCode(status);
+      auditContext.setReturnValue("len=" + (sdr == null ? 0 : sdr.getDataLength()));
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
     }
@@ -1175,6 +1178,7 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
 
           builder.setIndexData(UnsafeByteOperations.unsafeWrap(data));
           builder.setDataFileLen(shuffleIndexResult.getDataFileLen());
+          auditContext.setReturnValue("len=" + shuffleIndexResult.getDataFileLen());
           reply = builder.build();
         } catch (FileNotFoundException indexFileNotFoundException) {
           LOG.warn(
@@ -1299,6 +1303,8 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
               costTime,
               data.length,
               requestInfo);
+          auditContext.setReturnValue(
+              "len=" + data.length + ", bufferSegmentSize=" + bufferSegments.size());
           reply =
               GetMemoryShuffleDataResponse.newBuilder()
                   .setStatus(status.toProto())
