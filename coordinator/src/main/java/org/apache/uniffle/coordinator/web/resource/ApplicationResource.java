@@ -29,8 +29,6 @@ import org.apache.hbase.thirdparty.javax.ws.rs.Path;
 import org.apache.hbase.thirdparty.javax.ws.rs.Produces;
 import org.apache.hbase.thirdparty.javax.ws.rs.core.Context;
 import org.apache.hbase.thirdparty.javax.ws.rs.core.MediaType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.uniffle.common.web.resource.BaseResource;
 import org.apache.uniffle.common.web.resource.Response;
@@ -41,7 +39,7 @@ import org.apache.uniffle.coordinator.web.vo.UserAppNumVO;
 
 @Produces({MediaType.APPLICATION_JSON})
 public class ApplicationResource extends BaseResource {
-  private static final Logger LOG = LoggerFactory.getLogger(ApplicationResource.class);
+
   @Context protected ServletContext servletContext;
 
   @GET
@@ -92,9 +90,7 @@ public class ApplicationResource extends BaseResource {
                       userAppIdTimestampMap.getKey(),
                       appInfo.getAppId(),
                       appInfo.getUpdateTime(),
-                      appInfo.getRegistrationTime(),
-                      appInfo.getVersion(),
-                      appInfo.getGitCommitId()));
+                      appInfo.getRegistrationTime()));
             }
           }
           // Display is inverted by the submission time of the application.

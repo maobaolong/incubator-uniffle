@@ -248,9 +248,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
       ApplicationInfoRequest request, StreamObserver<ApplicationInfoResponse> responseObserver) {
     String appId = request.getAppId();
     String user = request.getUser();
-    coordinatorServer
-        .getApplicationManager()
-        .registerApplicationInfo(appId, user, request.getVersion(), request.getGitCommitId());
+    coordinatorServer.getApplicationManager().registerApplicationInfo(appId, user);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Got a registered application info: {}", appId);
     }
@@ -436,8 +434,6 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
         serverStatus,
         StorageInfoUtils.fromProto(request.getStorageInfoMap()),
         request.getServerId().getNettyPort(),
-        request.getServerId().getJettyPort(),
-        request.getVersion(),
-        request.getGitCommitId());
+        request.getServerId().getJettyPort());
   }
 }

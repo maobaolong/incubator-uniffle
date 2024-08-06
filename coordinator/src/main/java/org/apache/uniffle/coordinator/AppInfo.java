@@ -23,16 +23,11 @@ public class AppInfo implements Comparable<AppInfo> {
   private String appId;
   private long updateTime;
   private long registrationTime;
-  private String version;
-  private String gitCommitId;
 
-  public AppInfo(
-      String appId, long updateTime, long registrationTime, String version, String gitCommitId) {
+  public AppInfo(String appId, long updateTime, long registrationTime) {
     this.appId = appId;
     this.updateTime = updateTime;
     this.registrationTime = registrationTime;
-    this.version = version;
-    this.gitCommitId = gitCommitId;
   }
 
   public String getAppId() {
@@ -57,14 +52,6 @@ public class AppInfo implements Comparable<AppInfo> {
 
   public void setRegistrationTime(long registrationTime) {
     this.registrationTime = registrationTime;
-  }
-
-  public String getVersion() {
-    return version;
-  }
-
-  public String getGitCommitId() {
-    return gitCommitId;
   }
 
   @Override
@@ -92,11 +79,6 @@ public class AppInfo implements Comparable<AppInfo> {
   }
 
   public static AppInfo createAppInfo(String appId, long updateTime) {
-    return createAppInfo(appId, updateTime);
-  }
-
-  public static AppInfo createAppInfo(
-      String appId, long updateTime, String version, String gitCommitId) {
-    return new AppInfo(appId, updateTime, updateTime, version, gitCommitId);
+    return new AppInfo(appId, updateTime, updateTime);
   }
 }
