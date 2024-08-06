@@ -495,6 +495,15 @@ public class ShuffleTaskManager {
     if (shuffleBufferManager.isHugePartition(partitionSize)) {
       shuffleTaskInfo.markHugePartition(shuffleId, partitionId);
     }
+    if (shuffleBufferManager.hasPartitionExceededHugeHardLimit(partitionSize)) {
+      throw new ExceedHugePartitionHardLimitException(
+          "Current partition size: "
+              + partitionSize
+              + " exceeded the huge hard limit size: "
+              + shuffleBufferManager.getHugePartitionSizeHardLimit()
+              + " after caching this shuffle data with size: "
+              + size);
+    }
   }
 
   public Roaring64NavigableMap getCachedBlockIds(String appId, int shuffleId) {
