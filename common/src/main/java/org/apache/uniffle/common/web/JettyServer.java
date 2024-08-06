@@ -175,8 +175,4 @@ public class JettyServer {
   public void stop() throws Exception {
     server.stop();
   }
-
-  public int getHttpPort() {
-    return httpPort;
-  }
 }

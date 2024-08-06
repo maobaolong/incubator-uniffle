@@ -45,15 +45,11 @@ public class WebProxyServlet extends ProxyServlet {
     if (!validateDestination(clientRequest.getServerName(), clientRequest.getServerPort())) {
       return null;
     }
-    String targetAddress;
-    if (clientRequest.getHeader("serverType").equals("coordinator")) {
-      targetAddress = coordinatorServerAddressesMap.get(clientRequest.getHeader("targetAddress"));
-      if (targetAddress == null) {
-        // Get random one from coordinatorServerAddressesMap
-        targetAddress = coordinatorServerAddressesMap.values().iterator().next();
-      }
-    } else {
-      targetAddress = clientRequest.getHeader("targetAddress");
+    String targetAddress =
+        coordinatorServerAddressesMap.get(clientRequest.getHeader("targetAddress"));
+    if (targetAddress == null) {
+      // Get random one from coordinatorServerAddressesMap
+      targetAddress = coordinatorServerAddressesMap.values().iterator().next();
     }
     StringBuilder target = new StringBuilder();
     if (targetAddress.endsWith("/")) {
