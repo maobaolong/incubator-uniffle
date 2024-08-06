@@ -388,7 +388,6 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
       result = rpcResponse.getRequireBufferId();
     } else if (NOT_RETRY_STATUS_CODES.contains(
         StatusCode.fromCode(rpcResponse.getStatus().getNumber()))) {
-      failedStatusCodeRef.set(StatusCode.fromCode(rpcResponse.getStatus().getNumber()));
       String msg =
           "Can't require "
               + requireSize
