@@ -149,16 +149,12 @@ public class ShuffleServerGrpcNettyClient extends ShuffleServerGrpcClient {
       int size = 0;
       int blockNum = 0;
       List<Integer> partitionIds = new ArrayList<>();
-      List<Integer> partitionRequireSizes = new ArrayList<>();
       for (Map.Entry<Integer, List<ShuffleBlockInfo>> ptb : stb.getValue().entrySet()) {
-        int partitionRequireSize = 0;
         for (ShuffleBlockInfo sbi : ptb.getValue()) {
-          partitionRequireSize += sbi.getSize();
+          size += sbi.getSize();
           blockNum++;
         }
-        size += partitionRequireSize;
         partitionIds.add(ptb.getKey());
-        partitionRequireSizes.add(partitionRequireSize);
       }
 
       SendShuffleDataRequest sendShuffleDataRequest =
@@ -181,7 +177,6 @@ public class ShuffleServerGrpcNettyClient extends ShuffleServerGrpcClient {
                       request.getAppId(),
                       shuffleId,
                       partitionIds,
-                      partitionRequireSizes,
                       allocateSize,
                       request.getRetryMax(),
                       request.getRetryIntervalMax(),

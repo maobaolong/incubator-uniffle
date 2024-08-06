@@ -265,13 +265,7 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
   public long requirePreAllocation(
       String appId, int requireSize, int retryMax, long retryIntervalMax) throws Exception {
     return requirePreAllocation(
-        appId,
-        0,
-        Collections.emptyList(),
-        Collections.emptyList(),
-        requireSize,
-        retryMax,
-        retryIntervalMax);
+        appId, 0, Collections.emptyList(), requireSize, retryMax, retryIntervalMax);
   }
 
   @VisibleForTesting
@@ -279,7 +273,6 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
       String appId,
       int shuffleId,
       List<Integer> partitionIds,
-      List<Integer> partitionRequireSizes,
       int requireSize,
       int retryMax,
       long retryIntervalMax) {
@@ -287,7 +280,6 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
         appId,
         shuffleId,
         partitionIds,
-        partitionRequireSizes,
         requireSize,
         retryMax,
         retryIntervalMax,
@@ -298,7 +290,6 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
       String appId,
       int shuffleId,
       List<Integer> partitionIds,
-      List<Integer> partitionRequireSizes,
       int requireSize,
       int retryMax,
       long retryIntervalMax,
@@ -307,7 +298,6 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
         RequireBufferRequest.newBuilder()
             .setShuffleId(shuffleId)
             .addAllPartitionIds(partitionIds)
-            .addAllPartitionRequireSizes(partitionRequireSizes)
             .setAppId(appId)
             .setRequireSize(requireSize)
             .build();
@@ -386,8 +376,7 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
             System.currentTimeMillis() - start);
       }
       result = rpcResponse.getRequireBufferId();
-    } else if (NOT_RETRY_STATUS_CODES.contains(
-        StatusCode.fromCode(rpcResponse.getStatus().getNumber()))) {
+    } else if (rpcResponse.getStatus() == RssProtos.StatusCode.NO_REGISTER) {
       String msg =
           "Can't require "
               + requireSize
@@ -532,11 +521,9 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
       int blockNum = 0;
       int shuffleId = stb.getKey();
       List<Integer> partitionIds = new ArrayList<>();
-      List<Integer> partitionRequireSizes = new ArrayList<>();
 
       for (Map.Entry<Integer, List<ShuffleBlockInfo>> ptb : stb.getValue().entrySet()) {
         List<ShuffleBlock> shuffleBlocks = Lists.newArrayList();
-        int partitionRequireSize = 0;
         for (ShuffleBlockInfo sbi : ptb.getValue()) {
           shuffleBlocks.add(
               ShuffleBlock.newBuilder()
@@ -547,17 +534,15 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
                   .setUncompressLength(sbi.getUncompressLength())
                   .setData(UnsafeByteOperations.unsafeWrap(sbi.getData().nioBuffer()))
                   .build());
-          partitionRequireSize += sbi.getSize();
+          size += sbi.getSize();
           blockNum++;
         }
-        size += partitionRequireSize;
         shuffleData.add(
             ShuffleData.newBuilder()
                 .setPartitionId(ptb.getKey())
                 .addAllBlock(shuffleBlocks)
                 .build());
         partitionIds.add(ptb.getKey());
-        partitionRequireSizes.add(partitionRequireSize);
       }
 
       final int allocateSize = size;
@@ -570,7 +555,6 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
                       appId,
                       shuffleId,
                       partitionIds,
-                      partitionRequireSizes,
                       allocateSize,
                       request.getRetryMax() / maxRetryAttempts,
                       request.getRetryIntervalMax(),
