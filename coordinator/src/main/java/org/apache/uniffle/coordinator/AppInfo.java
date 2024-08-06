@@ -92,7 +92,7 @@ public class AppInfo implements Comparable<AppInfo> {
   }
 
   public static AppInfo createAppInfo(String appId, long updateTime) {
-    return createAppInfo(appId, updateTime, "", "");
+    return createAppInfo(appId, updateTime);
   }
 
   public static AppInfo createAppInfo(
