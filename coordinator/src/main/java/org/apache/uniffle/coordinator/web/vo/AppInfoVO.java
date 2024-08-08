@@ -35,6 +35,7 @@ public class AppInfoVO implements Comparable<AppInfoVO> {
   private String appId;
   private long updateTime;
   private long registrationTime;
+  private long finishTime;
   private String version;
   private String gitCommitId;
 
@@ -45,6 +46,8 @@ public class AppInfoVO implements Comparable<AppInfoVO> {
   private long flushedHadoopFileNum;
   private long flushedHadoopTotalSize;
   private long writeTotalSize;
+
+  public AppInfoVO() {}
 
   @Override
   public int compareTo(AppInfoVO appInfoVO) {

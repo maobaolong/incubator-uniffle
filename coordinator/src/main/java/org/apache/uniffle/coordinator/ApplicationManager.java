@@ -54,6 +54,7 @@ import org.apache.uniffle.coordinator.strategy.storage.AppBalanceSelectStorageSt
 import org.apache.uniffle.coordinator.strategy.storage.LowestIOSampleCostSelectStorageStrategy;
 import org.apache.uniffle.coordinator.strategy.storage.RankValue;
 import org.apache.uniffle.coordinator.strategy.storage.SelectStorageStrategy;
+import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
 
 public class ApplicationManager implements Closeable {
 
@@ -77,6 +78,9 @@ public class ApplicationManager implements Closeable {
   private QuotaManager quotaManager;
   // it's only for test case to check if status check has problem
   private boolean hasErrorInStatusCheck = false;
+
+  private CoordinatorServer coordinatorServer;
+  private CoordinatorAppHistoryManager coordinatorAppHistoryManager = null;
 
   public ApplicationManager(CoordinatorConf conf) {
     storageStrategy = conf.get(CoordinatorConf.COORDINATOR_REMOTE_STORAGE_SELECT_STRATEGY);
@@ -110,6 +114,9 @@ public class ApplicationManager implements Closeable {
         break;
       }
     }
+
+    coordinatorAppHistoryManager = CoordinatorAppHistoryManager.create(conf);
+
     // the thread for checking application status
     checkAppScheduler = ThreadUtils.getDaemonSingleThreadScheduledExecutor("ApplicationManager");
     checkAppScheduler.scheduleAtFixedRate(
@@ -348,7 +355,12 @@ public class ApplicationManager implements Closeable {
           if (System.currentTimeMillis() - lastReport.getUpdateTime() > expired) {
             expiredAppIds.add(appId);
             appAndTimes.remove(appId);
-            appIdToUser.remove(appId);
+            String user = appIdToUser.remove(appId);
+            if (coordinatorServer != null && user != null && coordinatorAppHistoryManager != null) {
+              lastReport.setFinishTime(System.currentTimeMillis());
+              AppInfoVO appInfoVO = coordinatorServer.getAppInfoV0(user, lastReport);
+              coordinatorAppHistoryManager.addAppInfo(appInfoVO);
+            }
           }
         }
       }
@@ -546,6 +558,14 @@ public class ApplicationManager implements Closeable {
     return currentUserAndApp;
   }
 
+  public List<AppInfoVO> getCachedAppInfos(int currentAppSize) {
+    return coordinatorAppHistoryManager.getAppInfos(currentAppSize);
+  }
+
+  public int getCachedAppInfosSize(int currentAppSize) {
+    return coordinatorAppHistoryManager.getAppInfosSize(currentAppSize);
+  }
+
   public void close() {
     if (detectStorageScheduler != null) {
       detectStorageScheduler.shutdownNow();
@@ -553,6 +573,13 @@ public class ApplicationManager implements Closeable {
     if (checkAppScheduler != null) {
       checkAppScheduler.shutdownNow();
     }
+    if (coordinatorAppHistoryManager != null) {
+      coordinatorAppHistoryManager.close();
+    }
+  }
+
+  public void setCoordinatorServer(CoordinatorServer coordinatorServer) {
+    this.coordinatorServer = coordinatorServer;
   }
 
   public enum StrategyName {

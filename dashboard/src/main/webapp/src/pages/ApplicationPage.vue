@@ -80,6 +80,11 @@
           sortable
         />
         <el-table-column
+            prop="finishTime"
+            label="Finish Time"
+            min-width="180"
+        />
+        <el-table-column
           prop="version"
           label="Version"
           min-width="180"

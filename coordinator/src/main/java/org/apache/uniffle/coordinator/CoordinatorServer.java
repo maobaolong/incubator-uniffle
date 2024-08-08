@@ -17,6 +17,7 @@
 
 package org.apache.uniffle.coordinator;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 import io.prometheus.client.CollectorRegistry;
@@ -48,6 +49,8 @@ import org.apache.uniffle.coordinator.metric.CoordinatorMetrics;
 import org.apache.uniffle.coordinator.strategy.assignment.AssignmentStrategy;
 import org.apache.uniffle.coordinator.strategy.assignment.AssignmentStrategyFactory;
 import org.apache.uniffle.coordinator.util.CoordinatorUtils;
+import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
+import org.apache.uniffle.proto.RssProtos;
 
 import static org.apache.uniffle.common.config.RssBaseConf.RSS_SECURITY_HADOOP_KERBEROS_ENABLE;
 import static org.apache.uniffle.common.config.RssBaseConf.RSS_SECURITY_HADOOP_KERBEROS_KEYTAB_FILE;
@@ -181,6 +184,7 @@ public class CoordinatorServer {
         new ClusterManagerFactory(coordinatorConf, hadoopConf);
 
     this.clusterManager = clusterManagerFactory.getClusterManager();
+    this.applicationManager.setCoordinatorServer(this);
 
     DynamicClientConfService dynamicClientConfService =
         new DynamicClientConfService(
@@ -273,5 +277,42 @@ public class CoordinatorServer {
   /** Await termination on the main thread since the grpc library uses daemon threads. */
   protected void blockUntilShutdown() throws InterruptedException {
     server.blockUntilShutdown();
+  }
+
+  public AppInfoVO getAppInfoV0(String user, AppInfo appInfo) {
+    AppInfoVO appInfoVO =
+        new AppInfoVO(
+            user,
+            appInfo.getAppId(),
+            appInfo.getUpdateTime(),
+            appInfo.getRegistrationTime(),
+            appInfo.getFinishTime(),
+            appInfo.getVersion(),
+            appInfo.getGitCommitId(),
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0);
+    for (ServerNode server : clusterManager.list()) {
+      Map<String, RssProtos.ApplicationInfo> appIdToInfos = server.getAppIdToInfos();
+      if (appIdToInfos.containsKey(appInfoVO.getAppId())) {
+        RssProtos.ApplicationInfo app = appIdToInfos.get(appInfoVO.getAppId());
+        appInfoVO.setPartitionNum(appInfoVO.getPartitionNum() + app.getPartitionNum());
+        appInfoVO.setWriteMemorySize(appInfoVO.getWriteMemorySize() + app.getWriteMemorySize());
+        appInfoVO.setFlushedLocalFileNum(
+            appInfoVO.getFlushedLocalFileNum() + app.getFlushedLocalFileNum());
+        appInfoVO.setFlushedLocalTotalSize(
+            appInfoVO.getFlushedLocalTotalSize() + app.getFlushedLocalTotalSize());
+        appInfoVO.setFlushedHadoopFileNum(
+            appInfoVO.getFlushedHadoopFileNum() + app.getFlushedHadoopFileNum());
+        appInfoVO.setFlushedHadoopTotalSize(
+            appInfoVO.getFlushedHadoopTotalSize() + app.getFlushedHadoopTotalSize());
+        appInfoVO.setWriteTotalSize(appInfoVO.getWriteTotalSize() + app.getWriteTotalSize());
+      }
+    }
+    return appInfoVO;
   }
 }
