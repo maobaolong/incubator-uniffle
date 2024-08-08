@@ -34,7 +34,7 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.uniffle</groupId>
-      <artifactId>rss-common</artifactId>
+      <artifactId>rss-server-common</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.uniffle</groupId>
@@ -72,7 +72,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.uniffle</groupId>
-      <artifactId>rss-common</artifactId>
+      <artifactId>rss-server-common</artifactId>
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
