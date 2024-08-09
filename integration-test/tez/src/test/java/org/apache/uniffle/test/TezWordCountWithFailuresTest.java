@@ -232,8 +232,8 @@ public class TezWordCountWithFailuresTest extends IntegrationTestBase {
   /*
    * Two verify mode are supported:
    * (a) verifyMode 0
-   *     tez.rss.avoid.recompute.succeeded.task is enable, should not recompute the task when this node is
-   *     blacke-listed for unhealthy.
+   *     tez.rss.avoid.recompute.succeeded.task is enabled, should not recompute the task when this node is
+   *     black-listed for unhealthy.
    *
    * (b) verifyMode 1
    *     tez.rss.avoid.recompute.succeeded.task is disable, will recompute the task when this node is
