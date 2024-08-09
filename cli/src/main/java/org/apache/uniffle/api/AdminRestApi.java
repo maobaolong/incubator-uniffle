@@ -59,12 +59,12 @@ public class AdminRestApi {
       String applicationIdRegex,
       String pageSize,
       String currentPage,
-      String heartBeatTimeRange)
+      String heartbeatTimeRange)
       throws JsonProcessingException {
     List<Application> results = new ArrayList<>();
     String postJson =
         getApplicationsJson(
-            applications, applicationIdRegex, pageSize, currentPage, heartBeatTimeRange);
+            applications, applicationIdRegex, pageSize, currentPage, heartbeatTimeRange);
     if (StringUtils.isNotBlank(postJson)) {
       ObjectMapper objectMapper = new ObjectMapper();
       ApplicationResponse response =
@@ -81,7 +81,7 @@ public class AdminRestApi {
       String applicationIdRegex,
       String pageSize,
       String currentPage,
-      String heartBeatTimeRange) {
+      String heartbeatTimeRange) {
     Map<String, Object> params = new HashMap<>();
 
     if (StringUtils.isNotBlank(applications)) {
@@ -101,15 +101,15 @@ public class AdminRestApi {
       params.put("currentPage", Integer.valueOf(currentPage));
     }
 
-    if (StringUtils.isNotBlank(heartBeatTimeRange)) {
-      transform(heartBeatTimeRange, params);
+    if (StringUtils.isNotBlank(heartbeatTimeRange)) {
+      transform(heartbeatTimeRange, params);
     }
 
     return this.getClient().post("/api/server/applications", params, null);
   }
 
-  private void transform(String heartBeatTimeRange, Map<String, Object> params) {
-    String[] timeRange = heartBeatTimeRange.split(",");
+  private void transform(String heartbeatTimeRange, Map<String, Object> params) {
+    String[] timeRange = heartbeatTimeRange.split(",");
     String startTimeStr = null;
     String endTimeStr = null;
 
@@ -146,7 +146,7 @@ public class AdminRestApi {
         params.put("heartBeatEndTime", endTimeMillis);
       }
     } catch (Exception e) {
-      LOG.error("transform heartBeatTimeRange error.", e);
+      LOG.error("transform heartbeatTimeRange error.", e);
     }
   }
 

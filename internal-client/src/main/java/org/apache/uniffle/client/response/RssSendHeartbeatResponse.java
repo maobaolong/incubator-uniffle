@@ -17,11 +17,23 @@
 
 package org.apache.uniffle.client.response;
 
+import java.util.Set;
+
 import org.apache.uniffle.common.rpc.StatusCode;
 
-public class RssAppHeartBeatResponse extends ClientResponse {
+public class RssSendHeartbeatResponse extends ClientResponse {
 
-  public RssAppHeartBeatResponse(StatusCode statusCode) {
+  private Set<String> appIds;
+
+  public RssSendHeartbeatResponse(StatusCode statusCode) {
     super(statusCode);
+  }
+
+  public Set<String> getAppIds() {
+    return appIds;
+  }
+
+  public void setAppIds(Set<String> appIds) {
+    this.appIds = appIds;
   }
 }

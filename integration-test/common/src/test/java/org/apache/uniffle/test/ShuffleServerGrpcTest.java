@@ -49,7 +49,7 @@ import org.apache.uniffle.client.api.ShuffleWriteClient;
 import org.apache.uniffle.client.factory.ShuffleClientFactory;
 import org.apache.uniffle.client.impl.grpc.ShuffleServerGrpcClient;
 import org.apache.uniffle.client.impl.grpc.ShuffleServerGrpcNettyClient;
-import org.apache.uniffle.client.request.RssAppHeartBeatRequest;
+import org.apache.uniffle.client.request.RssAppHeartbeatRequest;
 import org.apache.uniffle.client.request.RssFinishShuffleRequest;
 import org.apache.uniffle.client.request.RssGetShuffleDataRequest;
 import org.apache.uniffle.client.request.RssGetShuffleIndexRequest;
@@ -168,7 +168,7 @@ public class ShuffleServerGrpcTest extends IntegrationTestBase {
                     .clientType("GRPC")
                     .retryMax(2)
                     .retryIntervalMax(10000L)
-                    .heartBeatThreadNum(4)
+                    .heartbeatThreadNum(4)
                     .replica(1)
                     .replicaWrite(1)
                     .replicaRead(1)
@@ -789,7 +789,7 @@ public class ShuffleServerGrpcTest extends IntegrationTestBase {
             .getCounterMap()
             .get(ShuffleServerGrpcMetrics.APP_HEARTBEAT_METHOD)
             .get();
-    grpcShuffleServerClient.sendHeartBeat(new RssAppHeartBeatRequest(appId, 10000));
+    grpcShuffleServerClient.sendHeartbeat(new RssAppHeartbeatRequest(appId, 10000));
     newValue =
         grpcShuffleServers
             .get(0)

@@ -77,7 +77,7 @@ import static org.apache.uniffle.server.ShuffleServerConf.SERVER_DECOMMISSION_SH
 public class ShuffleServer {
 
   private static final Logger LOG = LoggerFactory.getLogger(ShuffleServer.class);
-  private RegisterHeartBeat registerHeartBeat;
+  private RegisterHeartbeat registerHeartbeat;
   private NettyDirectMemoryTracker directMemoryUsageReporter;
   private String id;
   private String ip;
@@ -152,7 +152,7 @@ public class ShuffleServer {
     LOG.info("Start to shuffle server with id {}", id);
     initMetricsReporter();
 
-    registerHeartBeat.startHeartBeat();
+    registerHeartbeat.startHeartbeat();
     directMemoryUsageReporter.start();
     Runtime.getRuntime()
         .addShutdownHook(
@@ -177,9 +177,9 @@ public class ShuffleServer {
       jettyServer.stop();
       LOG.info("Jetty Server Stopped!");
     }
-    if (registerHeartBeat != null) {
-      registerHeartBeat.shutdown();
-      LOG.info("HeartBeat Stopped!");
+    if (registerHeartbeat != null) {
+      registerHeartbeat.shutdown();
+      LOG.info("Heartbeat Stopped!");
     }
     if (directMemoryUsageReporter != null) {
       directMemoryUsageReporter.stop();
@@ -300,7 +300,7 @@ public class ShuffleServer {
       streamServer = new StreamServer(this);
     }
 
-    registerHeartBeat = new RegisterHeartBeat(this);
+    registerHeartbeat = new RegisterHeartbeat(this);
     directMemoryUsageReporter = new NettyDirectMemoryTracker(shuffleServerConf);
     shuffleFlushManager = new ShuffleFlushManager(shuffleServerConf, this, storageManager);
     shuffleBufferManager =
@@ -554,7 +554,7 @@ public class ShuffleServer {
   @VisibleForTesting
   public void sendHeartbeat() {
     ShuffleServer shuffleServer = this;
-    registerHeartBeat.sendHeartBeat(
+    registerHeartbeat.sendHeartbeat(
         shuffleServer.getId(),
         shuffleServer.getIp(),
         shuffleServer.getGrpcPort(),

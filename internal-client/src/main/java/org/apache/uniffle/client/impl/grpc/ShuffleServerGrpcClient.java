@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.uniffle.client.api.ShuffleServerClient;
 import org.apache.uniffle.client.request.RetryableRequest;
-import org.apache.uniffle.client.request.RssAppHeartBeatRequest;
+import org.apache.uniffle.client.request.RssAppHeartbeatRequest;
 import org.apache.uniffle.client.request.RssFinishShuffleRequest;
 import org.apache.uniffle.client.request.RssGetInMemoryShuffleDataRequest;
 import org.apache.uniffle.client.request.RssGetShuffleDataRequest;
@@ -49,7 +49,7 @@ import org.apache.uniffle.client.request.RssSendCommitRequest;
 import org.apache.uniffle.client.request.RssSendShuffleDataRequest;
 import org.apache.uniffle.client.request.RssUnregisterShuffleByAppIdRequest;
 import org.apache.uniffle.client.request.RssUnregisterShuffleRequest;
-import org.apache.uniffle.client.response.RssAppHeartBeatResponse;
+import org.apache.uniffle.client.response.RssAppHeartbeatResponse;
 import org.apache.uniffle.client.response.RssFinishShuffleResponse;
 import org.apache.uniffle.client.response.RssGetInMemoryShuffleDataResponse;
 import org.apache.uniffle.client.response.RssGetShuffleDataResponse;
@@ -674,7 +674,7 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
   }
 
   @Override
-  public RssAppHeartBeatResponse sendHeartBeat(RssAppHeartBeatRequest request) {
+  public RssAppHeartbeatResponse sendHeartbeat(RssAppHeartbeatRequest request) {
     AppHeartBeatResponse appHeartBeatResponse =
         doSendHeartBeat(request.getAppId(), request.getTimeoutMs());
     if (appHeartBeatResponse.getStatus() != RssProtos.StatusCode.SUCCESS) {
@@ -691,9 +691,9 @@ public class ShuffleServerGrpcClient extends GrpcClient implements ShuffleServer
               + "errorMsg:"
               + appHeartBeatResponse.getRetMsg();
       LOG.error(msg);
-      return new RssAppHeartBeatResponse(StatusCode.INTERNAL_ERROR);
+      return new RssAppHeartbeatResponse(StatusCode.INTERNAL_ERROR);
     } else {
-      return new RssAppHeartBeatResponse(StatusCode.SUCCESS);
+      return new RssAppHeartbeatResponse(StatusCode.SUCCESS);
     }
   }
 

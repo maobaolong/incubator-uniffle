@@ -17,7 +17,7 @@
 
 package org.apache.uniffle.client.api;
 
-import org.apache.uniffle.client.request.RssAppHeartBeatRequest;
+import org.apache.uniffle.client.request.RssAppHeartbeatRequest;
 import org.apache.uniffle.client.request.RssFinishShuffleRequest;
 import org.apache.uniffle.client.request.RssGetInMemoryShuffleDataRequest;
 import org.apache.uniffle.client.request.RssGetShuffleDataRequest;
@@ -30,7 +30,7 @@ import org.apache.uniffle.client.request.RssSendCommitRequest;
 import org.apache.uniffle.client.request.RssSendShuffleDataRequest;
 import org.apache.uniffle.client.request.RssUnregisterShuffleByAppIdRequest;
 import org.apache.uniffle.client.request.RssUnregisterShuffleRequest;
-import org.apache.uniffle.client.response.RssAppHeartBeatResponse;
+import org.apache.uniffle.client.response.RssAppHeartbeatResponse;
 import org.apache.uniffle.client.response.RssFinishShuffleResponse;
 import org.apache.uniffle.client.response.RssGetInMemoryShuffleDataResponse;
 import org.apache.uniffle.client.response.RssGetShuffleDataResponse;
@@ -56,7 +56,7 @@ public interface ShuffleServerClient {
 
   RssSendCommitResponse sendCommit(RssSendCommitRequest request);
 
-  RssAppHeartBeatResponse sendHeartBeat(RssAppHeartBeatRequest request);
+  RssAppHeartbeatResponse sendHeartbeat(RssAppHeartbeatRequest request);
 
   RssFinishShuffleResponse finishShuffle(RssFinishShuffleRequest request);
 

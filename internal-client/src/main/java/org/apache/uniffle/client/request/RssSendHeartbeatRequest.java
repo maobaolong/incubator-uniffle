@@ -23,7 +23,7 @@ import java.util.Set;
 import org.apache.uniffle.common.ServerStatus;
 import org.apache.uniffle.common.storage.StorageInfo;
 
-public class RssSendHeartBeatRequest {
+public class RssSendHeartbeatRequest {
 
   private final String shuffleServerId;
   private final String shuffleServerIp;
@@ -40,7 +40,7 @@ public class RssSendHeartBeatRequest {
   private final int jettyPort;
   private final long startTimeMs;
 
-  public RssSendHeartBeatRequest(
+  public RssSendHeartbeatRequest(
       String shuffleServerId,
       String shuffleServerIp,
       int shuffleServerPort,

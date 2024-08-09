@@ -26,8 +26,8 @@ public class ApplicationRequest {
   private Set<String> applications;
   private int pageSize = 10;
   private int currentPage = 1;
-  private String heartBeatStartTime;
-  private String heartBeatEndTime;
+  private String heartbeatStartTime;
+  private String heartbeatEndTime;
   private String appIdRegex;
 
   public Set<String> getApplications() {
@@ -54,20 +54,20 @@ public class ApplicationRequest {
     this.currentPage = currentPage;
   }
 
-  public String getHeartBeatStartTime() {
-    return heartBeatStartTime;
+  public String getHeartbeatStartTime() {
+    return heartbeatStartTime;
   }
 
-  public void setHeartBeatStartTime(String heartBeatStartTime) {
-    this.heartBeatStartTime = heartBeatStartTime;
+  public void setHeartbeatStartTime(String heartbeatStartTime) {
+    this.heartbeatStartTime = heartbeatStartTime;
   }
 
-  public String getHeartBeatEndTime() {
-    return heartBeatEndTime;
+  public String getHeartbeatEndTime() {
+    return heartbeatEndTime;
   }
 
-  public void setHeartBeatEndTime(String heartBeatEndTime) {
-    this.heartBeatEndTime = heartBeatEndTime;
+  public void setHeartbeatEndTime(String heartbeatEndTime) {
+    this.heartbeatEndTime = heartbeatEndTime;
   }
 
   public String getAppIdRegex() {

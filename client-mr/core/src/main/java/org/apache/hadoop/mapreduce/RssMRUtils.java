@@ -104,7 +104,7 @@ public class RssMRUtils {
   }
 
   public static ShuffleWriteClient createShuffleClient(JobConf jobConf) {
-    int heartBeatThreadNum =
+    int heartbeatThreadNum =
         jobConf.getInt(
             RssMRConfig.RSS_CLIENT_HEARTBEAT_THREAD_NUM,
             RssMRConfig.RSS_CLIENT_HEARTBEAT_THREAD_NUM_DEFAULT_VALUE);
@@ -144,7 +144,7 @@ public class RssMRUtils {
                     .clientType(clientType)
                     .retryMax(retryMax)
                     .retryIntervalMax(retryIntervalMax)
-                    .heartBeatThreadNum(heartBeatThreadNum)
+                    .heartbeatThreadNum(heartbeatThreadNum)
                     .replica(replica)
                     .replicaWrite(replicaWrite)
                     .replicaRead(replicaRead)

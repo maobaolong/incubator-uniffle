@@ -85,7 +85,7 @@ public class RssShuffleManager extends RssShuffleManagerBase {
   private static final Logger LOG = LoggerFactory.getLogger(RssShuffleManager.class);
   private final long heartbeatInterval;
   private final long heartbeatTimeout;
-  private ScheduledExecutorService heartBeatScheduledExecutorService;
+  private ScheduledExecutorService heartbeatScheduledExecutorService;
   private Map<String, Set<Long>> taskToSuccessBlockIds = JavaUtils.newConcurrentMap();
   private Map<String, FailedBlockSendTracker> taskToFailedBlockSendTracker =
       JavaUtils.newConcurrentMap();
@@ -154,7 +154,7 @@ public class RssShuffleManager extends RssShuffleManagerBase {
         sparkConf.getLong(RssSparkConfig.RSS_HEARTBEAT_TIMEOUT.key(), heartbeatInterval / 2);
     int retryMax = sparkConf.get(RssSparkConfig.RSS_CLIENT_RETRY_MAX);
     long retryIntervalMax = sparkConf.get(RssSparkConfig.RSS_CLIENT_RETRY_INTERVAL_MAX);
-    int heartBeatThreadNum = sparkConf.get(RssSparkConfig.RSS_CLIENT_HEARTBEAT_THREAD_NUM);
+    int heartbeatThreadNum = sparkConf.get(RssSparkConfig.RSS_CLIENT_HEARTBEAT_THREAD_NUM);
     this.dataCommitPoolSize = sparkConf.get(RssSparkConfig.RSS_DATA_COMMIT_POOL_SIZE);
     int unregisterThreadPoolSize =
         sparkConf.get(RssSparkConfig.RSS_CLIENT_UNREGISTER_THREAD_POOL_SIZE);
@@ -193,7 +193,7 @@ public class RssShuffleManager extends RssShuffleManagerBase {
         partitionReassignEnabled || rssStageRetryEnabled || blockIdSelfManagedEnabled;
     if (!sparkConf.getBoolean(RssSparkConfig.RSS_TEST_FLAG.key(), false)) {
       if (isDriver) {
-        heartBeatScheduledExecutorService =
+        heartbeatScheduledExecutorService =
             ThreadUtils.getDaemonSingleThreadScheduledExecutor("rss-heartbeat");
         if (shuffleManagerRpcServiceEnabled) {
           LOG.info("stage resubmit is supported and enabled");
@@ -226,7 +226,7 @@ public class RssShuffleManager extends RssShuffleManagerBase {
                       .clientType(clientType)
                       .retryMax(retryMax)
                       .retryIntervalMax(retryIntervalMax)
-                      .heartBeatThreadNum(heartBeatThreadNum)
+                      .heartbeatThreadNum(heartbeatThreadNum)
                       .replica(dataReplica)
                       .replicaWrite(dataReplicaWrite)
                       .replicaRead(dataReplicaRead)
@@ -381,7 +381,7 @@ public class RssShuffleManager extends RssShuffleManagerBase {
   private void startHeartbeat() {
     shuffleWriteClient.registerApplicationInfo(appId, heartbeatTimeout, user);
     if (!sparkConf.getBoolean(RssSparkConfig.RSS_TEST_FLAG.key(), false) && !heartbeatStarted) {
-      heartBeatScheduledExecutorService.scheduleAtFixedRate(
+      heartbeatScheduledExecutorService.scheduleAtFixedRate(
           () -> {
             try {
               shuffleWriteClient.sendAppHeartbeat(appId, heartbeatTimeout);
@@ -575,8 +575,8 @@ public class RssShuffleManager extends RssShuffleManagerBase {
   @Override
   public void stop() {
     super.stop();
-    if (heartBeatScheduledExecutorService != null) {
-      heartBeatScheduledExecutorService.shutdownNow();
+    if (heartbeatScheduledExecutorService != null) {
+      heartbeatScheduledExecutorService.shutdownNow();
     }
     if (dataPusher != null) {
       try {

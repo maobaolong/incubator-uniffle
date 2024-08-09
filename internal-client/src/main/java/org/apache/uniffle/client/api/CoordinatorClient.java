@@ -18,27 +18,27 @@
 package org.apache.uniffle.client.api;
 
 import org.apache.uniffle.client.request.RssAccessClusterRequest;
-import org.apache.uniffle.client.request.RssAppHeartBeatRequest;
+import org.apache.uniffle.client.request.RssAppHeartbeatRequest;
 import org.apache.uniffle.client.request.RssApplicationInfoRequest;
 import org.apache.uniffle.client.request.RssFetchClientConfRequest;
 import org.apache.uniffle.client.request.RssFetchRemoteStorageRequest;
 import org.apache.uniffle.client.request.RssGetShuffleAssignmentsRequest;
-import org.apache.uniffle.client.request.RssSendHeartBeatRequest;
+import org.apache.uniffle.client.request.RssSendHeartbeatRequest;
 import org.apache.uniffle.client.response.RssAccessClusterResponse;
-import org.apache.uniffle.client.response.RssAppHeartBeatResponse;
+import org.apache.uniffle.client.response.RssAppHeartbeatResponse;
 import org.apache.uniffle.client.response.RssApplicationInfoResponse;
 import org.apache.uniffle.client.response.RssFetchClientConfResponse;
 import org.apache.uniffle.client.response.RssFetchRemoteStorageResponse;
 import org.apache.uniffle.client.response.RssGetShuffleAssignmentsResponse;
-import org.apache.uniffle.client.response.RssSendHeartBeatResponse;
+import org.apache.uniffle.client.response.RssSendHeartbeatResponse;
 
 public interface CoordinatorClient {
 
-  RssAppHeartBeatResponse sendAppHeartBeat(RssAppHeartBeatRequest request);
+  RssAppHeartbeatResponse sendAppHeartbeat(RssAppHeartbeatRequest request);
 
   RssApplicationInfoResponse registerApplicationInfo(RssApplicationInfoRequest request);
 
-  RssSendHeartBeatResponse sendHeartBeat(RssSendHeartBeatRequest request);
+  RssSendHeartbeatResponse sendHeartbeat(RssSendHeartbeatRequest request);
 
   RssGetShuffleAssignmentsResponse getShuffleAssignments(RssGetShuffleAssignmentsRequest request);
 

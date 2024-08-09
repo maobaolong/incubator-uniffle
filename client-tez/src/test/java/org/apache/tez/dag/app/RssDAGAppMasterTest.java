@@ -496,7 +496,7 @@ public class RssDAGAppMasterTest {
               .clientType(clientType)
               .retryMax(1)
               .retryIntervalMax(1)
-              .heartBeatThreadNum(10)
+              .heartbeatThreadNum(10)
               .replica(1)
               .replicaWrite(1)
               .replicaRead(1)

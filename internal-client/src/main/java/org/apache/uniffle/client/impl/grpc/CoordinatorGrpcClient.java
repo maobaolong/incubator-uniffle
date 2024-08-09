@@ -34,19 +34,19 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.uniffle.client.api.CoordinatorClient;
 import org.apache.uniffle.client.request.RssAccessClusterRequest;
-import org.apache.uniffle.client.request.RssAppHeartBeatRequest;
+import org.apache.uniffle.client.request.RssAppHeartbeatRequest;
 import org.apache.uniffle.client.request.RssApplicationInfoRequest;
 import org.apache.uniffle.client.request.RssFetchClientConfRequest;
 import org.apache.uniffle.client.request.RssFetchRemoteStorageRequest;
 import org.apache.uniffle.client.request.RssGetShuffleAssignmentsRequest;
-import org.apache.uniffle.client.request.RssSendHeartBeatRequest;
+import org.apache.uniffle.client.request.RssSendHeartbeatRequest;
 import org.apache.uniffle.client.response.RssAccessClusterResponse;
-import org.apache.uniffle.client.response.RssAppHeartBeatResponse;
+import org.apache.uniffle.client.response.RssAppHeartbeatResponse;
 import org.apache.uniffle.client.response.RssApplicationInfoResponse;
 import org.apache.uniffle.client.response.RssFetchClientConfResponse;
 import org.apache.uniffle.client.response.RssFetchRemoteStorageResponse;
 import org.apache.uniffle.client.response.RssGetShuffleAssignmentsResponse;
-import org.apache.uniffle.client.response.RssSendHeartBeatResponse;
+import org.apache.uniffle.client.response.RssSendHeartbeatResponse;
 import org.apache.uniffle.common.PartitionRange;
 import org.apache.uniffle.common.RemoteStorageInfo;
 import org.apache.uniffle.common.ServerStatus;
@@ -113,7 +113,7 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
     return blockingStub.getShuffleServerList(Empty.newBuilder().build());
   }
 
-  public ShuffleServerHeartBeatResponse doSendHeartBeat(
+  public ShuffleServerHeartBeatResponse doSendHeartbeat(
       String id,
       String ip,
       int port,
@@ -209,9 +209,9 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
   }
 
   @Override
-  public RssSendHeartBeatResponse sendHeartBeat(RssSendHeartBeatRequest request) {
+  public RssSendHeartbeatResponse sendHeartbeat(RssSendHeartbeatRequest request) {
     ShuffleServerHeartBeatResponse rpcResponse =
-        doSendHeartBeat(
+        doSendHeartbeat(
             request.getShuffleServerId(),
             request.getShuffleServerIp(),
             request.getShuffleServerPort(),
@@ -227,37 +227,37 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
             request.getJettyPort(),
             request.getStartTimeMs());
 
-    RssSendHeartBeatResponse response;
+    RssSendHeartbeatResponse response;
     RssProtos.StatusCode statusCode = rpcResponse.getStatus();
     switch (statusCode) {
       case SUCCESS:
-        response = new RssSendHeartBeatResponse(StatusCode.SUCCESS);
+        response = new RssSendHeartbeatResponse(StatusCode.SUCCESS);
         break;
       case TIMEOUT:
-        response = new RssSendHeartBeatResponse(StatusCode.TIMEOUT);
+        response = new RssSendHeartbeatResponse(StatusCode.TIMEOUT);
         break;
       default:
-        response = new RssSendHeartBeatResponse(StatusCode.INTERNAL_ERROR);
+        response = new RssSendHeartbeatResponse(StatusCode.INTERNAL_ERROR);
     }
     return response;
   }
 
   @Override
-  public RssAppHeartBeatResponse sendAppHeartBeat(RssAppHeartBeatRequest request) {
+  public RssAppHeartbeatResponse sendAppHeartbeat(RssAppHeartbeatRequest request) {
     RssProtos.AppHeartBeatRequest rpcRequest =
         RssProtos.AppHeartBeatRequest.newBuilder().setAppId(request.getAppId()).build();
     RssProtos.AppHeartBeatResponse rpcResponse =
         blockingStub
             .withDeadlineAfter(request.getTimeoutMs(), TimeUnit.MILLISECONDS)
             .appHeartbeat(rpcRequest);
-    RssAppHeartBeatResponse response;
+    RssAppHeartbeatResponse response;
     RssProtos.StatusCode statusCode = rpcResponse.getStatus();
     switch (statusCode) {
       case SUCCESS:
-        response = new RssAppHeartBeatResponse(StatusCode.SUCCESS);
+        response = new RssAppHeartbeatResponse(StatusCode.SUCCESS);
         break;
       default:
-        response = new RssAppHeartBeatResponse(StatusCode.INTERNAL_ERROR);
+        response = new RssAppHeartbeatResponse(StatusCode.INTERNAL_ERROR);
     }
     return response;
   }

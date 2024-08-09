@@ -157,7 +157,7 @@ public class AssignmentWithTagsTest extends CoordinatorTestBase {
             .clientType(ClientType.GRPC.name())
             .retryMax(3)
             .retryIntervalMax(1000)
-            .heartBeatThreadNum(1)
+            .heartbeatThreadNum(1)
             .replica(1)
             .replicaWrite(1)
             .replicaRead(1)

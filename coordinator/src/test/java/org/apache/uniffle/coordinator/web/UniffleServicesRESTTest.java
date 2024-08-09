@@ -419,15 +419,15 @@ public class UniffleServicesRESTTest {
   @Test
   public void testGetApplicationsWithStartTimeAndEndTime() throws Exception {
 
-    // In this test case, we set two groups of heartBeatStartTime and heartBeatEndTime respectively.
+    // In this test case, we set two groups of heartbeatStartTime and heartbeatEndTime respectively.
     // We expect no data to be obtained in the first group,
     // and we expect to obtain 10 data in the second group.
     long startTime = new Date().getTime();
     long endTime = new Date().getTime() + 100;
 
     final ApplicationRequest request = new ApplicationRequest();
-    request.setHeartBeatStartTime(String.valueOf(startTime));
-    request.setHeartBeatEndTime(String.valueOf(endTime));
+    request.setHeartbeatStartTime(String.valueOf(startTime));
+    request.setHeartbeatEndTime(String.valueOf(endTime));
 
     Gson gson = new Gson();
     String params = gson.toJson(request);
@@ -442,8 +442,8 @@ public class UniffleServicesRESTTest {
 
     startTime = 0;
     final ApplicationRequest request2 = new ApplicationRequest();
-    request2.setHeartBeatStartTime(String.valueOf(startTime));
-    request2.setHeartBeatEndTime(String.valueOf(endTime));
+    request2.setHeartbeatStartTime(String.valueOf(startTime));
+    request2.setHeartbeatEndTime(String.valueOf(endTime));
 
     String params2 = gson.toJson(request2);
     String response2 = sendPOST(coordinatorAddress + APPLICATIONS, params2);

@@ -55,7 +55,7 @@ public class ShuffleClientFactory {
     private String clientType;
     private int retryMax;
     private long retryIntervalMax;
-    private int heartBeatThreadNum;
+    private int heartbeatThreadNum;
     private int replica;
     private int replicaWrite;
     private int replicaRead;
@@ -79,8 +79,8 @@ public class ShuffleClientFactory {
       return retryIntervalMax;
     }
 
-    public int getHeartBeatThreadNum() {
-      return heartBeatThreadNum;
+    public int getHeartbeatThreadNum() {
+      return heartbeatThreadNum;
     }
 
     public int getReplica() {
@@ -142,8 +142,8 @@ public class ShuffleClientFactory {
       return self();
     }
 
-    public T heartBeatThreadNum(int heartBeatThreadNum) {
-      this.heartBeatThreadNum = heartBeatThreadNum;
+    public T heartbeatThreadNum(int heartbeatThreadNum) {
+      this.heartbeatThreadNum = heartbeatThreadNum;
       return self();
     }
 

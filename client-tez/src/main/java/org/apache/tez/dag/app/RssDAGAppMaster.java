@@ -105,7 +105,7 @@ public class RssDAGAppMaster extends DAGAppMaster {
   private TezRemoteShuffleManager tezRemoteShuffleManager;
   private Map<String, String> clusterClientConf;
 
-  final ScheduledExecutorService heartBeatExecutorService =
+  final ScheduledExecutorService heartbeatExecutorService =
       Executors.newSingleThreadScheduledExecutor(ThreadUtils.getThreadFactory("AppHeartbeat"));
 
   public RssDAGAppMaster(
@@ -200,7 +200,7 @@ public class RssDAGAppMaster extends DAGAppMaster {
         .getShuffleWriteClient()
         .registerApplicationInfo(strAppAttemptId, heartbeatTimeout, "user");
 
-    appMaster.heartBeatExecutorService.scheduleAtFixedRate(
+    appMaster.heartbeatExecutorService.scheduleAtFixedRate(
         () -> {
           try {
             appMaster.getShuffleWriteClient().sendAppHeartbeat(strAppAttemptId, heartbeatTimeout);
@@ -302,7 +302,7 @@ public class RssDAGAppMaster extends DAGAppMaster {
   static void releaseRssResources(RssDAGAppMaster appMaster) {
     try {
       LOG.info("RssDAGAppMaster releaseRssResources invoked");
-      appMaster.heartBeatExecutorService.shutdownNow();
+      appMaster.heartbeatExecutorService.shutdownNow();
       if (appMaster.tezRemoteShuffleManager != null) {
         appMaster.tezRemoteShuffleManager.shutdown();
         appMaster.tezRemoteShuffleManager = null;

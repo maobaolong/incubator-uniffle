@@ -76,7 +76,7 @@ public class RssTezUtils {
   private RssTezUtils() {}
 
   public static ShuffleWriteClient createShuffleClient(Configuration conf) {
-    int heartBeatThreadNum =
+    int heartbeatThreadNum =
         conf.getInt(
             RssTezConfig.RSS_CLIENT_HEARTBEAT_THREAD_NUM,
             RssTezConfig.RSS_CLIENT_HEARTBEAT_THREAD_NUM_DEFAULT_VALUE);
@@ -116,7 +116,7 @@ public class RssTezUtils {
                     .clientType(clientType)
                     .retryMax(retryMax)
                     .retryIntervalMax(retryIntervalMax)
-                    .heartBeatThreadNum(heartBeatThreadNum)
+                    .heartbeatThreadNum(heartbeatThreadNum)
                     .replica(replica)
                     .replicaWrite(replicaWrite)
                     .replicaRead(replicaRead)

@@ -26,7 +26,7 @@ public class Application implements Comparable<Application> {
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
   private String applicationId;
   private String user;
-  private String lastHeartBeatTime;
+  private String lastHeartbeatTime;
   private String remoteStoragePath;
   private String registrationTime;
 
@@ -35,7 +35,7 @@ public class Application implements Comparable<Application> {
   public Application(Builder builder) {
     this.applicationId = builder.applicationId;
     this.user = builder.user;
-    this.lastHeartBeatTime = builder.lastHeartBeatTime;
+    this.lastHeartbeatTime = builder.lastHeartbeatTime;
     this.remoteStoragePath = builder.remoteStoragePath;
     this.registrationTime = builder.registrationTime;
   }
@@ -43,7 +43,7 @@ public class Application implements Comparable<Application> {
   public static class Builder {
     private String applicationId;
     private String user;
-    private String lastHeartBeatTime;
+    private String lastHeartbeatTime;
     private String registrationTime;
     private String remoteStoragePath;
 
@@ -59,8 +59,8 @@ public class Application implements Comparable<Application> {
       return this;
     }
 
-    public Builder lastHeartBeatTime(long lastHeartBeatTime) {
-      this.lastHeartBeatTime = DateFormatUtils.format(lastHeartBeatTime, DATE_PATTERN);
+    public Builder lastHeartbeatTime(long lastHeartbeatTime) {
+      this.lastHeartbeatTime = DateFormatUtils.format(lastHeartbeatTime, DATE_PATTERN);
       return this;
     }
 
@@ -89,8 +89,8 @@ public class Application implements Comparable<Application> {
     return user;
   }
 
-  public String getLastHeartBeatTime() {
-    return lastHeartBeatTime;
+  public String getLastHeartbeatTime() {
+    return lastHeartbeatTime;
   }
 
   public String getRegistrationTime() {
@@ -109,8 +109,8 @@ public class Application implements Comparable<Application> {
     this.user = user;
   }
 
-  public void setLastHeartBeatTime(String lastHeartBeatTime) {
-    this.lastHeartBeatTime = lastHeartBeatTime;
+  public void setLastHeartbeatTime(String lastHeartbeatTime) {
+    this.lastHeartbeatTime = lastHeartbeatTime;
   }
 
   public void setRegistrationTime(String registrationTime) {
@@ -130,7 +130,7 @@ public class Application implements Comparable<Application> {
     return new EqualsBuilder()
         .append(this.getApplicationId(), otherImpl.getApplicationId())
         .append(this.getUser(), otherImpl.getUser())
-        .append(this.getLastHeartBeatTime(), otherImpl.getLastHeartBeatTime())
+        .append(this.getLastHeartbeatTime(), otherImpl.getLastHeartbeatTime())
         .append(this.getRegistrationTime(), otherImpl.getRegistrationTime())
         .append(this.getRemoteStoragePath(), otherImpl.getRemoteStoragePath())
         .isEquals();
@@ -141,7 +141,7 @@ public class Application implements Comparable<Application> {
     return new HashCodeBuilder()
         .append(this.getApplicationId())
         .append(this.getUser())
-        .append(this.getLastHeartBeatTime())
+        .append(this.getLastHeartbeatTime())
         .append(this.getRegistrationTime())
         .append(this.getRemoteStoragePath())
         .toHashCode();
@@ -161,8 +161,8 @@ public class Application implements Comparable<Application> {
         + ", user='"
         + user
         + '\''
-        + ", lastHeartBeatTime='"
-        + lastHeartBeatTime
+        + ", lastHeartbeatTime='"
+        + lastHeartbeatTime
         + '\''
         + ", registrationTime='"
         + registrationTime

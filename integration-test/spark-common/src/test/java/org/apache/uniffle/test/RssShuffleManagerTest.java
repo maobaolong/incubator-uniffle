@@ -207,7 +207,7 @@ public class RssShuffleManagerTest extends SparkIntegrationTestBase {
               .clientType(ClientType.GRPC.name())
               .retryMax(3)
               .retryIntervalMax(2000)
-              .heartBeatThreadNum(4)
+              .heartbeatThreadNum(4)
               .replica(1)
               .replicaWrite(1)
               .replicaRead(1)

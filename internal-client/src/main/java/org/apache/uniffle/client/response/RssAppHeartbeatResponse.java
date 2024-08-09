@@ -15,23 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.uniffle.client.request;
+package org.apache.uniffle.client.response;
 
-public class RssAppHeartBeatRequest {
+import org.apache.uniffle.common.rpc.StatusCode;
 
-  private final String appId;
-  private final long timeoutMs;
+public class RssAppHeartbeatResponse extends ClientResponse {
 
-  public RssAppHeartBeatRequest(String appId, long timeoutMs) {
-    this.appId = appId;
-    this.timeoutMs = timeoutMs;
-  }
-
-  public String getAppId() {
-    return appId;
-  }
-
-  public long getTimeoutMs() {
-    return timeoutMs;
+  public RssAppHeartbeatResponse(StatusCode statusCode) {
+    super(statusCode);
   }
 }

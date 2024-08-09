@@ -409,7 +409,7 @@ public class ApplicationManager implements Closeable {
   }
 
   /**
-   * Get Applications, The list contains applicationId, user, lastHeartBeatTime, remoteStoragePath.
+   * Get Applications, The list contains applicationId, user, lastHeartbeatTime, remoteStoragePath.
    *
    * <p>We have set 6 criteria for filtering applicationId, and these criteria are in an 'AND'
    * relationship. All the criteria must be met for the applicationId to be selected.
@@ -417,8 +417,8 @@ public class ApplicationManager implements Closeable {
    * @param appIds Application List.
    * @param pageSize Items per page.
    * @param currentPage The number of pages to be queried.
-   * @param pHeartBeatStartTime heartbeat start time.
-   * @param pHeartBeatEndTime heartbeat end time.
+   * @param heartbeatStartTime heartbeat start time.
+   * @param heartbeatEndTime heartbeat end time.
    * @param appIdRegex applicationId regular expression.
    * @return Applications.
    */
@@ -426,8 +426,8 @@ public class ApplicationManager implements Closeable {
       Set<String> appIds,
       int pageSize,
       int currentPage,
-      String pHeartBeatStartTime,
-      String pHeartBeatEndTime,
+      String heartbeatStartTime,
+      String heartbeatEndTime,
       String appIdRegex) {
     List<Application> applications = new ArrayList<>();
     for (Map.Entry<String, Map<String, AppInfo>> entry : currentUserAndApp.entrySet()) {
@@ -445,11 +445,11 @@ public class ApplicationManager implements Closeable {
 
             // Filter condition 3: Determine whether the start and
             // end of the heartbeat time are in line with expectations.
-            if (StringUtils.isNotBlank(pHeartBeatStartTime)
-                || StringUtils.isNotBlank(pHeartBeatEndTime)) {
+            if (StringUtils.isNotBlank(heartbeatStartTime)
+                || StringUtils.isNotBlank(heartbeatEndTime)) {
               match =
-                  matchHeartBeatStartTimeAndEndTime(
-                      pHeartBeatStartTime, pHeartBeatEndTime, appInfo.getUpdateTime());
+                  matchHeartbeatStartTimeAndEndTime(
+                      heartbeatStartTime, heartbeatEndTime, appInfo.getUpdateTime());
             }
 
             // If it meets expectations, add to the list to be returned.
@@ -460,7 +460,7 @@ public class ApplicationManager implements Closeable {
                   new Application.Builder()
                       .applicationId(appId)
                       .user(user)
-                      .lastHeartBeatTime(appInfo.getUpdateTime())
+                      .lastHeartbeatTime(appInfo.getUpdateTime())
                       .registrationTime(appInfo.getRegistrationTime())
                       .remoteStoragePath(remoteStorageInfo)
                       .build();
@@ -494,12 +494,12 @@ public class ApplicationManager implements Closeable {
    *
    * @param pStartTime heartbeat start time.
    * @param pEndTime heartbeat end time.
-   * @param appHeartBeatTime application HeartBeatTime
+   * @param appHeartbeatTime application HeartbeatTime
    * @return Returns true if the heartbeat time is within the given query range, otherwise returns
    *     false.
    */
-  private boolean matchHeartBeatStartTimeAndEndTime(
-      String pStartTime, String pEndTime, long appHeartBeatTime) {
+  private boolean matchHeartbeatStartTimeAndEndTime(
+      String pStartTime, String pEndTime, long appHeartbeatTime) {
     long startTime = 0;
     long endTime = Long.MAX_VALUE;
 
@@ -511,8 +511,8 @@ public class ApplicationManager implements Closeable {
       endTime = parseLongValue(pEndTime, "heartBeatEndTime");
     }
 
-    Range<Long> heartBeatTime = Range.between(startTime, endTime);
-    return heartBeatTime.contains(appHeartBeatTime);
+    Range<Long> heartbeatTime = Range.between(startTime, endTime);
+    return heartbeatTime.contains(appHeartbeatTime);
   }
 
   /**

@@ -52,7 +52,7 @@ import org.apache.uniffle.client.api.ShuffleWriteClient;
 import org.apache.uniffle.client.factory.CoordinatorClientFactory;
 import org.apache.uniffle.client.factory.ShuffleClientFactory;
 import org.apache.uniffle.client.factory.ShuffleServerClientFactory;
-import org.apache.uniffle.client.request.RssAppHeartBeatRequest;
+import org.apache.uniffle.client.request.RssAppHeartbeatRequest;
 import org.apache.uniffle.client.request.RssApplicationInfoRequest;
 import org.apache.uniffle.client.request.RssFetchClientConfRequest;
 import org.apache.uniffle.client.request.RssFetchRemoteStorageRequest;
@@ -67,7 +67,7 @@ import org.apache.uniffle.client.request.RssSendShuffleDataRequest;
 import org.apache.uniffle.client.request.RssUnregisterShuffleByAppIdRequest;
 import org.apache.uniffle.client.request.RssUnregisterShuffleRequest;
 import org.apache.uniffle.client.response.ClientResponse;
-import org.apache.uniffle.client.response.RssAppHeartBeatResponse;
+import org.apache.uniffle.client.response.RssAppHeartbeatResponse;
 import org.apache.uniffle.client.response.RssApplicationInfoResponse;
 import org.apache.uniffle.client.response.RssFetchClientConfResponse;
 import org.apache.uniffle.client.response.RssFetchRemoteStorageResponse;
@@ -109,7 +109,7 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
   private Map<String, Map<Integer, Set<ShuffleServerInfo>>> shuffleServerInfoMap =
       JavaUtils.newConcurrentMap();
   private CoordinatorClientFactory coordinatorClientFactory;
-  private ExecutorService heartBeatExecutorService;
+  private ExecutorService heartbeatExecutorService;
   private int replica;
   private int replicaWrite;
   private int replicaRead;
@@ -141,8 +141,8 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
     this.retryMax = builder.getRetryMax();
     this.retryIntervalMax = builder.getRetryIntervalMax();
     this.coordinatorClientFactory = CoordinatorClientFactory.getInstance();
-    this.heartBeatExecutorService =
-        ThreadUtils.getDaemonFixedThreadPool(builder.getHeartBeatThreadNum(), "client-heartbeat");
+    this.heartbeatExecutorService =
+        ThreadUtils.getDaemonFixedThreadPool(builder.getHeartbeatThreadNum(), "client-heartbeat");
     this.replica = builder.getReplica();
     this.replicaWrite = builder.getReplicaWrite();
     this.replicaRead = builder.getReplicaRead();
@@ -893,7 +893,7 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
     RssApplicationInfoRequest request = new RssApplicationInfoRequest(appId, timeoutMs, user);
 
     ThreadUtils.executeTasks(
-        heartBeatExecutorService,
+        heartbeatExecutorService,
         coordinatorClients,
         coordinatorClient -> {
           try {
@@ -916,18 +916,18 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
 
   @Override
   public void sendAppHeartbeat(String appId, long timeoutMs) {
-    RssAppHeartBeatRequest request = new RssAppHeartBeatRequest(appId, timeoutMs);
+    RssAppHeartbeatRequest request = new RssAppHeartbeatRequest(appId, timeoutMs);
     Set<ShuffleServerInfo> allShuffleServers = getAllShuffleServers(appId);
 
     ThreadUtils.executeTasks(
-        heartBeatExecutorService,
+        heartbeatExecutorService,
         allShuffleServers,
         shuffleServerInfo -> {
           try {
             ShuffleServerClient client =
                 ShuffleServerClientFactory.getInstance()
                     .getShuffleServerClient(clientType, shuffleServerInfo, rssConf);
-            RssAppHeartBeatResponse response = client.sendHeartBeat(request);
+            RssAppHeartbeatResponse response = client.sendHeartbeat(request);
             if (response.getStatusCode() != StatusCode.SUCCESS) {
               LOG.warn("Failed to send heartbeat to " + shuffleServerInfo);
             }
@@ -940,11 +940,11 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
         "send heartbeat to shuffle server");
 
     ThreadUtils.executeTasks(
-        heartBeatExecutorService,
+        heartbeatExecutorService,
         coordinatorClients,
         coordinatorClient -> {
           try {
-            RssAppHeartBeatResponse response = coordinatorClient.sendAppHeartBeat(request);
+            RssAppHeartbeatResponse response = coordinatorClient.sendAppHeartbeat(request);
             if (response.getStatusCode() != StatusCode.SUCCESS) {
               LOG.warn("Failed to send heartbeat to " + coordinatorClient.getDesc());
             } else {
@@ -961,7 +961,7 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
 
   @Override
   public void close() {
-    heartBeatExecutorService.shutdownNow();
+    heartbeatExecutorService.shutdownNow();
     coordinatorClients.forEach(CoordinatorClient::close);
     dataTransferPool.shutdownNow();
   }

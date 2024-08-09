@@ -31,50 +31,50 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.uniffle.client.api.CoordinatorClient;
 import org.apache.uniffle.client.factory.CoordinatorClientFactory;
-import org.apache.uniffle.client.request.RssSendHeartBeatRequest;
+import org.apache.uniffle.client.request.RssSendHeartbeatRequest;
 import org.apache.uniffle.common.ServerStatus;
 import org.apache.uniffle.common.rpc.StatusCode;
 import org.apache.uniffle.common.storage.StorageInfo;
 import org.apache.uniffle.common.util.ThreadUtils;
 
-public class RegisterHeartBeat {
+public class RegisterHeartbeat {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RegisterHeartBeat.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RegisterHeartbeat.class);
 
-  private final long heartBeatInitialDelay;
-  private final long heartBeatInterval;
+  private final long heartbeatInitialDelay;
+  private final long heartbeatInterval;
   private final ShuffleServer shuffleServer;
   private final String coordinatorQuorum;
   private final List<CoordinatorClient> coordinatorClients;
   private final ScheduledExecutorService service =
-      ThreadUtils.getDaemonSingleThreadScheduledExecutor("startHeartBeat");
-  private final ExecutorService heartBeatExecutorService;
+      ThreadUtils.getDaemonSingleThreadScheduledExecutor("startHeartbeat");
+  private final ExecutorService heartbeatExecutorService;
 
-  public RegisterHeartBeat(ShuffleServer shuffleServer) {
+  public RegisterHeartbeat(ShuffleServer shuffleServer) {
     ShuffleServerConf conf = shuffleServer.getShuffleServerConf();
-    this.heartBeatInitialDelay = conf.getLong(ShuffleServerConf.SERVER_HEARTBEAT_DELAY);
-    this.heartBeatInterval = conf.getLong(ShuffleServerConf.SERVER_HEARTBEAT_INTERVAL);
+    this.heartbeatInitialDelay = conf.getLong(ShuffleServerConf.SERVER_HEARTBEAT_DELAY);
+    this.heartbeatInterval = conf.getLong(ShuffleServerConf.SERVER_HEARTBEAT_INTERVAL);
     this.coordinatorQuorum = conf.getString(ShuffleServerConf.RSS_COORDINATOR_QUORUM);
     CoordinatorClientFactory factory = CoordinatorClientFactory.getInstance();
     this.coordinatorClients =
         factory.createCoordinatorClient(
             conf.get(ShuffleServerConf.RSS_CLIENT_TYPE), this.coordinatorQuorum);
     this.shuffleServer = shuffleServer;
-    this.heartBeatExecutorService =
+    this.heartbeatExecutorService =
         ThreadUtils.getDaemonFixedThreadPool(
-            conf.getInteger(ShuffleServerConf.SERVER_HEARTBEAT_THREAD_NUM), "sendHeartBeat");
+            conf.getInteger(ShuffleServerConf.SERVER_HEARTBEAT_THREAD_NUM), "sendHeartbeat");
   }
 
-  public void startHeartBeat() {
+  public void startHeartbeat() {
     LOG.info(
         "Start heartbeat to coordinator {} after {}ms and interval is {}ms",
         coordinatorQuorum,
-        heartBeatInitialDelay,
-        heartBeatInterval);
+        heartbeatInitialDelay,
+        heartbeatInterval);
     Runnable runnable =
         () -> {
           try {
-            sendHeartBeat(
+            sendHeartbeat(
                 shuffleServer.getId(),
                 shuffleServer.getIp(),
                 shuffleServer.getGrpcPort(),
@@ -93,11 +93,11 @@ public class RegisterHeartBeat {
           }
         };
     service.scheduleAtFixedRate(
-        runnable, heartBeatInitialDelay, heartBeatInterval, TimeUnit.MILLISECONDS);
+        runnable, heartbeatInitialDelay, heartbeatInterval, TimeUnit.MILLISECONDS);
   }
 
   @VisibleForTesting
-  public boolean sendHeartBeat(
+  public boolean sendHeartbeat(
       String id,
       String ip,
       int grpcPort,
@@ -113,8 +113,8 @@ public class RegisterHeartBeat {
       long startTimeMs) {
     AtomicBoolean sendSuccessfully = new AtomicBoolean(false);
     // use `rss.server.heartbeat.interval` as the timeout option
-    RssSendHeartBeatRequest request =
-        new RssSendHeartBeatRequest(
+    RssSendHeartbeatRequest request =
+        new RssSendHeartbeatRequest(
             id,
             ip,
             grpcPort,
@@ -122,7 +122,7 @@ public class RegisterHeartBeat {
             preAllocatedMemory,
             availableMemory,
             eventNumInFlush,
-            heartBeatInterval,
+            heartbeatInterval,
             tags,
             serverStatus,
             localStorageInfo,
@@ -131,9 +131,9 @@ public class RegisterHeartBeat {
             startTimeMs);
 
     ThreadUtils.executeTasks(
-        heartBeatExecutorService,
+        heartbeatExecutorService,
         coordinatorClients,
-        client -> client.sendHeartBeat(request),
+        client -> client.sendHeartbeat(request),
         request.getTimeout() * 2,
         "send heartbeat",
         future -> {
@@ -153,7 +153,7 @@ public class RegisterHeartBeat {
   }
 
   public void shutdown() {
-    heartBeatExecutorService.shutdownNow();
+    heartbeatExecutorService.shutdownNow();
     service.shutdownNow();
   }
 }

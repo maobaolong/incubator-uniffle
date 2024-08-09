@@ -224,7 +224,7 @@ public class UniffleCLI extends AbstractCustomCommandLine {
                         app.getApplicationId(),
                         app.getUser(),
                         app.getRegistrationTime(),
-                        app.getLastHeartBeatTime(),
+                        app.getLastHeartbeatTime(),
                         app.getRemoteStoragePath()));
           }
           writer.print(formattingCLIUtils.render());
@@ -291,15 +291,15 @@ public class UniffleCLI extends AbstractCustomCommandLine {
       currentPage = cmd.getOptionValue(uniffleApplicationCurrentPage.getLongOpt()).trim();
     }
 
-    // Condition 5: heartBeatStartTime
-    String heartBeatTimeRange = null;
+    // Condition 5: heartbeatStartTime
+    String heartbeatTimeRange = null;
     if (cmd.hasOption(uniffleApplicationHbTimeRange.getLongOpt())) {
-      heartBeatTimeRange = cmd.getOptionValue(uniffleApplicationHbTimeRange.getLongOpt()).trim();
+      heartbeatTimeRange = cmd.getOptionValue(uniffleApplicationHbTimeRange.getLongOpt()).trim();
     }
 
     AdminRestApi adminRestApi = new AdminRestApi(client);
     return adminRestApi.getApplications(
-        applications, applicationIdRegex, pageSize, currentPage, heartBeatTimeRange);
+        applications, applicationIdRegex, pageSize, currentPage, heartbeatTimeRange);
   }
 
   /**

@@ -167,8 +167,8 @@ public class ServerResource extends BaseResource {
 
     int currentPage = params.getCurrentPage();
     int pageSize = params.getPageSize();
-    String startTime = params.getHeartBeatStartTime();
-    String endTime = params.getHeartBeatEndTime();
+    String startTime = params.getHeartbeatStartTime();
+    String endTime = params.getHeartbeatEndTime();
     String appIdRegex = params.getAppIdRegex();
 
     try {
