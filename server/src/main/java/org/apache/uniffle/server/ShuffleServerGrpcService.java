@@ -630,7 +630,11 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
       auditContext.withAppId(appId).withShuffleId(request.getShuffleId());
       String auditArgs = "requireSize=" + request.getRequireSize();
       if (request.getPartitionIdsList() != null) {
-        auditArgs += ", partitionIdsSize=" + request.getPartitionIdsList().size();
+        auditArgs +=
+            ", partitionIdsSize="
+                + request.getPartitionIdsList().size()
+                + ", partitionRequireSizesSize="
+                + request.getPartitionRequireSizesList().size();
       }
       auditContext.withArgs(auditArgs);
       StatusCode status = verifyRequest(appId);
