@@ -15,32 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.uniffle.coordinator.audit;
+package org.apache.uniffle.common.audit;
 
-import org.slf4j.Logger;
+import java.io.Closeable;
 
-import org.apache.uniffle.common.audit.RpcAuditContext;
-
-/** An audit context for coordinator rpc. */
-public class CoordinatorRpcAuditContext extends RpcAuditContext {
-  private String appId = "N/A";
-
-  /**
-   * Constructor of {@link CoordinatorRpcAuditContext}.
-   *
-   * @param log the logger to log the audit information
-   */
-  public CoordinatorRpcAuditContext(Logger log) {
-    super(log);
-  }
-
+/** Context for audit logging. */
+public interface AuditContext extends Closeable {
   @Override
-  protected String content() {
-    return String.format("appId=%s", appId);
-  }
-
-  public CoordinatorRpcAuditContext setAppId(String appId) {
-    this.appId = appId;
-    return this;
-  }
+  void close();
 }
