@@ -384,9 +384,7 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
       int readBufferSize = req.getReadBufferSize();
       auditContext.setAppId(appId).setShuffleId(shuffleId);
       auditContext.setArgs(
-          "requestId="
-              + req.getRequestId()
-              + ", partitionId="
+          "partitionId="
               + partitionId
               + ", blockId="
               + blockId
@@ -446,8 +444,6 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
             ShuffleServerMetrics.gaugeReadMemoryDataBufferSize.inc(readBufferSize);
           }
           auditContext.setStatusCode(status);
-          auditContext.setReturnValue(
-              "len=" + data.size() + ", bufferSegments=" + bufferSegments.size());
           response =
               new GetMemoryShuffleDataResponse(
                   req.getRequestId(), status, msg, bufferSegments, data);
@@ -498,9 +494,7 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
       auditContext.setAppId(appId);
       auditContext.setShuffleId(shuffleId);
       auditContext.setArgs(
-          "requestId="
-              + req.getRequestId()
-              + ", partitionId="
+          "partitionId="
               + partitionId
               + ", partitionNumPerRange="
               + partitionNumPerRange
@@ -550,7 +544,6 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
           ShuffleServerMetrics.gaugeReadLocalIndexFileThreadNum.inc();
           ShuffleServerMetrics.gaugeReadLocalIndexFileBufferSize.inc(assumedFileSize);
           auditContext.setStatusCode(status);
-          auditContext.setReturnValue("len=" + data.size());
           response =
               new GetLocalShuffleIndexResponse(
                   req.getRequestId(), status, msg, data, shuffleIndexResult.getDataFileLen());
@@ -609,9 +602,7 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
       auditContext.setAppId(appId);
       auditContext.setShuffleId(shuffleId);
       auditContext.setArgs(
-          "requestId="
-              + req.getRequestId()
-              + ", partitionId="
+          "partitionId="
               + partitionId
               + ", partitionNumPerRange="
               + partitionNumPerRange
@@ -696,7 +687,6 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
                   start, length, sdr.getDataLength(), requestInfo, req, response, client);
           client.getChannel().writeAndFlush(response).addListener(listener);
           auditContext.setStatusCode(response.getStatusCode());
-          auditContext.setReturnValue("len=" + sdr.getDataLength());
           return;
         } catch (Exception e) {
           shuffleServer.getShuffleBufferManager().releaseReadMemory(length);

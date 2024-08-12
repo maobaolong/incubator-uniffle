@@ -29,7 +29,6 @@ public abstract class RpcAuditContext implements Closeable {
   private String command;
   private String statusCode;
   private String args;
-  private String returnValue;
   private String from;
   private long creationTimeNs;
   protected long executionTimeNs;
@@ -109,11 +108,6 @@ public abstract class RpcAuditContext implements Closeable {
     return this;
   }
 
-  public RpcAuditContext setReturnValue(String returnValue) {
-    this.returnValue = returnValue;
-    return this;
-  }
-
   public RpcAuditContext setFrom(String from) {
     this.from = from;
     return this;
@@ -136,9 +130,6 @@ public abstract class RpcAuditContext implements Closeable {
             command, statusCode, from, executionTimeNs / 1000, content());
     if (args != null) {
       line += String.format("\targs{%s}", args);
-    }
-    if (returnValue != null) {
-      line += String.format("\treturn{%s}", returnValue);
     }
     return line;
   }
