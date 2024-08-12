@@ -17,7 +17,6 @@
 
 package org.apache.uniffle.coordinator;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +78,6 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
 
   private final CoordinatorServer coordinatorServer;
   private final boolean isRpcAuditLogEnabled;
-  private final List<String> rpcAuditExcludeOpList;
 
   public CoordinatorGrpcService(CoordinatorServer coordinatorServer) {
     this.coordinatorServer = coordinatorServer;
@@ -87,14 +85,6 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
         coordinatorServer
             .getCoordinatorConf()
             .getBoolean(CoordinatorConf.COORDINATOR_RPC_AUDIT_LOG_ENABLED);
-    if (isRpcAuditLogEnabled) {
-      rpcAuditExcludeOpList =
-          coordinatorServer
-              .getCoordinatorConf()
-              .get(CoordinatorConf.COORDINATOR_RPC_AUDIT_LOG_EXCLUDE_LIST);
-    } else {
-      rpcAuditExcludeOpList = Collections.emptyList();
-    }
   }
 
   @Override
@@ -533,7 +523,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   private CoordinatorRpcAuditContext createAuditContext(String command) {
     // Audit log may be enabled during runtime
     Logger auditLogger = null;
-    if (isRpcAuditLogEnabled && !rpcAuditExcludeOpList.contains(command)) {
+    if (isRpcAuditLogEnabled) {
       auditLogger = AUDIT_LOGGER;
     }
     CoordinatorRpcAuditContext auditContext = new CoordinatorRpcAuditContext(auditLogger);
