@@ -284,10 +284,12 @@ public class LocalStorageChecker extends Checker {
       File checkDir = new File(storageDir, CHECKER_DIR_NAME);
       try {
         if (!checkDir.mkdirs()) {
+          LOG.error("Failed to create check dir: {}", checkDir.getAbsolutePath());
           return false;
         }
         File writeFile = new File(checkDir, "test");
         if (!writeFile.createNewFile()) {
+          LOG.error("Failed to create write file: {}", writeFile.getAbsolutePath());
           return false;
         }
         byte[] data = RandomUtils.nextBytes(1024);
@@ -305,6 +307,7 @@ public class LocalStorageChecker extends Checker {
             if (hasReadBytes < 1024) {
               for (int i = 0; i < readBytes; i++) {
                 if (data[hasReadBytes + i] != readData[i]) {
+                  LOG.error("Storage read and write are not match. Storage dir: {}.", storageDir);
                   return false;
                 }
               }
