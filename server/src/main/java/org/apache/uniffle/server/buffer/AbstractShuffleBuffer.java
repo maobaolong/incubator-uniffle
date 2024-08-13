@@ -41,8 +41,12 @@ public abstract class AbstractShuffleBuffer implements ShuffleBuffer {
 
   protected long size;
 
+  protected volatile boolean closed;
+  public static final long BUFFER_CLOSED = -1L;
+
   public AbstractShuffleBuffer() {
     this.size = 0;
+    this.closed = false;
   }
 
   /** Only for test */
