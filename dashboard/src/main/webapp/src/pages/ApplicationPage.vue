@@ -83,6 +83,8 @@
             prop="finishTime"
             label="Finish Time"
             min-width="180"
+            :formatter="dateFormatter"
+            sortable
         />
         <el-table-column
           prop="version"
