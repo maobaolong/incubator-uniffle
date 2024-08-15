@@ -301,16 +301,12 @@ public class CoordinatorServer {
       if (appIdToInfos.containsKey(appInfoVO.getAppId())) {
         RssProtos.ApplicationInfo app = appIdToInfos.get(appInfoVO.getAppId());
         appInfoVO.setPartitionNum(appInfoVO.getPartitionNum() + app.getPartitionNum());
-        appInfoVO.setWriteMemorySize(appInfoVO.getWriteMemorySize() + app.getWriteMemorySize());
-        appInfoVO.setFlushedLocalFileNum(
-            appInfoVO.getFlushedLocalFileNum() + app.getFlushedLocalFileNum());
-        appInfoVO.setFlushedLocalTotalSize(
-            appInfoVO.getFlushedLocalTotalSize() + app.getFlushedLocalTotalSize());
-        appInfoVO.setFlushedHadoopFileNum(
-            appInfoVO.getFlushedHadoopFileNum() + app.getFlushedHadoopFileNum());
-        appInfoVO.setFlushedHadoopTotalSize(
-            appInfoVO.getFlushedHadoopTotalSize() + app.getFlushedHadoopTotalSize());
-        appInfoVO.setWriteTotalSize(appInfoVO.getWriteTotalSize() + app.getWriteTotalSize());
+        appInfoVO.setMemorySize(appInfoVO.getMemorySize() + app.getMemorySize());
+        appInfoVO.setLocalFileNum(appInfoVO.getLocalFileNum() + app.getLocalFileNum());
+        appInfoVO.setLocalTotalSize(appInfoVO.getLocalTotalSize() + app.getLocalTotalSize());
+        appInfoVO.setHadoopFileNum(appInfoVO.getHadoopFileNum() + app.getHadoopFileNum());
+        appInfoVO.setHadoopTotalSize(appInfoVO.getHadoopTotalSize() + app.getHadoopTotalSize());
+        appInfoVO.setTotalSize(appInfoVO.getTotalSize() + app.getTotalSize());
       }
     }
     return appInfoVO;

@@ -165,7 +165,7 @@ public class HybridStorageManager implements StorageManager {
         coldStorageManager.getApplicationStorageInfos(appId);
     Pair<ApplicationStorageInfo, ApplicationStorageInfo> warm =
         warmStorageManager.getApplicationStorageInfos(appId);
-    return Pair.of(code.getLeft(), warm.getRight());
+    return Pair.of(code.getLeft(), warm.getLeft());
   }
 
   public void removeResources(PurgeEvent event) {

@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.uniffle.common.util.JavaUtils;
 import org.apache.uniffle.common.util.RssUtils;
@@ -42,17 +43,22 @@ public abstract class AbstractStorage implements Storage {
   abstract ShuffleWriteHandler newWriteHandler(CreateShuffleWriteHandlerRequest request);
 
   @Override
-  public ShuffleWriteHandler getOrCreateWriteHandler(CreateShuffleWriteHandlerRequest request) {
+  public Pair<ShuffleWriteHandler, Boolean> getOrCreateWriteHandler(
+      CreateShuffleWriteHandlerRequest request) {
     writerHandlers.computeIfAbsent(request.getAppId(), key -> JavaUtils.newConcurrentMap());
     requests.computeIfAbsent(request.getAppId(), key -> JavaUtils.newConcurrentMap());
     Map<String, ShuffleWriteHandler> map = writerHandlers.get(request.getAppId());
     String partitionKey =
         RssUtils.generatePartitionKey(
             request.getAppId(), request.getShuffleId(), request.getStartPartition());
+    boolean isCreate = false;
+    if (!map.containsKey(partitionKey)) {
+      isCreate = true;
+    }
     map.computeIfAbsent(partitionKey, key -> newWriteHandler(request));
     Map<String, CreateShuffleWriteHandlerRequest> requestMap = requests.get(request.getAppId());
     requestMap.putIfAbsent(partitionKey, request);
-    return map.get(partitionKey);
+    return Pair.of(map.get(partitionKey), isCreate);
   }
 
   @Override

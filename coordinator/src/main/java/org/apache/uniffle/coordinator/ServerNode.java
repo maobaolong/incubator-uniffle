@@ -40,6 +40,30 @@ public class ServerNode implements Comparable<ServerNode> {
     return appIdToInfos;
   }
 
+  public void combineAppInfos(ServerNode oldServerNode) {
+    if (oldServerNode == null) {
+      return;
+    }
+    for (Map.Entry<String, RssProtos.ApplicationInfo> entry :
+        oldServerNode.getAppIdToInfos().entrySet()) {
+      if (entry.getValue() == null) {
+        continue;
+      }
+      if (!appIdToInfos.containsKey(entry.getKey())) {
+        appIdToInfos.put(entry.getKey(), entry.getValue());
+      } else {
+        RssProtos.ApplicationInfo current = appIdToInfos.get(entry.getKey());
+        RssProtos.ApplicationInfo other = entry.getValue();
+        // keep the max info
+        if (current.getTotalSize() > other.getTotalSize()) {
+          appIdToInfos.put(entry.getKey(), current);
+        } else {
+          appIdToInfos.put(entry.getKey(), other);
+        }
+      }
+    }
+  }
+
   public ServerNode(String id) {
     this(id, "", 0, 0, 0, 0, 0, Sets.newHashSet(), ServerStatus.EXCLUDED);
   }

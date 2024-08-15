@@ -40,12 +40,12 @@ public class AppInfoVO implements Comparable<AppInfoVO> {
   private String gitCommitId;
 
   private long partitionNum;
-  private long writeMemorySize;
-  private long flushedLocalFileNum;
-  private long flushedLocalTotalSize;
-  private long flushedHadoopFileNum;
-  private long flushedHadoopTotalSize;
-  private long writeTotalSize;
+  private long memorySize;
+  private long localFileNum;
+  private long localTotalSize;
+  private long hadoopFileNum;
+  private long hadoopTotalSize;
+  private long totalSize;
 
   public AppInfoVO() {}
 

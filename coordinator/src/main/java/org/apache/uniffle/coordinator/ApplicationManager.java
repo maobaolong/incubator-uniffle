@@ -360,6 +360,10 @@ public class ApplicationManager implements Closeable {
               lastReport.setFinishTime(System.currentTimeMillis());
               AppInfoVO appInfoVO = coordinatorServer.getAppInfoV0(user, lastReport);
               coordinatorAppHistoryManager.addAppInfo(appInfoVO);
+              // remove the remain appInfo in serverNode
+              for (ServerNode serverNode : coordinatorServer.getClusterManager().list()) {
+                serverNode.getAppIdToInfos().remove(appId);
+              }
             }
           }
         }

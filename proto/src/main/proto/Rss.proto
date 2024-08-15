@@ -269,12 +269,12 @@ enum ServerStatus {
 message ApplicationInfo {
   string appId = 1;
   int64 partitionNum = 2;
-  int64 writeMemorySize = 3;
-  int64 flushedLocalFileNum = 4;
-  int64 flushedLocalTotalSize = 5;
-  int64 flushedHadoopFileNum = 6;
-  int64 flushedHadoopTotalSize = 7;
-  int64 writeTotalSize = 8;
+  int64 memorySize = 3;
+  int64 localFileNum = 4;
+  int64 localTotalSize = 5;
+  int64 hadoopFileNum = 6;
+  int64 hadoopTotalSize = 7;
+  int64 totalSize = 8;
 }
 
 message ShuffleServerHeartBeatRequest {

@@ -583,19 +583,19 @@ public class ShuffleServer {
       String appId = entry.getKey();
       Pair<ApplicationStorageInfo, ApplicationStorageInfo> pair =
           storageManager.getApplicationStorageInfos(appId);
-      ApplicationStorageInfo local = pair.getLeft();
-      ApplicationStorageInfo hadoop = pair.getRight();
+      ApplicationStorageInfo hadoop = pair.getLeft();
+      ApplicationStorageInfo local = pair.getRight();
       ShuffleTaskInfo taskInfo = entry.getValue();
       RssProtos.ApplicationInfo applicationInfo =
           RssProtos.ApplicationInfo.newBuilder()
               .setAppId(appId)
               .setPartitionNum(taskInfo.getPartitionNum())
-              .setWriteMemorySize(taskInfo.getInMemoryDataSize())
-              .setFlushedLocalFileNum(local != null ? local.getFileNum() : 0)
-              .setFlushedLocalTotalSize(local != null ? local.getUsedBytes() : 0)
-              .setFlushedHadoopFileNum(hadoop != null ? hadoop.getFileNum() : 0)
-              .setFlushedHadoopTotalSize(hadoop != null ? hadoop.getUsedBytes() : 0)
-              .setWriteTotalSize(taskInfo.getTotalDataSize())
+              .setMemorySize(taskInfo.getInMemoryDataSize())
+              .setHadoopFileNum(taskInfo.getOnHadoopNum())
+              .setLocalFileNum(taskInfo.getOnLocalFileNum())
+              .setLocalTotalSize(taskInfo.getOnLocalFileDataSize())
+              .setHadoopTotalSize(taskInfo.getOnHadoopDataSize())
+              .setTotalSize(taskInfo.getTotalDataSize())
               .build();
 
       appInfos.add(applicationInfo);

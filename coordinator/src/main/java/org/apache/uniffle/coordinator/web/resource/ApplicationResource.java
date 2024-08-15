@@ -52,10 +52,8 @@ public class ApplicationResource extends BaseResource {
     return execute(
         () -> {
           Map<String, Integer> appTotalityMap = Maps.newHashMap();
-          int appTotality = getApplicationManager().getAppIds().size();
-          int cachedAppInfoSize = getApplicationManager().getCachedAppInfosSize(appTotality);
-          appTotalityMap.put("appTotality", appTotality + cachedAppInfoSize);
-          appTotalityMap.put("appCurrent", (int) CoordinatorMetrics.counterTotalAppNum.get());
+          appTotalityMap.put("appCurrent", getApplicationManager().getAppIds().size());
+          appTotalityMap.put("appTotality", (int) CoordinatorMetrics.counterTotalAppNum.get());
           return appTotalityMap;
         });
   }

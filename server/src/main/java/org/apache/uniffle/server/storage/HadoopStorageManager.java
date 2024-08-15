@@ -222,7 +222,7 @@ public class HadoopStorageManager extends SingleStorageManager {
       String appId) {
     Pair<ApplicationStorageInfo, ApplicationStorageInfo> pair =
         super.getApplicationStorageInfos(appId);
-    return Pair.of(null, pair.getLeft());
+    return Pair.of(pair.getLeft(), null);
   }
 
   @VisibleForTesting
