@@ -64,6 +64,7 @@ public class CoordinatorServer {
   private static final Logger LOG = LoggerFactory.getLogger(CoordinatorServer.class);
 
   private final CoordinatorConf coordinatorConf;
+  private final long startTimeMs;
   private JettyServer jettyServer;
   private ServerInterface server;
   private ClusterManager clusterManager;
@@ -76,6 +77,7 @@ public class CoordinatorServer {
   private String id;
 
   public CoordinatorServer(CoordinatorConf coordinatorConf) throws Exception {
+    this.startTimeMs = System.currentTimeMillis();
     this.coordinatorConf = coordinatorConf;
     try {
       initialization();
@@ -277,6 +279,10 @@ public class CoordinatorServer {
   /** Await termination on the main thread since the grpc library uses daemon threads. */
   protected void blockUntilShutdown() throws InterruptedException {
     server.blockUntilShutdown();
+  }
+
+  public long getStartTimeMs() {
+    return startTimeMs;
   }
 
   public AppInfoVO getAppInfoV0(String user, AppInfo appInfo) {
