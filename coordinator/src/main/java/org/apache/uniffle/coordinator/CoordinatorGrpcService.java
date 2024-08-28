@@ -36,11 +36,12 @@ import org.slf4j.LoggerFactory;
 import org.apache.uniffle.common.PartitionRange;
 import org.apache.uniffle.common.RemoteStorageInfo;
 import org.apache.uniffle.common.ServerStatus;
-import org.apache.uniffle.common.audit.AuditContext;
+import org.apache.uniffle.common.audit.RpcAuditContext;
+import org.apache.uniffle.common.rpc.ClientContextServerInterceptor;
 import org.apache.uniffle.common.storage.StorageInfoUtils;
 import org.apache.uniffle.coordinator.access.AccessCheckResult;
 import org.apache.uniffle.coordinator.access.AccessInfo;
-import org.apache.uniffle.coordinator.audit.CoordinatorRPCAuditContext;
+import org.apache.uniffle.coordinator.audit.CoordinatorRpcAuditContext;
 import org.apache.uniffle.coordinator.conf.RssClientConfFetchInfo;
 import org.apache.uniffle.coordinator.strategy.assignment.PartitionRangeAssignment;
 import org.apache.uniffle.coordinator.util.CoordinatorUtils;
@@ -124,7 +125,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   public void getShuffleAssignments(
       GetShuffleServerRequest request,
       StreamObserver<GetShuffleAssignmentsResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("getShuffleAssignments")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("getShuffleAssignments")) {
       final String appId = request.getApplicationId();
       final int shuffleId = request.getShuffleId();
       final int partitionNum = request.getPartitionNum();
@@ -135,11 +136,12 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
       final int estimateTaskConcurrency = request.getEstimateTaskConcurrency();
       final Set<String> faultyServerIds = new HashSet<>(request.getFaultyServerIdsList());
 
-      auditContext.withAppId(appId).withShuffleId(shuffleId);
+      auditContext.withAppId(appId);
       auditContext.withArgs(
           String.format(
-              "partitionNum=%d, partitionNumPerRange=%d, replica=%d, requiredTags=%s, "
+              "shuffleId=%d, partitionNum=%d, partitionNumPerRange=%d, replica=%d, requiredTags=%s, "
                   + "requiredShuffleServerNumber=%d, faultyServerIds=%s, stageId=%d, stageAttemptNumber=%d, isReassign=%b",
+              shuffleId,
               partitionNum,
               partitionNumPerRange,
               replica,
@@ -216,7 +218,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   public void heartbeat(
       ShuffleServerHeartBeatRequest request,
       StreamObserver<ShuffleServerHeartBeatResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("heartbeat")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("heartbeat")) {
       final ServerNode serverNode = toServerNode(request);
       auditContext.withArgs("serverNode=" + serverNode.getId());
       ServerNode oldServerNode = null;
@@ -248,7 +250,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   @Override
   public void checkServiceAvailable(
       Empty request, StreamObserver<CheckServiceAvailableResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("checkServiceAvailable")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("checkServiceAvailable")) {
       final CheckServiceAvailableResponse response =
           CheckServiceAvailableResponse.newBuilder()
               .setAvailable(coordinatorServer.getClusterManager().getNodesNum() > 0)
@@ -263,7 +265,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   public void reportClientOperation(
       ReportShuffleClientOpRequest request,
       StreamObserver<ReportShuffleClientOpResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("reportClientOperation")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("reportClientOperation")) {
       final String clientHost = request.getClientHost();
       final int clientPort = request.getClientPort();
       final ShuffleServerId shuffleServer = request.getServer();
@@ -286,7 +288,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   @Override
   public void appHeartbeat(
       AppHeartBeatRequest request, StreamObserver<AppHeartBeatResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("appHeartbeat")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("appHeartbeat")) {
       String appId = request.getAppId();
       auditContext.withAppId(appId);
       coordinatorServer.getApplicationManager().refreshAppId(appId);
@@ -313,7 +315,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   @Override
   public void registerApplicationInfo(
       ApplicationInfoRequest request, StreamObserver<ApplicationInfoResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("registerApplicationInfo")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("registerApplicationInfo")) {
       String appId = request.getAppId();
       String user = request.getUser();
       auditContext.withAppId(appId).withArgs("user=" + user);
@@ -343,7 +345,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   @Override
   public void accessCluster(
       AccessClusterRequest request, StreamObserver<AccessClusterResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("accessCluster")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("accessCluster")) {
       StatusCode statusCode = StatusCode.SUCCESS;
       AccessClusterResponse response;
       AccessManager accessManager = coordinatorServer.getAccessManager();
@@ -387,7 +389,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   @Override
   public void fetchClientConf(
       Empty empty, StreamObserver<FetchClientConfResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("fetchClientConf")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("fetchClientConf")) {
       fetchClientConfImpl(RssClientConfFetchInfo.EMPTY_CLIENT_CONF_FETCH_INFO, responseObserver);
       auditContext.withStatusCode(StatusCode.SUCCESS);
     }
@@ -396,7 +398,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   @Override
   public void fetchClientConfV2(
       FetchClientConfRequest request, StreamObserver<FetchClientConfResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("fetchClientConfV2")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("fetchClientConfV2")) {
       fetchClientConfImpl(RssClientConfFetchInfo.fromProto(request), responseObserver);
       auditContext.withStatusCode(StatusCode.SUCCESS);
     }
@@ -437,7 +439,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   public void fetchRemoteStorage(
       FetchRemoteStorageRequest request,
       StreamObserver<FetchRemoteStorageResponse> responseObserver) {
-    try (CoordinatorRPCAuditContext auditContext = createAuditContext("fetchRemoteStorage")) {
+    try (CoordinatorRpcAuditContext auditContext = createAuditContext("fetchRemoteStorage")) {
       FetchRemoteStorageResponse response;
       StatusCode status = StatusCode.SUCCESS;
       String appId = request.getAppId();
@@ -535,20 +537,23 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   }
 
   /**
-   * Creates a {@link CoordinatorRPCAuditContext} instance.
+   * Creates a {@link CoordinatorRpcAuditContext} instance.
    *
-   * @param command the command to be logged by this {@link AuditContext}
-   * @return newly-created {@link CoordinatorRPCAuditContext} instance
+   * @param command the command to be logged by this {@link RpcAuditContext}
+   * @return newly-created {@link CoordinatorRpcAuditContext} instance
    */
-  private CoordinatorRPCAuditContext createAuditContext(String command) {
+  private CoordinatorRpcAuditContext createAuditContext(String command) {
     // Audit log may be enabled during runtime
     Logger auditLogger = null;
     if (isRpcAuditLogEnabled && !rpcAuditExcludeOpList.contains(command)) {
       auditLogger = AUDIT_LOGGER;
     }
-    CoordinatorRPCAuditContext auditContext = new CoordinatorRPCAuditContext(auditLogger);
+    CoordinatorRpcAuditContext auditContext = new CoordinatorRpcAuditContext(auditLogger);
     if (auditLogger != null) {
-      auditContext.withCommand(command).withCreationTimeNs(System.nanoTime());
+      auditContext
+          .withCommand(command)
+          .withFrom(ClientContextServerInterceptor.getIpAddress())
+          .withCreationTimeNs(System.nanoTime());
     }
     return auditContext;
   }
