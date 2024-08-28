@@ -19,6 +19,8 @@ package org.apache.uniffle.coordinator;
 
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.prometheus.client.CollectorRegistry;
 import org.apache.hadoop.conf.Configuration;
@@ -286,6 +288,16 @@ public class CoordinatorServer {
   }
 
   public AppInfoVO getAppInfoV0(String user, AppInfo appInfo) {
+    String regex = coordinatorConf.getString(CoordinatorConf.RSS_APPID_REG_PATTERN);
+    Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    Matcher matcher = pattern.matcher(appInfo.getAppId());
+    String url = "";
+    String extractedAppId = appInfo.getAppId();
+    if (matcher.find()) {
+      extractedAppId = matcher.group(1);
+    }
+    String urlTemplate = coordinatorConf.getString(CoordinatorConf.RSS_APPID_URL_TEMPLATE);
+    url = urlTemplate.replace("{appId}", extractedAppId);
     AppInfoVO appInfoVO =
         new AppInfoVO(
             user,
@@ -301,7 +313,8 @@ public class CoordinatorServer {
             0,
             0,
             0,
-            0);
+            0,
+            url);
     for (ServerNode server : clusterManager.list()) {
       Map<String, RssProtos.ApplicationInfo> appIdToInfos = server.getAppIdToInfos();
       if (appIdToInfos.containsKey(appInfoVO.getAppId())) {

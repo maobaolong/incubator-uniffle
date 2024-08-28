@@ -124,6 +124,15 @@
           min-width="180"
           :formatter="memFormatter"
         />
+        <el-table-column
+          label="URL"
+          min-width="180">
+          <template v-slot="{ row }">
+            <div class="mb-4">
+              <el-button @click="handleAppUrl(row)">URL</el-button>
+            </div>
+          </template>
+        </el-table-column>
       </el-table>
     </div>
   </div>
@@ -134,6 +143,7 @@ import { getApplicationInfoList, getAppTotal, getTotalForUser } from '@/api/api'
 import { onMounted, reactive } from 'vue'
 import { dateFormatter, memFormatter } from '@/utils/common'
 import { useCurrentServerStore } from '@/store/useCurrentServerStore'
+import { ElMessage } from 'element-plus';
 
 export default {
   setup() {
@@ -158,7 +168,13 @@ export default {
       const res = await getAppTotal()
       pageData.apptotal = res.data.data
     }
-
+    async function handleAppUrl(appRow) {
+      try {
+        return window.open(appRow.url, '_blank')
+      } catch (err) {
+        ElMessage.error('Internal error.')
+      }
+    }
     // The system obtains data from global variables and requests the interface to obtain new data after data changes.
     currentServerStore.$subscribe((mutable, state) => {
       if (state.currentServer) {
@@ -200,7 +216,8 @@ export default {
       sortApp,
       sortAppChangeEvent,
       memFormatter,
-      dateFormatter
+      dateFormatter,
+      handleAppUrl
     }
   }
 }

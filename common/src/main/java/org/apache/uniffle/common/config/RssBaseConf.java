@@ -289,6 +289,19 @@ public class RssBaseConf extends RssConf {
                   + " first combining the username and the password with a colon (uniffle:uniffle123)"
                   + ", and then by encoding the resulting string in base64 (dW5pZmZsZTp1bmlmZmxlMTIz).");
 
+  public static final ConfigOption<String> RSS_APPID_REG_PATTERN =
+      ConfigOptions.key("rss.appid.reg.pattern")
+          .stringType()
+          .defaultValue("(application_\\d+_\\d+)")
+          .withDescription("The regular application id pattern to extract");
+
+  public static final ConfigOption<String> RSS_APPID_URL_TEMPLATE =
+      ConfigOptions.key("rss.appid.url.template")
+          .stringType()
+          .defaultValue("")
+          .withDescription(
+              "The url template, {appId} in url template will be replace with the extract info from rss.appid.reg.pattern.");
+
   public boolean loadConfFromFile(String fileName, List<ConfigOption<Object>> configOptions) {
     Map<String, String> properties = RssUtils.getPropertiesFromFile(fileName);
     if (properties == null) {

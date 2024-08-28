@@ -47,6 +47,8 @@ public class AppInfoVO implements Comparable<AppInfoVO> {
   private long hadoopTotalSize;
   private long totalSize;
 
+  private String url;
+
   public AppInfoVO() {}
 
   @Override

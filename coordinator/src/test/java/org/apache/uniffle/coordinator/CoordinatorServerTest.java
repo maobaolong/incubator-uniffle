@@ -21,7 +21,9 @@ import org.junit.jupiter.api.Test;
 
 import org.apache.uniffle.common.util.ExitUtils;
 import org.apache.uniffle.common.util.ExitUtils.ExitException;
+import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
 
+import static org.apache.uniffle.coordinator.AppInfo.createAppInfo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CoordinatorServerTest {
@@ -73,5 +75,17 @@ public class CoordinatorServerTest {
             "testThread");
     t.start();
     t.join();
+  }
+
+  @Test
+  public void testAppInfoVOUrl() throws Exception {
+    CoordinatorConf coordinatorConf = new CoordinatorConf();
+    coordinatorConf.setString("rss.appid.reg.pattern", "(application_\\d+_\\d+)");
+    coordinatorConf.setString("rss.appid.url.template", "http://localhost/{appId}/test");
+    CoordinatorServer cs1 = new CoordinatorServer(coordinatorConf);
+    String user = "user01";
+    AppInfo appInfo = createAppInfo("application_1703049085550_19283617_1724740334479", 0);
+    AppInfoVO appInfoVO = cs1.getAppInfoV0(user, appInfo);
+    assertEquals(appInfoVO.getUrl(), "http://localhost/application_1703049085550_19283617/test");
   }
 }
