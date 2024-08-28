@@ -95,6 +95,7 @@ public class LocalStorageChecker extends Checker {
     AtomicInteger num = new AtomicInteger(0);
     AtomicLong totalSpace = new AtomicLong(0L);
     AtomicLong wholeDiskUsedSpace = new AtomicLong(0L);
+    AtomicLong wholeDiskFreeSpace = new AtomicLong(0L);
     AtomicLong serviceUsedSpace = new AtomicLong(0L);
     AtomicInteger corruptedDirs = new AtomicInteger(0);
 
@@ -114,6 +115,7 @@ public class LocalStorageChecker extends Checker {
 
                 totalSpace.addAndGet(total);
                 wholeDiskUsedSpace.addAndGet(total - availableBytes);
+                wholeDiskFreeSpace.addAndGet(availableBytes);
                 long usedBytes = getServiceUsedSpace(storageInfo.storageDir);
                 serviceUsedSpace.addAndGet(usedBytes);
                 storageInfo.updateServiceUsedBytes(usedBytes);
@@ -165,6 +167,7 @@ public class LocalStorageChecker extends Checker {
 
     ShuffleServerMetrics.gaugeLocalStorageTotalSpace.set(totalSpace.get());
     ShuffleServerMetrics.gaugeLocalStorageWholeDiskUsedSpace.set(wholeDiskUsedSpace.get());
+    ShuffleServerMetrics.gaugeLocalStorageWholeDiskFreeSpace.set(wholeDiskFreeSpace.get());
     ShuffleServerMetrics.gaugeLocalStorageServiceUsedSpace.set(serviceUsedSpace.get());
     ShuffleServerMetrics.gaugeLocalStorageTotalDirsNum.set(storageInfos.size());
     ShuffleServerMetrics.gaugeLocalStorageCorruptedDirsNum.set(corruptedDirs.get());

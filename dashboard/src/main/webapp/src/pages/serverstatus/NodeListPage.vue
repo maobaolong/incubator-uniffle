@@ -54,6 +54,16 @@
         sortable
       />
       <el-table-column prop="eventNumInFlush" label="FlushNum" min-width="80" sortable />
+      <el-table-column
+          label="Disk(used/free)"
+          min-width="180"
+      >
+        <template v-slot="{ row }">
+          {{ memFormatter(row, 'used', calculateNodeUsedStorage(row)) }}
+          /
+          {{ memFormatter(row, 'free', calculateNodeFreeStorage(row)) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="Status" min-width="80" sortable />
       <el-table-column
         prop="startTime"
@@ -317,6 +327,18 @@ export default {
           // Cancelled
         })
     }
+    const calculateNodeUsedStorage = (row) => {
+      if (!row.storageInfo) return 0;
+      return Object.values(row.storageInfo).reduce((total, storage) => {
+        return total + storage.usedBytes;
+      }, 0);
+    }
+    const calculateNodeFreeStorage = (row) => {
+      if (!row.storageInfo) return 0;
+      return Object.values(row.storageInfo).reduce((total, storage) => {
+        return total + Math.max(0, storage.capacity - storage.usedBytes);
+      }, 0);
+    }
     return {
       listPageData,
       sortColumn,
@@ -328,7 +350,9 @@ export default {
       handlerServerMetrics,
       handlerServerStacks,
       memFormatter,
-      dateFormatter
+      dateFormatter,
+      calculateNodeUsedStorage,
+      calculateNodeFreeStorage
     }
   }
 }

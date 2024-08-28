@@ -96,6 +96,14 @@ public class StorageInfo {
     return type;
   }
 
+  public long getCapacity() {
+    return capacity;
+  }
+
+  public long getUsedBytes() {
+    return usedBytes;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
