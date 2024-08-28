@@ -15,38 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.uniffle.server.audit;
+package org.apache.uniffle.common.audit;
 
-import org.slf4j.Logger;
+import java.io.Closeable;
 
-import org.apache.uniffle.common.audit.RpcAuditContext;
-
-/** An audit context for shuffle server rpc. */
-public class ServerRpcAuditContext extends RpcAuditContext {
-  private String appId = "N/A";
-  private int shuffleId = -1;
-
-  /**
-   * Constructor of {@link ServerRpcAuditContext}.
-   *
-   * @param log the logger to log the audit information
-   */
-  public ServerRpcAuditContext(Logger log) {
-    super(log);
-  }
-
+/** Context for audit logging. */
+public interface AuditContext extends Closeable {
   @Override
-  protected String content() {
-    return String.format("appId=%s\tshuffleId=%s", appId, shuffleId);
-  }
-
-  public ServerRpcAuditContext withAppId(String appId) {
-    this.appId = appId;
-    return this;
-  }
-
-  public ServerRpcAuditContext withShuffleId(int shuffleId) {
-    this.shuffleId = shuffleId;
-    return this;
-  }
+  void close();
 }
