@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
 import org.apache.hbase.thirdparty.javax.ws.rs.GET;
 import org.apache.hbase.thirdparty.javax.ws.rs.Path;
 import org.apache.hbase.thirdparty.javax.ws.rs.Produces;
+import org.apache.hbase.thirdparty.javax.ws.rs.QueryParam;
 import org.apache.hbase.thirdparty.javax.ws.rs.core.Context;
 import org.apache.hbase.thirdparty.javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
@@ -113,6 +114,27 @@ public class ApplicationResource extends BaseResource {
           // Display is inverted by the submission time of the application.
           userToAppList.sort(Comparator.reverseOrder());
           return userToAppList;
+        });
+  }
+
+  @GET
+  @Path("/appConf")
+  public Response<Map<String, String>> getAppConf(
+      @QueryParam("user") String user, @QueryParam("id") String appId) {
+    return execute(
+        () -> {
+          boolean found = false;
+          Map<String, Map<String, AppInfo>> currentUserAndApp =
+              getApplicationManager().getCurrentUserAndApp();
+          if (!currentUserAndApp.containsKey(user)) {
+            return getApplicationManager().getCachedAppInfoByUserAppId(user, appId).getAppConf();
+          }
+          Map<String, AppInfo> appInfoMap = currentUserAndApp.get(user);
+          if (!appInfoMap.containsKey(appId)) {
+            return getApplicationManager().getCachedAppInfoByUserAppId(user, appId).getAppConf();
+          }
+          AppInfo appInfo = appInfoMap.get(appId);
+          return appInfo.getAppConf();
         });
   }
 

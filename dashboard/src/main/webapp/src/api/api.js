@@ -124,6 +124,10 @@ export function getTotalForUser(params, headers) {
   return http.get('/app/userTotal', params, headers, 0)
 }
 
+export function getAppConf(params, headers) {
+  return http.get('/app/appConf', params, headers, 0)
+}
+
 // Obtain the configured coordinator server list
 export function getAllCoordinatorAddrees(params, headers) {
   return http.get('/coordinator/coordinatorServers', params, headers, 1)

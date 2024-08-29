@@ -495,7 +495,8 @@ public class FetcherTest {
     public void sendAppHeartbeat(String appId, long timeoutMs) {}
 
     @Override
-    public void registerApplicationInfo(String appId, long timeoutMs, String user) {}
+    public void registerApplicationInfo(
+        String appId, long timeoutMs, String user, Map<String, String> appConf) {}
 
     @Override
     public void registerShuffle(

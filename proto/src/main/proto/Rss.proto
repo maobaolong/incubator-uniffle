@@ -410,6 +410,7 @@ message ApplicationInfoRequest {
   string user = 2;
   optional string version = 3;
   optional string gitCommitId = 4;
+  map<string, string> appConf = 5;
 }
 
 message ApplicationInfoResponse {

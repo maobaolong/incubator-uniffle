@@ -17,6 +17,7 @@
 
 package org.apache.uniffle.coordinator.web.vo;
 
+import java.util.Map;
 import java.util.Objects;
 
 import lombok.AllArgsConstructor;
@@ -48,6 +49,10 @@ public class AppInfoVO implements Comparable<AppInfoVO> {
   private long totalSize;
 
   private String url;
+
+  private Map<String, String> displayAppConf;
+
+  private Map<String, String> appConf;
 
   public AppInfoVO() {}
 

@@ -321,7 +321,8 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
       auditContext.withAppId(appId).withArgs("user=" + user);
       coordinatorServer
           .getApplicationManager()
-          .registerApplicationInfo(appId, user, request.getVersion(), request.getGitCommitId());
+          .registerApplicationInfo(
+              appId, user, request.getVersion(), request.getGitCommitId(), request.getAppConfMap());
       if (LOG.isDebugEnabled()) {
         LOG.debug("Got a registered application info: {}", appId);
       }

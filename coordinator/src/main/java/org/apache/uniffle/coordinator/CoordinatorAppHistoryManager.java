@@ -215,9 +215,11 @@ public class CoordinatorAppHistoryManager {
         .subList(cachedAppInfoMap.size() - needSize, cachedAppInfoMap.size());
   }
 
-  public int getAppInfosSize(int currentAppSize) {
-    int needSize = Math.max(0, dashboardAppInfoMaxSize - currentAppSize);
-    return Math.min(cachedAppInfoMap.size(), needSize);
+  public AppInfoVO getAppInfoByUserAppId(String user, String appId) {
+    if (cachedAppInfoMap.containsKey(appId)) {
+      return cachedAppInfoMap.get(appId);
+    }
+    return null;
   }
 
   public static CoordinatorAppHistoryManager create(CoordinatorConf conf) {

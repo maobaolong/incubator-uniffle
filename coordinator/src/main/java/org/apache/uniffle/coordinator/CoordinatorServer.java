@@ -17,6 +17,9 @@
 
 package org.apache.uniffle.coordinator;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -77,6 +80,7 @@ public class CoordinatorServer {
   private GRPCMetrics grpcMetrics;
   private MetricReporter metricReporter;
   private String id;
+  private List<String> appConfShowList;
 
   public CoordinatorServer(CoordinatorConf coordinatorConf) throws Exception {
     this.startTimeMs = System.currentTimeMillis();
@@ -204,6 +208,12 @@ public class CoordinatorServer {
     this.accessManager =
         new AccessManager(
             coordinatorConf, clusterManager, applicationManager.getQuotaManager(), hadoopConf);
+    this.appConfShowList =
+        Arrays.asList(
+            coordinatorConf
+                .getString(CoordinatorConf.COORDINATOR_APP_CONF_SHOW_LIST)
+                .trim()
+                .split(","));
     CoordinatorFactory coordinatorFactory = new CoordinatorFactory(this);
     server = coordinatorFactory.getServer();
     jettyServer = new JettyServer(coordinatorConf);
@@ -298,6 +308,17 @@ public class CoordinatorServer {
     }
     String urlTemplate = coordinatorConf.getString(CoordinatorConf.RSS_APPID_URL_TEMPLATE);
     url = urlTemplate.replace("{appId}", extractedAppId);
+
+    Map<String, String> displayAppConf = new HashMap<>();
+    Map<String, String> appConf = appInfo.getAppConf();
+    if (appConf != null) {
+      for (Map.Entry<String, String> entry : appConf.entrySet()) {
+        if (this.appConfShowList.contains(entry.getKey())) {
+          displayAppConf.put(entry.getKey(), entry.getValue());
+        }
+      }
+    }
+
     AppInfoVO appInfoVO =
         new AppInfoVO(
             user,
@@ -314,7 +335,9 @@ public class CoordinatorServer {
             0,
             0,
             0,
-            url);
+            url,
+            displayAppConf,
+            appConf);
     for (ServerNode server : clusterManager.list()) {
       Map<String, RssProtos.ApplicationInfo> appIdToInfos = server.getAppIdToInfos();
       if (appIdToInfos.containsKey(appInfoVO.getAppId())) {

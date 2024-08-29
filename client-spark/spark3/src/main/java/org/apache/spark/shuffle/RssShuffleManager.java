@@ -20,6 +20,7 @@ package org.apache.spark.shuffle;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -899,8 +900,20 @@ public class RssShuffleManager extends RssShuffleManagerBase {
     return sparkConf;
   }
 
+  public Map<String, String> sparkConfToMap(SparkConf sparkConf) {
+    Map<String, String> map = new HashMap<>();
+
+    for (Tuple2<String, String> tuple : sparkConf.getAll()) {
+      String key = tuple._1;
+      map.put(key, tuple._2);
+    }
+
+    return map;
+  }
+
   private synchronized void startHeartbeat() {
-    shuffleWriteClient.registerApplicationInfo(id.get(), heartbeatTimeout, user);
+    Map<String, String> sparkConfMap = sparkConfToMap(getSparkConf());
+    shuffleWriteClient.registerApplicationInfo(id.get(), heartbeatTimeout, user, sparkConfMap);
     if (!heartbeatStarted) {
       heartBeatScheduledExecutorService.scheduleAtFixedRate(
           () -> {

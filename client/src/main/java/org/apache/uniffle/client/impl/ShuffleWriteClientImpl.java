@@ -889,8 +889,10 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
   }
 
   @Override
-  public void registerApplicationInfo(String appId, long timeoutMs, String user) {
-    RssApplicationInfoRequest request = new RssApplicationInfoRequest(appId, timeoutMs, user);
+  public void registerApplicationInfo(
+      String appId, long timeoutMs, String user, Map<String, String> appConf) {
+    RssApplicationInfoRequest request =
+        new RssApplicationInfoRequest(appId, timeoutMs, user, appConf);
 
     ThreadUtils.executeTasks(
         heartBeatExecutorService,

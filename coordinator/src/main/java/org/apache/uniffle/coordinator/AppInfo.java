@@ -17,6 +17,7 @@
 
 package org.apache.uniffle.coordinator;
 
+import java.util.Map;
 import java.util.Objects;
 
 public class AppInfo implements Comparable<AppInfo> {
@@ -26,14 +27,25 @@ public class AppInfo implements Comparable<AppInfo> {
   private long finishTime;
   private String version;
   private String gitCommitId;
+  private Map<String, String> appConf;
+
+  public AppInfo(String appId, long updateTime, long registrationTime) {
+    this(appId, updateTime, registrationTime, "", "", null);
+  }
 
   public AppInfo(
-      String appId, long updateTime, long registrationTime, String version, String gitCommitId) {
+      String appId,
+      long updateTime,
+      long registrationTime,
+      String version,
+      String gitCommitId,
+      Map<String, String> appConf) {
     this.appId = appId;
     this.updateTime = updateTime;
     this.registrationTime = registrationTime;
     this.version = version;
     this.gitCommitId = gitCommitId;
+    this.appConf = appConf;
   }
 
   public String getAppId() {
@@ -76,6 +88,10 @@ public class AppInfo implements Comparable<AppInfo> {
     return finishTime;
   }
 
+  public Map<String, String> getAppConf() {
+    return appConf;
+  }
+
   @Override
   public int compareTo(AppInfo appInfo) {
     return Long.compare(registrationTime, appInfo.getRegistrationTime());
@@ -101,11 +117,15 @@ public class AppInfo implements Comparable<AppInfo> {
   }
 
   public static AppInfo createAppInfo(String appId, long updateTime) {
-    return createAppInfo(appId, updateTime, "", "");
+    return createAppInfo(appId, updateTime, "", "", null);
   }
 
   public static AppInfo createAppInfo(
-      String appId, long updateTime, String version, String gitCommitId) {
-    return new AppInfo(appId, updateTime, updateTime, version, gitCommitId);
+      String appId,
+      long updateTime,
+      String version,
+      String gitCommitId,
+      Map<String, String> appConf) {
+    return new AppInfo(appId, updateTime, updateTime, version, gitCommitId, appConf);
   }
 }

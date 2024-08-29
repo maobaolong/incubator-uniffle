@@ -133,13 +133,27 @@
             </div>
           </template>
         </el-table-column>
+        <el-table-column
+            label="AppConf"
+            min-width="360">
+          <template v-slot="{ row }">
+            <template v-if="row.displayAppConf">
+              <div v-for="(value, key) in row.displayAppConf" :key="key" class="app-conf-item">
+                {{ key }} = {{ value }}
+              </div>
+            </template>
+            <div class="mb-4">
+              <el-button @click="handlerAppConf(row)">...</el-button>
+            </div>
+          </template>
+        </el-table-column>
       </el-table>
     </div>
   </div>
 </template>
 
 <script>
-import { getApplicationInfoList, getAppTotal, getTotalForUser } from '@/api/api'
+import { getApplicationInfoList, getAppTotal, getAppConf, getTotalForUser } from '@/api/api'
 import { onMounted, reactive } from 'vue'
 import { dateFormatter, memFormatter } from '@/utils/common'
 import { useCurrentServerStore } from '@/store/useCurrentServerStore'
@@ -175,6 +189,25 @@ export default {
         ElMessage.error('Internal error.')
       }
     }
+
+    async function handlerAppConf(appRow) {
+      if (appRow.userName === undefined || appRow.userName === '') {
+        ElMessage.error('userName is undefined or empty')
+        return
+      }
+      try {
+        const response = await getAppConf({'user': appRow.userName, 'id': appRow.appId})
+        if (response.status >= 200 && response.status < 300) {
+          const newWindow = window.open('', '_blank')
+          newWindow.document.write('<pre>' + JSON.stringify(response.data, null, 2) + '</pre>')
+        } else {
+          ElMessage.error('Request failed.')
+        }
+      } catch (err) {
+        ElMessage.error('Internal error.')
+      }
+    }
+
     // The system obtains data from global variables and requests the interface to obtain new data after data changes.
     currentServerStore.$subscribe((mutable, state) => {
       if (state.currentServer) {
@@ -217,7 +250,8 @@ export default {
       sortAppChangeEvent,
       memFormatter,
       dateFormatter,
-      handleAppUrl
+      handleAppUrl,
+      handlerAppConf
     }
   }
 }

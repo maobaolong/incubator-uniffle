@@ -17,16 +17,26 @@
 
 package org.apache.uniffle.client.request;
 
+import java.util.Map;
+
 public class RssApplicationInfoRequest {
 
   private final String appId;
   private final long timeoutMs;
   private final String user;
 
+  private final Map<String, String> appConf;
+
   public RssApplicationInfoRequest(String appId, long timeoutMs, String user) {
+    this(appId, timeoutMs, user, null);
+  }
+
+  public RssApplicationInfoRequest(
+      String appId, long timeoutMs, String user, Map<String, String> appConf) {
     this.appId = appId;
     this.timeoutMs = timeoutMs;
     this.user = user;
+    this.appConf = appConf;
   }
 
   public String getAppId() {
@@ -39,5 +49,9 @@ public class RssApplicationInfoRequest {
 
   public String getUser() {
     return user;
+  }
+
+  public Map<String, String> getAppConf() {
+    return appConf;
   }
 }

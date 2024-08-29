@@ -53,7 +53,12 @@ public interface ShuffleWriteClient {
 
   void sendAppHeartbeat(String appId, long timeoutMs);
 
-  void registerApplicationInfo(String appId, long timeoutMs, String user);
+  default void registerApplicationInfo(String appId, long timeoutMs, String user) {
+    registerApplicationInfo(appId, timeoutMs, user, null);
+  }
+
+  void registerApplicationInfo(
+      String appId, long timeoutMs, String user, Map<String, String> appConf);
 
   default void registerShuffle(
       ShuffleServerInfo shuffleServerInfo,

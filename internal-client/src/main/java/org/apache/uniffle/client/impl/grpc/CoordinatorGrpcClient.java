@@ -273,6 +273,7 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
             .setUser(request.getUser())
             .setVersion(Constants.VERSION)
             .setGitCommitId(Constants.REVISION_SHORT)
+            .putAllAppConf(request.getAppConf())
             .build();
     ApplicationInfoResponse rpcResponse =
         blockingStub
