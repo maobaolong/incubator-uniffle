@@ -32,29 +32,41 @@ import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.mockito.internal.util.collections.Sets;
 
 import org.apache.uniffle.common.ShufflePartitionedBlock;
+import org.apache.uniffle.common.log.TestLoggerExtension;
+import org.apache.uniffle.common.log.TestLoggerParamResolver;
 import org.apache.uniffle.common.storage.StorageInfo;
 import org.apache.uniffle.common.storage.StorageMedia;
 import org.apache.uniffle.common.storage.StorageStatus;
+import org.apache.uniffle.common.util.JavaUtils;
 import org.apache.uniffle.server.ShuffleDataFlushEvent;
 import org.apache.uniffle.server.ShuffleDataReadEvent;
 import org.apache.uniffle.server.ShuffleServerConf;
 import org.apache.uniffle.server.ShuffleServerMetrics;
+import org.apache.uniffle.server.ShuffleTaskInfo;
 import org.apache.uniffle.storage.common.LocalStorage;
 import org.apache.uniffle.storage.common.Storage;
 import org.apache.uniffle.storage.util.StorageType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static uk.org.webcompere.systemstubs.SystemStubs.withEnvironmentVariables;
 
 /** The class is to test the {@link LocalStorageManager} */
+@ExtendWith(TestLoggerExtension.class)
+@ExtendWith(TestLoggerParamResolver.class)
 public class LocalStorageManagerTest {
 
   @BeforeAll
@@ -331,5 +343,43 @@ public class LocalStorageManagerTest {
               // by default, it should report HDD as local storage type
               assertEquals(StorageMedia.SSD, storageInfo.get(mountPoint).getType());
             });
+  }
+
+  @Test
+  public void testNewAppWhileCheckLeak(ExtensionContext context) {
+    String[] storagePaths = {"/tmp/rss-data1"};
+
+    ShuffleServerConf conf = new ShuffleServerConf();
+    conf.set(ShuffleServerConf.RSS_STORAGE_BASE_PATH, Arrays.asList(storagePaths));
+    conf.setLong(ShuffleServerConf.DISK_CAPACITY, 1024L);
+    conf.setString(
+        ShuffleServerConf.RSS_STORAGE_TYPE.key(),
+        org.apache.uniffle.storage.util.StorageType.LOCALFILE.name());
+    LocalStorageManager localStorageManager = new LocalStorageManager(conf);
+
+    List<LocalStorage> storages = localStorageManager.getStorages();
+    assertNotNull(storages);
+
+    LocalStorage mockLocalStorage = mock(LocalStorage.class);
+    when(mockLocalStorage.getAppIds()).thenReturn(Sets.newSet("app0", "app1", "app2"));
+    storages.add(mockLocalStorage);
+
+    // test normal case
+    Map<String, ShuffleTaskInfo> shuffleTaskInfos = JavaUtils.newConcurrentMap();
+    shuffleTaskInfos.put("app1", new ShuffleTaskInfo("app1"));
+    shuffleTaskInfos.put("app2", new ShuffleTaskInfo("app2"));
+    localStorageManager.checkAndClearLeakedShuffleData(shuffleTaskInfos::keySet);
+    TestLoggerExtension testLogger = TestLoggerExtension.getTestLogger(context);
+    // app0 is not in the shuffleTaskInfos, so it should not be deleted
+    assertTrue(testLogger.wasLogged("Delete shuffle data for appId\\[app0\\]"));
+    testLogger.clear();
+
+    // test race condition case, app 3 is new app
+    shuffleTaskInfos.put("app3", new ShuffleTaskInfo("app3"));
+    when(mockLocalStorage.getAppIds()).thenReturn(Sets.newSet("app0", "app1", "app2", "app3"));
+    localStorageManager.checkAndClearLeakedShuffleData(shuffleTaskInfos::keySet);
+    // app3 is new app, but it should not be deleted since we get the current appIds from supplier
+    assertFalse(testLogger.wasLogged("Delete shuffle data for appId\\[app3\\]"));
+    System.out.println();
   }
 }
