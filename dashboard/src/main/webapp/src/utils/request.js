@@ -50,8 +50,8 @@ frontEndAxiosInstance.interceptors.request.use((config) => {
 })
 
 backEndAxiosInstance.interceptors.request.use((config) => {
-  config.headers['Content-type'] = 'application/json'
-  config.headers.Accept = 'application/json'
+  config.headers['Content-type'] = config.headers['Content-Type'] || 'application/json'
+  config.headers.Accept = config.headers.Accept || 'application/json'
   return config
 })
 

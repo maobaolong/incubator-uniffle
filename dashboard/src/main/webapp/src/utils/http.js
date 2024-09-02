@@ -24,10 +24,10 @@ const http = {
     if (fontBackFlag === 0) {
       // The system obtains the address of the Coordinator to be accessed from global variables.
       const currentServerStore = useCurrentServerStore()
-      if (headers) {
+      if (headers && headers.targetAddress) {
         headers.requestServerType = requestServerType.server
       } else {
-        headers = {}
+        headers = headers || {}
         headers.requestServerType = requestServerType.coordinator
         headers.targetAddress = currentServerStore.currentServer
       }
