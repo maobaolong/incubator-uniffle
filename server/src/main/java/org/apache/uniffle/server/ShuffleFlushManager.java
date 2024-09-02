@@ -170,7 +170,13 @@ public class ShuffleFlushManager {
               storageDataReplica,
               user,
               maxConcurrencyPerPartitionToWrite);
-      Pair<ShuffleWriteHandler, Boolean> pair = storage.getOrCreateWriteHandler(request);
+      Pair<ShuffleWriteHandler, Boolean> pair;
+      try {
+        pair = storage.getOrCreateWriteHandler(request);
+      } catch (Exception e) {
+        LOG.warn("Failed to create write handler for event: {}", event, e);
+        throw new EventRetryException(e);
+      }
       long startTime = System.currentTimeMillis();
       boolean writeSuccess = storageManager.write(storage, pair.getLeft(), event);
       if (!writeSuccess) {
