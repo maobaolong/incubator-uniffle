@@ -78,6 +78,7 @@
                 <el-button type="primary" @click="handlerMetrics">Metrics</el-button>
                 <el-button type="success" @click="handlerPromMetrics">Prometheus Metrics</el-button>
                 <el-button type="info" @click="handlerStacks">Stacks</el-button>
+                <el-button type="info" @click="handleCoordinatorLog">log</el-button>
               </div>
             </el-descriptions-item>
             <el-descriptions-item>
@@ -119,6 +120,9 @@
         </el-table>
       </el-collapse-item>
     </el-collapse>
+    <el-dialog v-model="showLogDialog" fullscreen>
+      <LogFileList v-if="showLogDialog" :serverId="selectedServerId" />
+    </el-dialog>
   </div>
 </template>
 
@@ -133,9 +137,11 @@ import {
   getCoordinatorStacks
 } from '@/api/api'
 import { useCurrentServerStore } from '@/store/useCurrentServerStore'
+import LogFileList from '@/pages/LogListPage'
 import { dateFormatter } from '@/utils/common'
 
 export default {
+  components: { LogFileList },
   setup() {
     const pageData = reactive({
       activeNames: ['1', '2'],
@@ -143,6 +149,8 @@ export default {
       serverInfo: {}
     })
     const currentServerStore = useCurrentServerStore()
+    const showLogDialog = ref(false)
+    const selectedServerId = ref('')
 
     async function getCoordinatorServerConfPage() {
       const res = await getCoordinatorConf()
@@ -191,6 +199,10 @@ export default {
       } catch (err) {
         ElMessage.error('Internal error.')
       }
+    }
+    async function handleCoordinatorLog() {
+      selectedServerId.value = currentServerStore.currentServer
+      showLogDialog.value = true
     }
 
     /**
@@ -256,7 +268,10 @@ export default {
       handlerMetrics,
       handlerPromMetrics,
       handlerStacks,
+      handleCoordinatorLog,
       filteredTableData,
+      showLogDialog,
+      selectedServerId,
       searchKeyword,
       dateFormatter
     }

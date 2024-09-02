@@ -25,10 +25,12 @@ import javax.servlet.ServletContext;
 
 import org.apache.hbase.thirdparty.javax.ws.rs.GET;
 import org.apache.hbase.thirdparty.javax.ws.rs.Path;
+import org.apache.hbase.thirdparty.javax.ws.rs.PathParam;
 import org.apache.hbase.thirdparty.javax.ws.rs.core.Context;
 
 import org.apache.uniffle.common.util.ThreadUtils;
 import org.apache.uniffle.common.web.resource.BaseResource;
+import org.apache.uniffle.common.web.resource.LogResouce;
 import org.apache.uniffle.common.web.resource.MetricResource;
 import org.apache.uniffle.common.web.resource.PrometheusMetricResource;
 import org.apache.uniffle.common.web.resource.Response;
@@ -74,6 +76,17 @@ public class ServerResource extends BaseResource {
     StringBuilder builder = new StringBuilder();
     ThreadUtils.printThreadInfo(builder, "");
     return builder.toString();
+  }
+
+  @GET
+  @Path("/logs")
+  public Response<Map<String, Long>> getShuffleServerLogs() {
+    return execute(LogResouce::getLogList);
+  }
+
+  @Path("/logs/{file}")
+  public Class<LogResouce> getShuffleServerLog(@PathParam("file") String file) {
+    return LogResouce.class;
   }
 
   private ShuffleServer getShuffleServer() {

@@ -137,3 +137,21 @@ export function getAllCoordinatorAddrees(params, headers) {
 export function deleteConfirmedLostServer(params, headers) {
   return http.delete('/server/deleteServer', params, headers, 0)
 }
+export function getCoordinatorLogs(params, headers) {
+  return http.get('/coordinator/logs', params, headers, 0)
+}
+export function getCoordinatorLogFile(logFile, params, headers) {
+  headers = headers || {}
+  headers['Content-type'] = 'text/plain'
+  headers.Accept = 'text/plain'
+  return http.get(`/coordinator/logs/${logFile}`, params, headers, 0)
+}
+export function getShuffleServerLogs(params, headers) {
+  return http.get('/shuffleServer/logs', params, headers, 0)
+}
+export function getShuffleServerLogFile(logFile, params, headers) {
+  headers = headers || {}
+  headers['Content-type'] = 'text/plain'
+  headers.Accept = 'text/plain'
+  return http.get(`/shuffleServer/logs/${logFile}`, params, headers, 0)
+}

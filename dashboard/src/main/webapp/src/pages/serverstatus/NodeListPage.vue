@@ -93,6 +93,7 @@
             <el-button type="primary" @click="handlerServerMetrics(row)">metrics</el-button>
             <el-button type="success" @click="handlerServerPrometheusMetrics(row)">metrics(prom)</el-button>
             <el-button type="info" @click="handlerServerStacks(row)">stacks</el-button>
+            <el-button type="info" @click="handlerServerLog(row)">log</el-button>
           </div>
         </template>
       </el-table-column>
@@ -112,6 +113,13 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-dialog v-model="showLogDialog" fullscreen>
+      <LogFileList
+        v-if="showLogDialog"
+        :serverId="selectedServerId"
+        :targetAddress="selectedTargetAddress"
+      />
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -132,14 +140,20 @@ import {
   getShuffleServerPrometheusMetrics,
   getShuffleServerStacks
 } from '@/api/api'
+import LogFileList from '@/pages/LogListPage.vue'
 
 export default {
+  components: { LogFileList },
   setup() {
     const router = useRouter()
     const currentServerStore = useCurrentServerStore()
     const sortColumn = reactive({})
     const listPageData = reactive({ tableData: [] })
     const isShowRemove = ref(false)
+    const showLogDialog = ref(false)
+    const selectedServerId = ref('')
+    const selectedTargetAddress = ref('')
+
     async function deleteLostServer(row) {
       try {
         const params = { serverId: row.id }
@@ -339,6 +353,12 @@ export default {
         return total + Math.max(0, storage.capacity - storage.usedBytes);
       }, 0);
     }
+    async function handlerServerLog(serverRow) {
+      const targetAddress = combinedRequestAddress(serverRow)
+      selectedServerId.value = serverRow.id
+      selectedTargetAddress.value = targetAddress
+      showLogDialog.value = true
+    }
     return {
       listPageData,
       sortColumn,
@@ -349,10 +369,14 @@ export default {
       handlerServerPrometheusMetrics,
       handlerServerMetrics,
       handlerServerStacks,
+      handlerServerLog,
       memFormatter,
       dateFormatter,
       calculateNodeUsedStorage,
-      calculateNodeFreeStorage
+      calculateNodeFreeStorage,
+      showLogDialog,
+      selectedServerId,
+      selectedTargetAddress
     }
   }
 }
