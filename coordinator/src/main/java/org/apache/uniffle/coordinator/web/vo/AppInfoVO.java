@@ -26,6 +26,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import org.apache.uniffle.coordinator.ShuffleInfo;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -53,6 +55,8 @@ public class AppInfoVO implements Comparable<AppInfoVO> {
   private Map<String, String> displayAppConf;
 
   private Map<String, String> appConf;
+
+  private Map<Integer, ShuffleInfo> shuffleInfo;
 
   public AppInfoVO() {}
 

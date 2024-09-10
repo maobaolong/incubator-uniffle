@@ -93,6 +93,16 @@
             </div>
           </template>
         </el-table-column>
+        <el-table-column
+            prop="shuffleInfo"
+            label="shuffleInfo"
+            min-width="180">
+          <template v-slot="{ row }">
+            <div v-for="(value, key) in row.shuffleInfo" :key="key">
+              <span>{{ formatTime(value.assignmentTime) }}-{{ key }}-{{ value.partitionNum }}</span>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="partitionNum" label="PartitionNum" min-width="180" />
         <el-table-column
           prop="memorySize"
@@ -155,7 +165,7 @@
 <script>
 import { getApplicationInfoList, getAppTotal, getAppConf, getTotalForUser } from '@/api/api'
 import { onMounted, reactive } from 'vue'
-import { dateFormatter, memFormatter } from '@/utils/common'
+import { dateFormatter, memFormatter, formatTime } from '@/utils/common'
 import { useCurrentServerStore } from '@/store/useCurrentServerStore'
 import { ElMessage } from 'element-plus';
 
@@ -250,6 +260,7 @@ export default {
       sortAppChangeEvent,
       memFormatter,
       dateFormatter,
+      formatTime,
       handleAppUrl,
       handlerAppConf
     }

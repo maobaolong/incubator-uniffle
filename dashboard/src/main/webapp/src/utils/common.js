@@ -46,4 +46,12 @@ const dateFormatter = (row, column, cellValue) => {
   return moment(cellValue).format('YYYY-MM-DD HH:mm:ss')
 }
 
-export { memFormatter, dateFormatter }
+function formatTime(timestamp) {
+  const assignmentTime = new Date(timestamp);
+  const hours = assignmentTime.getHours();
+  const minutes = assignmentTime.getMinutes();
+  const seconds = assignmentTime.getSeconds();
+  return `${hours}:${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+}
+
+export { memFormatter, dateFormatter, formatTime }

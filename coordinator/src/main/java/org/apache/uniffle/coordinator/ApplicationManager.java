@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,11 +83,15 @@ public class ApplicationManager implements Closeable {
   private CoordinatorServer coordinatorServer;
   private CoordinatorAppHistoryManager coordinatorAppHistoryManager = null;
 
+  /* appId -> shuffleId -> shuffleInfo */
+  private Map<String, Map<Integer, ShuffleInfo>> appToShuffleInfo;
+
   public ApplicationManager(CoordinatorConf conf) {
     storageStrategy = conf.get(CoordinatorConf.COORDINATOR_REMOTE_STORAGE_SELECT_STRATEGY);
     appIdToRemoteStorageInfo = JavaUtils.newConcurrentMap();
     remoteStoragePathRankValue = JavaUtils.newConcurrentMap();
     availableRemoteStorageInfo = JavaUtils.newConcurrentMap();
+    appToShuffleInfo = JavaUtils.newConcurrentMap();
     if (StrategyName.IO_SAMPLE == storageStrategy) {
       selectStorageStrategy =
           new LowestIOSampleCostSelectStorageStrategy(
@@ -375,6 +380,7 @@ public class ApplicationManager implements Closeable {
         if (appIdToRemoteStorageInfo.containsKey(appId)) {
           decRemoteStorageCounter(appIdToRemoteStorageInfo.get(appId).getPath());
           appIdToRemoteStorageInfo.remove(appId);
+          appToShuffleInfo.remove(appId);
         }
       }
       CoordinatorMetrics.gaugeRunningAppNum.set(appIds.size());
@@ -589,5 +595,15 @@ public class ApplicationManager implements Closeable {
   public enum StrategyName {
     APP_BALANCE,
     IO_SAMPLE
+  }
+
+  public void setAppShuffleInfo(String appId, int shuffleId, int partitionNum) {
+    appToShuffleInfo
+        .computeIfAbsent(appId, id -> new HashMap<>())
+        .put(shuffleId, new ShuffleInfo(shuffleId, System.currentTimeMillis(), partitionNum));
+  }
+
+  public Map<Integer, ShuffleInfo> getAppShuffleInfo(String appId) {
+    return appToShuffleInfo.getOrDefault(appId, Collections.emptyMap());
   }
 }

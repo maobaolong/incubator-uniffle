@@ -337,7 +337,8 @@ public class CoordinatorServer {
             0,
             url,
             displayAppConf,
-            appConf);
+            appConf,
+            applicationManager.getAppShuffleInfo(appInfo.getAppId()));
     for (ServerNode server : clusterManager.list()) {
       Map<String, RssProtos.ApplicationInfo> appIdToInfos = server.getAppIdToInfos();
       if (appIdToInfos.containsKey(appInfoVO.getAppId())) {
@@ -352,5 +353,9 @@ public class CoordinatorServer {
       }
     }
     return appInfoVO;
+  }
+
+  public void setAppShuffleInfo(String appId, int shuffleId, int partitionNum) {
+    applicationManager.setAppShuffleInfo(appId, shuffleId, partitionNum);
   }
 }

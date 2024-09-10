@@ -187,6 +187,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
                     faultyServerIds);
         response = CoordinatorUtils.toGetShuffleAssignmentsResponse(pra);
         logAssignmentResult(appId, shuffleId, pra);
+        coordinatorServer.setAppShuffleInfo(appId, shuffleId, partitionNum);
         responseObserver.onNext(response);
       } catch (Exception e) {
         LOG.error(
