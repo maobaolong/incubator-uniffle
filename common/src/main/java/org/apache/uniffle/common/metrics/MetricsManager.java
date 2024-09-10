@@ -85,6 +85,10 @@ public class MetricsManager {
   }
 
   public void addLabeledGauge(String name, Supplier<Double> supplier) {
+    addLabeledCacheGauge(name, supplier, 0);
+  }
+
+  public void addLabeledCacheGauge(String name, Supplier<Double> supplier, long updateInterval) {
     supplierGaugeMap.computeIfAbsent(
         name,
         metricName ->
@@ -93,7 +97,8 @@ public class MetricsManager {
                     "Gauge " + name,
                     supplier,
                     this.defaultLabelNames,
-                    this.defaultLabelValues)
+                    this.defaultLabelValues,
+                    updateInterval)
                 .register(collectorRegistry));
   }
 
