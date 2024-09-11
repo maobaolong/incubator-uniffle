@@ -28,6 +28,10 @@ import org.apache.uniffle.common.config.RssConf;
 import org.apache.uniffle.common.util.Constants;
 
 public class CommonMetrics {
+  public static final String JVM_PAUSE_TOTAL_EXTRA_TIME = "JvmPauseMonitorTotalExtraTime";
+  public static final String JVM_PAUSE_INFO_TIME_EXCEEDED = "JvmPauseMonitorInfoTimeExceeded";
+  public static final String JVM_PAUSE_WARN_TIME_EXCEEDED = "JvmPauseMonitorWarnTimeExceeded";
+
   protected static MetricsManager metricsManager;
   protected static boolean isRegister = false;
   protected static String tags;
