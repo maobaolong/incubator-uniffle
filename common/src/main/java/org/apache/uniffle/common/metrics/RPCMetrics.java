@@ -56,6 +56,42 @@ public abstract class RPCMetrics {
   private final ExecutorService summaryObservePool;
   protected MetricsManager metricsManager;
   protected String tags;
+  protected static final String RPC_EXECUTION_TIME_LT_ONE_SECOND =
+      "rpc_execution_time_lt_one_second";
+  protected static final String RPC_EXECUTION_TIME_GE_ONE_SECOND =
+      "rpc_execution_time_ge_one_second";
+  protected static final String RPC_EXECUTION_TIME_GE_TEN_SECOND =
+      "rpc_execution_time_ge_ten_second";
+  protected static final String RPC_EXECUTION_TIME_GE_TWENTY_SECOND =
+      "rpc_execution_time_ge_twenty_second";
+  protected static final String RPC_EXECUTION_TIME_GE_THIRTY_SECOND =
+      "rpc_execution_time_ge_thirty_second";
+  protected static final String RPC_EXECUTION_TIME_GE_FORTY_SECOND =
+      "rpc_execution_time_ge_forty_second";
+  protected static final String RPC_EXECUTION_TIME_GE_FIFTY_SECOND =
+      "rpc_execution_time_ge_fifty_second";
+  protected static final String RPC_EXECUTION_TIME_GE_SIXTY_SECOND =
+      "rpc_execution_time_ge_sixty_second";
+  protected static final String RPC_EXECUTION_TIME_GE_SEVENTY_SECOND =
+      "rpc_execution_time_ge_seventy_second";
+  protected static final String RPC_EXECUTION_TIME_GE_EIGHTY_SECOND =
+      "rpc_execution_time_ge_eighty_second";
+  protected static final String RPC_EXECUTION_TIME_GE_NINETY_SECOND =
+      "rpc_execution_time_ge_ninety_second";
+  protected static final String RPC_EXECUTION_TIME_GE_HUNDRED_SECOND =
+      "rpc_execution_time_ge_hundred_second";
+  public static Counter.Child counterRpcExecutionTimeLTOneSecond;
+  public static Counter.Child counterRpcExecutionTimeGEOneSecond;
+  public static Counter.Child counterRpcExecutionTimeGETenSecond;
+  public static Counter.Child counterRpcExecutionTimeGETwentySecond;
+  public static Counter.Child counterRpcExecutionTimeGEThirtySecond;
+  public static Counter.Child counterRpcExecutionTimeGEFortySecond;
+  public static Counter.Child counterRpcExecutionTimeGEFiftySecond;
+  public static Counter.Child counterRpcExecutionTimeGESixtySecond;
+  public static Counter.Child counterRpcExecutionTimeGESeventySecond;
+  public static Counter.Child counterRpcExecutionTimeGEEightySecond;
+  public static Counter.Child counterRpcExecutionTimeGENinetySecond;
+  public static Counter.Child counterRpcExecutionTimeGEHundredSecond;
 
   public RPCMetrics(RssConf rssConf, String tags) {
     this.tags = tags;
@@ -86,6 +122,7 @@ public abstract class RPCMetrics {
       Map<String, String> labels = Maps.newHashMap();
       labels.put(Constants.METRICS_TAG_LABEL_NAME, tags);
       metricsManager = new MetricsManager(collectorRegistry, labels);
+      registerInternal();
       registerGeneralMetrics();
       registerMetrics();
       isRegistered = true;
@@ -184,5 +221,32 @@ public abstract class RPCMetrics {
 
   public Map<String, Summary.Child> getProcessTimeSummaryMap() {
     return processTimeSummaryMap;
+  }
+
+  private void registerInternal() {
+    counterRpcExecutionTimeLTOneSecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_LT_ONE_SECOND);
+    counterRpcExecutionTimeGEOneSecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_ONE_SECOND);
+    counterRpcExecutionTimeGETenSecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_TEN_SECOND);
+    counterRpcExecutionTimeGETwentySecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_TWENTY_SECOND);
+    counterRpcExecutionTimeGEThirtySecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_THIRTY_SECOND);
+    counterRpcExecutionTimeGEFortySecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_FORTY_SECOND);
+    counterRpcExecutionTimeGEFiftySecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_FIFTY_SECOND);
+    counterRpcExecutionTimeGESixtySecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_SIXTY_SECOND);
+    counterRpcExecutionTimeGESeventySecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_SEVENTY_SECOND);
+    counterRpcExecutionTimeGEEightySecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_EIGHTY_SECOND);
+    counterRpcExecutionTimeGENinetySecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_NINETY_SECOND);
+    counterRpcExecutionTimeGEHundredSecond =
+        metricsManager.addLabeledCounter(RPC_EXECUTION_TIME_GE_HUNDRED_SECOND);
   }
 }
