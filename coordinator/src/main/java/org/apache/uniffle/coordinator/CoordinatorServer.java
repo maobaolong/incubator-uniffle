@@ -80,6 +80,7 @@ public class CoordinatorServer {
   private GRPCMetrics grpcMetrics;
   private MetricReporter metricReporter;
   private String id;
+  private int rpcListenPort;
   private List<String> appConfShowList;
 
   public CoordinatorServer(CoordinatorConf coordinatorConf) throws Exception {
@@ -115,7 +116,7 @@ public class CoordinatorServer {
     LOG.info(
         "{} version: {}", this.getClass().getSimpleName(), Constants.VERSION_AND_REVISION_SHORT);
     jettyServer.start();
-    server.start();
+    rpcListenPort = server.start();
     if (metricReporter != null) {
       metricReporter.start();
     }
@@ -295,6 +296,10 @@ public class CoordinatorServer {
 
   public long getStartTimeMs() {
     return startTimeMs;
+  }
+
+  public int getRpcListenPort() {
+    return rpcListenPort;
   }
 
   public AppInfoVO getAppInfoV0(String user, AppInfo appInfo) {
