@@ -146,12 +146,11 @@ public class ShuffleBufferManager {
     ShuffleServerMetrics.addLabeledCacheGauge(
         BLOCK_COUNT,
         () ->
-            (double)
-                bufferPool.values().stream()
-                    .flatMap(innerMap -> innerMap.values().stream())
-                    .flatMap(rangeMap -> rangeMap.asMapOfRanges().values().stream())
-                    .mapToInt(shuffleBuffer -> shuffleBuffer.getBlockCount())
-                    .sum(),
+            bufferPool.values().stream()
+                .flatMap(innerMap -> innerMap.values().stream())
+                .flatMap(rangeMap -> rangeMap.asMapOfRanges().values().stream())
+                .mapToInt(shuffleBuffer -> shuffleBuffer.getBlockCount())
+                .sum(),
         2 * 60 * 1000L /* 2 minutes */);
   }
 

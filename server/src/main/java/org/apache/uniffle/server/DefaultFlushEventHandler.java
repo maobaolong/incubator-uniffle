@@ -20,9 +20,9 @@ package org.apache.uniffle.server;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Queues;
@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.uniffle.common.config.RssBaseConf;
+import org.apache.uniffle.common.executor.ThreadPoolManager;
 import org.apache.uniffle.common.function.ConsumerWithException;
 import org.apache.uniffle.common.util.ThreadUtils;
 import org.apache.uniffle.server.flush.EventDiscardException;
@@ -161,18 +162,23 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
 
   protected void initFlushEventExecutor() {
     if (StorageType.withLocalfile(storageType)) {
-      int poolSize =
-          shuffleServerConf.getInteger(ShuffleServerConf.SERVER_FLUSH_LOCALFILE_THREAD_POOL_SIZE);
       localFileThreadPoolExecutor =
-          createFlushEventExecutor(poolSize, "LocalFileFlushEventThreadPool");
+          createFlushEventExecutor(
+              () ->
+                  shuffleServerConf.getInteger(
+                      ShuffleServerConf.SERVER_FLUSH_LOCALFILE_THREAD_POOL_SIZE),
+              "LocalFileFlushEventThreadPool");
     }
     if (StorageType.withHadoop(storageType)) {
-      int poolSize =
-          shuffleServerConf.getInteger(ShuffleServerConf.SERVER_FLUSH_HADOOP_THREAD_POOL_SIZE);
-      hadoopThreadPoolExecutor = createFlushEventExecutor(poolSize, "HadoopFlushEventThreadPool");
+      hadoopThreadPoolExecutor =
+          createFlushEventExecutor(
+              () ->
+                  shuffleServerConf.getInteger(
+                      ShuffleServerConf.SERVER_FLUSH_HADOOP_THREAD_POOL_SIZE),
+              "HadoopFlushEventThreadPool");
     }
-    fallbackThreadPoolExecutor = createFlushEventExecutor(5, "FallBackFlushEventThreadPool");
-    ShuffleServerMetrics.addLabeledGauge(EVENT_QUEUE_SIZE, () -> (double) flushQueue.size());
+    fallbackThreadPoolExecutor = createFlushEventExecutor(() -> 5, "FallBackFlushEventThreadPool");
+    ShuffleServerMetrics.addLabeledGauge(EVENT_QUEUE_SIZE, flushQueue::size);
     startEventProcessor();
   }
 
@@ -222,20 +228,16 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
     }
   }
 
-  protected Executor createFlushEventExecutor(int poolSize, String threadFactoryName) {
+  protected Executor createFlushEventExecutor(
+      Supplier<Integer> poolSize, String threadFactoryName) {
     int waitQueueSize =
         shuffleServerConf.getInteger(ShuffleServerConf.SERVER_FLUSH_THREAD_POOL_QUEUE_SIZE);
     BlockingQueue<Runnable> waitQueue = Queues.newLinkedBlockingQueue(waitQueueSize);
-    long keepAliveTime = shuffleServerConf.getLong(ShuffleServerConf.SERVER_FLUSH_THREAD_ALIVE);
-    LOG.info(
-        "CreateFlushPool, poolSize:{}, keepAliveTime:{}, queueSize:{}",
-        poolSize,
-        keepAliveTime,
-        waitQueueSize);
-    return new ThreadPoolExecutor(
+    return ThreadPoolManager.newThreadPool(
+        threadFactoryName,
         poolSize,
         poolSize,
-        keepAliveTime,
+        () -> shuffleServerConf.getLong(ShuffleServerConf.SERVER_FLUSH_THREAD_ALIVE),
         TimeUnit.SECONDS,
         waitQueue,
         ThreadUtils.getThreadFactory(threadFactoryName));

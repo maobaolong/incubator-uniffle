@@ -84,11 +84,11 @@ public class MetricsManager {
     return c.labels(this.defaultLabelValues);
   }
 
-  public void addLabeledGauge(String name, Supplier<Double> supplier) {
+  public <T> void addLabeledGauge(String name, Supplier<T> supplier) {
     addLabeledCacheGauge(name, supplier, 0);
   }
 
-  public void addLabeledCacheGauge(String name, Supplier<Double> supplier, long updateInterval) {
+  public <T> void addLabeledCacheGauge(String name, Supplier<T> supplier, long updateInterval) {
     supplierGaugeMap.computeIfAbsent(
         name,
         metricName ->

@@ -25,30 +25,29 @@ import java.util.function.Supplier;
 
 import io.prometheus.client.Collector;
 import io.prometheus.client.GaugeMetricFamily;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-class SupplierGauge extends Collector implements Collector.Describable {
+class SupplierGauge<T> extends Collector implements Collector.Describable {
+  private static final Logger LOG = LoggerFactory.getLogger(SupplierGauge.class);
   private String name;
   private String help;
-  private Supplier<Double> supplier;
+  private Supplier<T> supplier;
   private List<String> labelNames;
   private List<String> labelValues;
   private long updateInterval;
   private long lastUpdateTime;
-  private double lastValue;
+  private T lastValue;
 
   SupplierGauge(
-      String name,
-      String help,
-      Supplier<Double> supplier,
-      String[] labelNames,
-      String[] labelValues) {
+      String name, String help, Supplier<T> supplier, String[] labelNames, String[] labelValues) {
     this(name, help, supplier, labelNames, labelValues, 0);
   }
 
   SupplierGauge(
       String name,
       String help,
-      Supplier<Double> supplier,
+      Supplier<T> supplier,
       String[] labelNames,
       String[] labelValues,
       long updateInterval) {
@@ -59,7 +58,6 @@ class SupplierGauge extends Collector implements Collector.Describable {
     this.labelValues = Arrays.asList(labelValues);
     this.updateInterval = updateInterval;
     this.lastUpdateTime = 0;
-    this.lastValue = 0;
   }
 
   @Override
@@ -70,9 +68,13 @@ class SupplierGauge extends Collector implements Collector.Describable {
       this.lastValue = this.supplier.get();
       this.lastUpdateTime = time;
     }
+    if (this.lastValue == null || !(this.lastValue instanceof Number)) {
+      LOG.warn("SupplierGauge {} returned null value or is not number.", this.name);
+      return Collections.emptyList();
+    }
     samples.add(
         new MetricFamilySamples.Sample(
-            this.name, this.labelNames, this.labelValues, this.lastValue));
+            this.name, this.labelNames, this.labelValues, ((Number) this.lastValue).doubleValue()));
     MetricFamilySamples mfs = new MetricFamilySamples(this.name, Type.GAUGE, this.help, samples);
     List<MetricFamilySamples> mfsList = new ArrayList<MetricFamilySamples>(1);
     mfsList.add(mfs);

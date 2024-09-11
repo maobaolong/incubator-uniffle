@@ -17,11 +17,7 @@
 
 package org.apache.uniffle.server;
 
-import java.util.Map;
-import java.util.function.Supplier;
-
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
@@ -30,13 +26,14 @@ import io.prometheus.client.Summary;
 import org.apache.commons.lang3.StringUtils;
 
 import org.apache.uniffle.common.config.ConfigUtils;
-import org.apache.uniffle.common.metrics.MetricsManager;
+import org.apache.uniffle.common.config.RssConf;
+import org.apache.uniffle.common.metrics.CommonMetrics;
 import org.apache.uniffle.common.util.Constants;
 import org.apache.uniffle.storage.common.LocalStorage;
 
 import static org.apache.uniffle.common.util.Constants.METRICS_APP_LABEL_NAME;
 
-public class ShuffleServerMetrics {
+public class ShuffleServerMetrics extends CommonMetrics {
 
   private static final String TOTAL_RECEIVED_DATA = "total_received_data";
   private static final String TOTAL_WRITE_DATA = "total_write_data";
@@ -251,30 +248,22 @@ public class ShuffleServerMetrics {
   public static Counter counterTotalHadoopWriteDataSize;
   public static Counter counterTotalHadoopWriteDataSizeForHugePartition;
   public static Counter counterTotalLocalFileWriteDataSize;
-
-  private static String tags;
   public static Counter counterLocalFileEventFlush;
   public static Counter counterHadoopEventFlush;
   public static Counter counterPreAllocatedBufferExpired;
   public static Counter counterAppNotFound;
 
-  private static MetricsManager metricsManager;
-  private static boolean isRegister = false;
-
   public static synchronized void register(
-      CollectorRegistry collectorRegistry, String tags, ShuffleServerConf serverConf) {
+      CollectorRegistry collectorRegistry, String tags, RssConf conf) {
     if (!isRegister) {
-      ShuffleServerMetrics.tags = tags;
-      Map<String, String> labels = Maps.newHashMap();
-      labels.put(Constants.METRICS_TAG_LABEL_NAME, ShuffleServerMetrics.tags);
-      metricsManager = new MetricsManager(collectorRegistry, labels);
+      CommonMetrics.register(collectorRegistry, tags, conf);
       isRegister = true;
-      setUpMetrics(serverConf);
+      setUpMetrics(conf);
     }
   }
 
-  public static void register(ShuffleServerConf serverConf) {
-    register(CollectorRegistry.defaultRegistry, Constants.SHUFFLE_SERVER_VERSION, serverConf);
+  public static void register(RssConf conf) {
+    register(CollectorRegistry.defaultRegistry, Constants.SHUFFLE_SERVER_VERSION, conf);
   }
 
   @VisibleForTesting
@@ -283,16 +272,6 @@ public class ShuffleServerMetrics {
         CollectorRegistry.defaultRegistry,
         Constants.SHUFFLE_SERVER_VERSION,
         new ShuffleServerConf());
-  }
-
-  @VisibleForTesting
-  public static void clear() {
-    isRegister = false;
-    CollectorRegistry.defaultRegistry.clear();
-  }
-
-  public static CollectorRegistry getCollectorRegistry() {
-    return metricsManager.getCollectorRegistry();
   }
 
   public static void incStorageRetryCounter(String storageHost) {
@@ -352,7 +331,7 @@ public class ShuffleServerMetrics {
     incHadoopStorageWriteDataSize(storageHost, size, false);
   }
 
-  private static void setUpMetrics(ShuffleServerConf serverConf) {
+  protected static void setUpMetrics(RssConf serverConf) {
     counterTotalReceivedDataSize = metricsManager.addLabeledCounter(TOTAL_RECEIVED_DATA);
     counterTotalWriteDataSize = metricsManager.addLabeledCounter(TOTAL_WRITE_DATA);
     counterTotalDeleteDataSize = metricsManager.addLabeledCounter(TOTAL_DELETE_DATA);
@@ -519,14 +498,5 @@ public class ShuffleServerMetrics {
             .help("top N of on hadoop shuffle data size for app level")
             .labelNames("app_id")
             .register(metricsManager.getCollectorRegistry());
-  }
-
-  public static void addLabeledGauge(String name, Supplier<Double> supplier) {
-    addLabeledCacheGauge(name, supplier, 0);
-  }
-
-  public static void addLabeledCacheGauge(
-      String name, Supplier<Double> supplier, long updateInterval) {
-    metricsManager.addLabeledCacheGauge(name, supplier, updateInterval);
   }
 }
