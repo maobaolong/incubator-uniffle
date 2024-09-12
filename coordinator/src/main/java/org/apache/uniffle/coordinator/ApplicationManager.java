@@ -232,6 +232,9 @@ public class ApplicationManager implements Closeable {
       String path = entry.getKey();
       RemoteStorageInfo rsInfo = entry.getValue();
 
+      if (StringUtils.isEmpty(path) || path.equalsIgnoreCase("null")) {
+        continue;
+      }
       if (!availableRemoteStorageInfo.containsKey(path)) {
         remoteStoragePathRankValue.computeIfAbsent(
             path,

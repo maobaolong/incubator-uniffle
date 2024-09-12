@@ -76,7 +76,7 @@ public class LegacyClientConfParser implements ClientConfParser {
 
   private Map<String, RemoteStorageInfo> parseRemoteStorageInfos(
       String remoteStoragePath, String remoteStorageConf) {
-    if (StringUtils.isNotEmpty(remoteStoragePath)) {
+    if (StringUtils.isNotEmpty(remoteStoragePath) && !remoteStoragePath.equalsIgnoreCase("null")) {
       LOG.info("Parsing remote storage with {} {}", remoteStoragePath, remoteStorageConf);
 
       Set<String> paths = Sets.newHashSet(remoteStoragePath.split(Constants.COMMA_SPLIT_CHAR));
