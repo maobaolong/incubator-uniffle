@@ -167,6 +167,16 @@ public class QuotaManager {
     }
   }
 
+  public void unregisterApplicationInfo(String appId, Map<String, AppInfo> appAndTime) {
+    String[] appIdAndUuid = appId.split("_");
+    String uuidFromApp = appIdAndUuid[appIdAndUuid.length - 1];
+    // if appId created successfully, we need to remove the uuid
+    synchronized (this) {
+      appAndTime.remove(uuidFromApp);
+      appAndTime.remove(appId);
+    }
+  }
+
   protected void updateQuotaMetrics() {
     for (Map.Entry<String, Map<String, AppInfo>> userAndApp : currentUserAndApp.entrySet()) {
       String user = userAndApp.getKey();

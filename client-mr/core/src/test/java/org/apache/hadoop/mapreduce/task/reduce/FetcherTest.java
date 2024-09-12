@@ -499,6 +499,9 @@ public class FetcherTest {
         String appId, long timeoutMs, String user, Map<String, String> appConf) {}
 
     @Override
+    public void unregisterApplicationInfo(String appId, long timeoutMs, String user) {}
+
+    @Override
     public void registerShuffle(
         ShuffleServerInfo shuffleServerInfo,
         String appId,

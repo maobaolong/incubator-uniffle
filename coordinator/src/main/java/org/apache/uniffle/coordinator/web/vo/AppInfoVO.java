@@ -38,6 +38,7 @@ public class AppInfoVO implements Comparable<AppInfoVO> {
   private String appId;
   private long updateTime;
   private long registrationTime;
+  private String exitCode;
   private long finishTime;
   private String version;
   private String gitCommitId;

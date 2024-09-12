@@ -292,6 +292,29 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
   }
 
   @Override
+  public RssApplicationInfoResponse unregisterApplicationInfo(RssApplicationInfoRequest request) {
+    ApplicationInfoRequest rpcRequest =
+        ApplicationInfoRequest.newBuilder()
+            .setAppId(request.getAppId())
+            .setUser(request.getUser())
+            .build();
+    ApplicationInfoResponse rpcResponse =
+        blockingStub
+            .withDeadlineAfter(request.getTimeoutMs(), TimeUnit.MILLISECONDS)
+            .unregisterApplicationInfo(rpcRequest);
+    RssApplicationInfoResponse response;
+    RssProtos.StatusCode statusCode = rpcResponse.getStatus();
+    switch (statusCode) {
+      case SUCCESS:
+        response = new RssApplicationInfoResponse(StatusCode.SUCCESS);
+        break;
+      default:
+        response = new RssApplicationInfoResponse(StatusCode.INTERNAL_ERROR);
+    }
+    return response;
+  }
+
+  @Override
   public RssGetShuffleAssignmentsResponse getShuffleAssignments(
       RssGetShuffleAssignmentsRequest request) {
     RssProtos.GetShuffleAssignmentsResponse rpcResponse =

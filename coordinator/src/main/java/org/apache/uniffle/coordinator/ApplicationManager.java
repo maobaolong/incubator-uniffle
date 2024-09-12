@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.uniffle.common.Application;
 import org.apache.uniffle.common.RemoteStorageInfo;
+import org.apache.uniffle.common.rpc.StatusCode;
 import org.apache.uniffle.common.util.JavaUtils;
 import org.apache.uniffle.common.util.ThreadUtils;
 import org.apache.uniffle.coordinator.access.checker.AccessQuotaChecker;
@@ -161,6 +162,39 @@ public class ApplicationManager implements Closeable {
     } else {
       appAndTime.put(appId, appInfo);
     }
+  }
+
+  private void addToAppHistory(String user, AppInfo appInfo, StatusCode statusCode) {
+    if (coordinatorServer != null && user != null && coordinatorAppHistoryManager != null) {
+      appInfo.setExitCode(statusCode.toString());
+      appInfo.setFinishTime(System.currentTimeMillis());
+      AppInfoVO appInfoVO = coordinatorServer.getAppInfoV0(user, appInfo);
+      coordinatorAppHistoryManager.addAppInfo(appInfoVO);
+      // remove the remain appInfo in serverNode
+      for (ServerNode serverNode : coordinatorServer.getClusterManager().list()) {
+        serverNode.getAppIdToInfos().remove(appInfo.getAppId());
+      }
+    }
+  }
+
+  public void unregisterApplicationInfo(String appId, String user) {
+
+    Map<String, AppInfo> appAndTime = currentUserAndApp.get(user);
+    if (appAndTime == null) {
+      LOG.warn("unregisterApplicationInfo: appId={} user={} user not found.", appId, user);
+      return;
+    }
+    AppInfo appInfo = appAndTime.get(appId);
+    if (appInfo == null) {
+      LOG.error("unregisterApplicationInfo: appId={} user={} appId not found.", appId, user);
+      return;
+    }
+    if (quotaManager != null) {
+      quotaManager.unregisterApplicationInfo(appId, appAndTime);
+    } else {
+      appAndTime.remove(appId);
+    }
+    addToAppHistory(user, appInfo, StatusCode.SUCCESS);
   }
 
   public void refreshAppId(String appId) {
@@ -361,15 +395,7 @@ public class ApplicationManager implements Closeable {
             expiredAppIds.add(appId);
             appAndTimes.remove(appId);
             String user = appIdToUser.remove(appId);
-            if (coordinatorServer != null && user != null && coordinatorAppHistoryManager != null) {
-              lastReport.setFinishTime(System.currentTimeMillis());
-              AppInfoVO appInfoVO = coordinatorServer.getAppInfoV0(user, lastReport);
-              coordinatorAppHistoryManager.addAppInfo(appInfoVO);
-              // remove the remain appInfo in serverNode
-              for (ServerNode serverNode : coordinatorServer.getClusterManager().list()) {
-                serverNode.getAppIdToInfos().remove(appId);
-              }
-            }
+            addToAppHistory(user, lastReport, StatusCode.TIMEOUT);
           }
         }
       }

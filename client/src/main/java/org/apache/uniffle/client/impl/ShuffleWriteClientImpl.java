@@ -917,6 +917,36 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
   }
 
   @Override
+  public void unregisterApplicationInfo(String appId, long timeoutMs, String user) {
+    RssApplicationInfoRequest request = new RssApplicationInfoRequest(appId, timeoutMs, user);
+
+    ThreadUtils.executeTasks(
+        heartBeatExecutorService,
+        coordinatorClients,
+        coordinatorClient -> {
+          try {
+            RssApplicationInfoResponse response =
+                coordinatorClient.unregisterApplicationInfo(request);
+            if (response.getStatusCode() != StatusCode.SUCCESS) {
+              LOG.error(
+                  "Failed to send unregister applicationInfo to " + coordinatorClient.getDesc());
+            } else {
+              LOG.info(
+                  "Successfully send unregister applicationInfo to " + coordinatorClient.getDesc());
+            }
+          } catch (Exception e) {
+            LOG.warn(
+                "Error happened when send unregister applicationInfo to "
+                    + coordinatorClient.getDesc(),
+                e);
+          }
+          return null;
+        },
+        timeoutMs,
+        "unregister application");
+  }
+
+  @Override
   public void sendAppHeartbeat(String appId, long timeoutMs) {
     RssAppHeartBeatRequest request = new RssAppHeartBeatRequest(appId, timeoutMs);
     Set<ShuffleServerInfo> allShuffleServers = getAllShuffleServers(appId);

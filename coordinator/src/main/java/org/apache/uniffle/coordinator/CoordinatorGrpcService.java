@@ -345,6 +345,35 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
   }
 
   @Override
+  public void unregisterApplicationInfo(
+      ApplicationInfoRequest request, StreamObserver<ApplicationInfoResponse> responseObserver) {
+    try (CoordinatorRpcAuditContext auditContext =
+        createAuditContext("unregisterApplicationInfo")) {
+      String appId = request.getAppId();
+      String user = request.getUser();
+      auditContext.withAppId(appId);
+      coordinatorServer.getApplicationManager().unregisterApplicationInfo(appId, user);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Got a unregistered application info: {}", appId);
+      }
+      ApplicationInfoResponse response =
+          ApplicationInfoResponse.newBuilder().setRetMsg("").setStatus(StatusCode.SUCCESS).build();
+
+      if (Context.current().isCancelled()) {
+        responseObserver.onError(
+            Status.CANCELLED.withDescription("Cancelled by client").asRuntimeException());
+        auditContext.withStatusCode("CANCELLED");
+        LOG.warn("Cancelled by client {} for after deadline.", appId);
+        return;
+      }
+
+      auditContext.withStatusCode(response.getStatus());
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    }
+  }
+
+  @Override
   public void accessCluster(
       AccessClusterRequest request, StreamObserver<AccessClusterResponse> responseObserver) {
     try (CoordinatorRpcAuditContext auditContext = createAuditContext("accessCluster")) {

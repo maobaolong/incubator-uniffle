@@ -20,10 +20,13 @@ package org.apache.uniffle.coordinator;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.uniffle.common.rpc.StatusCode;
+
 public class AppInfo implements Comparable<AppInfo> {
   private String appId;
   private long updateTime;
   private long registrationTime;
+  private String exitCode;
   private long finishTime;
   private String version;
   private String gitCommitId;
@@ -46,6 +49,7 @@ public class AppInfo implements Comparable<AppInfo> {
     this.version = version;
     this.gitCommitId = gitCommitId;
     this.appConf = appConf;
+    this.exitCode = StatusCode.UNKNOWN.toString();
   }
 
   public String getAppId() {
@@ -78,6 +82,14 @@ public class AppInfo implements Comparable<AppInfo> {
 
   public String getGitCommitId() {
     return gitCommitId;
+  }
+
+  public void setExitCode(String exitCode) {
+    this.exitCode = exitCode;
+  }
+
+  public String getExitCode() {
+    return this.exitCode;
   }
 
   public void setFinishTime(long finishTime) {

@@ -330,6 +330,7 @@ public class CoordinatorServer {
             appInfo.getAppId(),
             appInfo.getUpdateTime(),
             appInfo.getRegistrationTime(),
+            appInfo.getExitCode(),
             appInfo.getFinishTime(),
             appInfo.getVersion(),
             appInfo.getGitCommitId(),

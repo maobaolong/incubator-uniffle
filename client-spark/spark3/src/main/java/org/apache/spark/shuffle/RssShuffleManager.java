@@ -863,6 +863,7 @@ public class RssShuffleManager extends RssShuffleManagerBase {
     if (shuffleWriteClient != null) {
       // Unregister shuffle before closing shuffle write client.
       shuffleWriteClient.unregisterShuffle(getAppId());
+      shuffleWriteClient.unregisterApplicationInfo(appId, heartbeatTimeout, user);
       shuffleWriteClient.close();
     }
     if (dataPusher != null) {

@@ -38,6 +38,8 @@ public interface CoordinatorClient {
 
   RssApplicationInfoResponse registerApplicationInfo(RssApplicationInfoRequest request);
 
+  RssApplicationInfoResponse unregisterApplicationInfo(RssApplicationInfoRequest request);
+
   RssSendHeartBeatResponse sendHeartBeat(RssSendHeartBeatRequest request);
 
   RssGetShuffleAssignmentsResponse getShuffleAssignments(RssGetShuffleAssignmentsRequest request);

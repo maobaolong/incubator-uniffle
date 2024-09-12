@@ -60,6 +60,8 @@ public interface ShuffleWriteClient {
   void registerApplicationInfo(
       String appId, long timeoutMs, String user, Map<String, String> appConf);
 
+  void unregisterApplicationInfo(String appId, long timeoutMs, String user);
+
   default void registerShuffle(
       ShuffleServerInfo shuffleServerInfo,
       String appId,

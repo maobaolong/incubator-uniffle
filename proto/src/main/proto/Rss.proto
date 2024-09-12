@@ -385,6 +385,9 @@ service CoordinatorServer {
   // Report a application info to Coordinator Server
   rpc registerApplicationInfo(ApplicationInfoRequest) returns (ApplicationInfoResponse);
 
+  // Send a stop application request to Coordinator Server
+  rpc unregisterApplicationInfo(ApplicationInfoRequest) returns (ApplicationInfoResponse);
+
   // Access to the remote shuffle service cluster
   rpc accessCluster(AccessClusterRequest) returns (AccessClusterResponse);
 
