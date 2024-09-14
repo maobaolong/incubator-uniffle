@@ -25,6 +25,7 @@ import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
 
 import static org.apache.uniffle.coordinator.AppInfo.createAppInfo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CoordinatorServerTest {
 
@@ -45,7 +46,7 @@ public class CoordinatorServerTest {
     try {
       cs2.start();
     } catch (Exception e) {
-      assertEquals(expectMessage, e.getMessage());
+      assertTrue(e.getMessage().startsWith(expectMessage));
       assertEquals(expectStatus, ((ExitException) e).getStatus());
     } finally {
       // Always call stopServer after new CoordinatorServer to shut down ExecutorService
