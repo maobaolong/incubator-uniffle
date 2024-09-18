@@ -185,8 +185,8 @@ public class ShuffleFlushManager {
       if (isStorageAuditLogEnabled) {
         AUDIT_LOGGER.info(
             String.format(
-                "%s|%s|%d|%s|%s|%s|%d|%s|%s|%d",
-                AuditType.WRITE.getValue(),
+                "%s|%s|%d|%s|%s|%s|%d|%s|%s|%d|%d",
+                pair.getRight() ? AuditType.CREATE.getValue() : AuditType.WRITE.getValue(),
                 event.getAppId(),
                 event.getShuffleId(),
                 event.getStartPartition() + "_" + event.getEndPartition(),
@@ -195,7 +195,8 @@ public class ShuffleFlushManager {
                 event.getSize(),
                 DateFormatUtils.format(startTime, AUDIT_DATE_PATTERN),
                 DateFormatUtils.format(endTime, AUDIT_DATE_PATTERN),
-                endTime - startTime));
+                endTime - startTime,
+                event.getShuffleBlocks() == null ? 0 : event.getShuffleBlocks().size()));
       }
       if (null != shuffleTaskInfo) {
         String storageHost = event.getUnderStorage().getStorageHost();

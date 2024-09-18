@@ -19,7 +19,9 @@ package org.apache.uniffle.common;
 
 public enum AuditType {
   WRITE("w"),
-  DELETE("d");
+  DELETE("d"),
+  CREATE("c");
+
   private String value;
 
   AuditType(String value) {
