@@ -412,7 +412,7 @@ public class RssShuffleManager extends RssShuffleManagerBase {
 
   @VisibleForTesting
   protected void registerCoordinator() {
-    String coordinators = sparkConf.get(RssSparkConfig.RSS_COORDINATOR_QUORUM.key());
+    String coordinators = RssSparkShuffleUtils.getCoordinatorQuorumStr(sparkConf);
     LOG.info("Registering coordinators {}", coordinators);
     shuffleWriteClient.registerCoordinators(coordinators);
   }

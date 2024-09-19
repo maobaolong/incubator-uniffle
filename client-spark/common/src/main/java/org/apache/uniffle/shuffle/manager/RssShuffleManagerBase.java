@@ -398,7 +398,7 @@ public abstract class RssShuffleManagerBase implements RssShuffleManagerInterfac
 
   protected static void fetchAndApplyDynamicConf(SparkConf sparkConf) {
     String clientType = sparkConf.get(RssSparkConfig.RSS_CLIENT_TYPE);
-    String coordinators = sparkConf.get(RssSparkConfig.RSS_COORDINATOR_QUORUM.key());
+    String coordinators = RssSparkShuffleUtils.getCoordinatorQuorumStr(sparkConf);
     CoordinatorClientFactory coordinatorClientFactory = CoordinatorClientFactory.getInstance();
     List<CoordinatorClient> coordinatorClients =
         coordinatorClientFactory.createCoordinatorClient(

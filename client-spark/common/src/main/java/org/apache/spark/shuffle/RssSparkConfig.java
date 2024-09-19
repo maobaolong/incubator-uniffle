@@ -442,6 +442,14 @@ public class RssSparkConfig {
                           + "sequence number, the partition id and the task attempt id."))
           .createWithDefault(1048576);
 
+  public static final ConfigEntry<String> RSS_REGION_MAPPING =
+      createStringBuilder(
+              new ConfigBuilder("spark.rss.region.mapping")
+                  .doc(
+                      "A comma-separated list of mapping between regions, separate regions with "
+                          + "colons"))
+          .createWithDefault("");
+
   // spark2 doesn't have this key defined
   public static final String SPARK_SHUFFLE_COMPRESS_KEY = "spark.shuffle.compress";
 
@@ -451,6 +459,8 @@ public class RssSparkConfig {
       ImmutableSet.of(RSS_STORAGE_TYPE.key(), RSS_REMOTE_STORAGE_PATH.key());
 
   public static final boolean RSS_USE_RSS_SHUFFLE_MANAGER_DEFAULT_VALUE = false;
+
+  public static final String SPARK_RSS_CLIENT_REGION = "SPARK_RSS_CLIENT_REGION";
 
   public static TypedConfigBuilder<Integer> createIntegerBuilder(ConfigBuilder builder) {
     scala.Function1<String, Integer> f =

@@ -20,6 +20,7 @@ package org.apache.spark.shuffle;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -105,10 +106,41 @@ public class RssSparkShuffleUtils {
 
   public static List<CoordinatorClient> createCoordinatorClients(SparkConf sparkConf) {
     String clientType = sparkConf.get(RssSparkConfig.RSS_CLIENT_TYPE);
-    String coordinators = sparkConf.get(RssSparkConfig.RSS_COORDINATOR_QUORUM);
+    String coordinators = getCoordinatorQuorumStr(sparkConf);
     CoordinatorClientFactory coordinatorClientFactory = CoordinatorClientFactory.getInstance();
     return coordinatorClientFactory.createCoordinatorClient(
         ClientType.valueOf(clientType), coordinators);
+  }
+
+  public static String getCoordinatorQuorumStr(SparkConf sparkConf) {
+    String region = System.getenv(RssSparkConfig.SPARK_RSS_CLIENT_REGION);
+    if (region != null && !region.isEmpty()) {
+      if (sparkConf.contains(RssSparkConfig.RSS_REGION_MAPPING.key())) {
+        String regionMapStr = sparkConf.get(RssSparkConfig.RSS_REGION_MAPPING.key());
+        Map<String, String> regionMap = new HashMap<>();
+        try {
+          for (String regionMapping : regionMapStr.trim().split(",")) {
+            if (!regionMapping.contains(":")) {
+              continue;
+            }
+            regionMap.put(regionMapping.split(":")[0], regionMapping.split(":")[1]);
+          }
+        } catch (Exception e) {
+          LOG.error("Failed to get region map from sparkConf, regionMapStr: {}", regionMapStr);
+        }
+        region = regionMap.getOrDefault(region, region);
+      }
+      LOG.debug("Spark client region: {}", region);
+      String key = String.format("%s.%s", RssSparkConfig.RSS_COORDINATOR_QUORUM.key(), region);
+      if (sparkConf.contains(key)) {
+        String coordinatorQuorum = sparkConf.get(key);
+        LOG.debug("CoordinatorQuorum: {}", coordinatorQuorum);
+        return coordinatorQuorum;
+      }
+    } else {
+      LOG.info("Can't get spark client region");
+    }
+    return sparkConf.get(RssSparkConfig.RSS_COORDINATOR_QUORUM.key());
   }
 
   public static void applyDynamicClientConf(SparkConf sparkConf, Map<String, String> confItems) {
