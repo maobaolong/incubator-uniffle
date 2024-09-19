@@ -918,6 +918,9 @@ public class ShuffleWriteClientImpl implements ShuffleWriteClient {
 
   @Override
   public void unregisterApplicationInfo(String appId, long timeoutMs, String user) {
+    if (appId == null || appId.isEmpty()) {
+      return;
+    }
     RssApplicationInfoRequest request = new RssApplicationInfoRequest(appId, timeoutMs, user);
 
     ThreadUtils.executeTasks(
