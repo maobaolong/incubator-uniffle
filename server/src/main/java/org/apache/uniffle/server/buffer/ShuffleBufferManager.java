@@ -804,6 +804,11 @@ public class ShuffleBufferManager {
     this.usedMemory.set(usedMemory);
   }
 
+  @VisibleForTesting
+  public void setBufferFlushThreshold(long bufferFlushThreshold) {
+    this.bufferFlushThreshold = bufferFlushThreshold;
+  }
+
   public List<String> getBlockLengthTopN() {
     double[] bucketValues =
         ShuffleServerMetrics.appHistogramWriteBlockSize.collect().get(0).samples.stream()
