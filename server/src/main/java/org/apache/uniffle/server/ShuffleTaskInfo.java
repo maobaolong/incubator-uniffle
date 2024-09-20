@@ -29,6 +29,7 @@ import org.roaringbitmap.longlong.Roaring64NavigableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.uniffle.common.PartitionInfo;
 import org.apache.uniffle.common.ShuffleDataDistributionType;
 import org.apache.uniffle.common.util.JavaUtils;
 
@@ -56,6 +57,8 @@ public class ShuffleTaskInfo {
   private final AtomicLong onLocalFileNum = new AtomicLong(0);
   private final AtomicLong onHadoopDataSize = new AtomicLong(0);
   private final AtomicLong onHadoopNum = new AtomicLong(0);
+  /** shuffleId, partitionId, partitionSize */
+  private final PartitionInfo maxSizePartitionInfo = new PartitionInfo();
 
   /** shuffleId -> partitionId -> partition shuffle data size */
   private Map<Integer, Map<Integer, Long>> partitionDataSizes;
@@ -131,7 +134,16 @@ public class ShuffleTaskInfo {
     partitionDataSizes.computeIfAbsent(shuffleId, key -> JavaUtils.newConcurrentMap());
     Map<Integer, Long> partitions = partitionDataSizes.get(shuffleId);
     partitions.putIfAbsent(partitionId, 0L);
-    return partitions.computeIfPresent(partitionId, (k, v) -> v + delta);
+    return partitions.computeIfPresent(
+        partitionId,
+        (k, v) -> {
+          long size = v + delta;
+          if (size > maxSizePartitionInfo.getSize()) {
+            maxSizePartitionInfo.update(
+                partitionId, shuffleId, size, getBlockNumber(shuffleId, partitionId));
+          }
+          return size;
+        });
   }
 
   public long getTotalDataSize() {
@@ -227,10 +239,14 @@ public class ShuffleTaskInfo {
   }
 
   public void incBlockNumber(int shuffleId, int partitionId, int delta) {
-    this.partitionBlockCounters
-        .computeIfAbsent(shuffleId, x -> JavaUtils.newConcurrentMap())
-        .computeIfAbsent(partitionId, x -> new AtomicLong())
-        .addAndGet(delta);
+    long blockCount =
+        this.partitionBlockCounters
+            .computeIfAbsent(shuffleId, x -> JavaUtils.newConcurrentMap())
+            .computeIfAbsent(partitionId, x -> new AtomicLong())
+            .addAndGet(delta);
+    if (maxSizePartitionInfo.isCurrentPartition(shuffleId, partitionId)) {
+      maxSizePartitionInfo.setBlockCount(blockCount);
+    }
   }
 
   public long getBlockNumber(int shuffleId, int partitionId) {
@@ -257,6 +273,10 @@ public class ShuffleTaskInfo {
     return partitionDataSizes.values().stream().mapToLong(Map::size).sum();
   }
 
+  public PartitionInfo getMaxSizePartitionInfo() {
+    return maxSizePartitionInfo;
+  }
+
   @Override
   public String toString() {
     return "ShuffleTaskInfo{"
@@ -273,6 +293,8 @@ public class ShuffleTaskInfo {
         + onHadoopDataSize
         + ", partitionDataSizes="
         + partitionDataSizes
+        + ", maxSizePartitionInfo="
+        + maxSizePartitionInfo
         + '}';
   }
 }
