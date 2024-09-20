@@ -17,6 +17,8 @@
 
 package org.apache.uniffle.common;
 
+import org.apache.uniffle.proto.RssProtos;
+
 public class PartitionInfo {
   private int id;
   private int shuffleId;
@@ -50,6 +52,24 @@ public class PartitionInfo {
   public String toString() {
     return String.format(
         "[id=%s, shuffleId=%s, size=%s, blockCount=%s]", id, shuffleId, size, blockCount);
+  }
+
+  public RssProtos.PartitionInfo toProto() {
+    return RssProtos.PartitionInfo.newBuilder()
+        .setId(id)
+        .setShuffleId(shuffleId)
+        .setSize(size)
+        .setBlockCount(blockCount)
+        .build();
+  }
+
+  public static PartitionInfo fromProto(RssProtos.PartitionInfo proto) {
+    PartitionInfo partitionInfo = new PartitionInfo();
+    partitionInfo.id = proto.getId();
+    partitionInfo.shuffleId = proto.getShuffleId();
+    partitionInfo.size = proto.getSize();
+    partitionInfo.blockCount = proto.getBlockCount();
+    return partitionInfo;
   }
 
   public boolean isCurrentPartition(int shuffleId, int partitionId) {

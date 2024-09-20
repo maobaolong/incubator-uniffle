@@ -59,6 +59,8 @@ public class AppInfoVO implements Comparable<AppInfoVO> {
 
   private Map<Integer, ShuffleInfo> shuffleInfo;
 
+  private String maxSizePartitionInfo;
+
   public AppInfoVO() {}
 
   @Override

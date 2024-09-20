@@ -602,6 +602,7 @@ public class ShuffleServer {
               .setLocalTotalSize(taskInfo.getOnLocalFileDataSize())
               .setHadoopTotalSize(taskInfo.getOnHadoopDataSize())
               .setTotalSize(taskInfo.getTotalDataSize())
+              .setMaxSizePartitionInfo(taskInfo.getMaxSizePartitionInfo().toProto())
               .build();
 
       appInfos.add(applicationInfo);

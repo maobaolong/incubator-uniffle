@@ -266,6 +266,13 @@ enum ServerStatus {
   // todo: more status, such as UPGRADING
 }
 
+message PartitionInfo {
+  int32 id = 1;
+  int32 shuffleId = 2;
+  int64 size = 3;
+  int64 blockCount = 4;
+}
+
 message ApplicationInfo {
   string appId = 1;
   int64 partitionNum = 2;
@@ -275,6 +282,7 @@ message ApplicationInfo {
   int64 hadoopFileNum = 6;
   int64 hadoopTotalSize = 7;
   int64 totalSize = 8;
+  PartitionInfo maxSizePartitionInfo = 9;
 }
 
 message ShuffleServerHeartBeatRequest {

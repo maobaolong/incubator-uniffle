@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import org.apache.uniffle.common.Arguments;
+import org.apache.uniffle.common.PartitionInfo;
 import org.apache.uniffle.common.ReconfigurableConfManager;
 import org.apache.uniffle.common.config.RssBaseConf;
 import org.apache.uniffle.common.exception.RssException;
@@ -344,7 +345,9 @@ public class CoordinatorServer {
             url,
             displayAppConf,
             appConf,
-            applicationManager.getAppShuffleInfo(appInfo.getAppId()));
+            applicationManager.getAppShuffleInfo(appInfo.getAppId()),
+            "");
+    RssProtos.PartitionInfo maxSizePartitionInfoForAllServer = null;
     for (ServerNode server : clusterManager.list()) {
       Map<String, RssProtos.ApplicationInfo> appIdToInfos = server.getAppIdToInfos();
       if (appIdToInfos.containsKey(appInfoVO.getAppId())) {
@@ -356,7 +359,18 @@ public class CoordinatorServer {
         appInfoVO.setHadoopFileNum(appInfoVO.getHadoopFileNum() + app.getHadoopFileNum());
         appInfoVO.setHadoopTotalSize(appInfoVO.getHadoopTotalSize() + app.getHadoopTotalSize());
         appInfoVO.setTotalSize(appInfoVO.getTotalSize() + app.getTotalSize());
+        RssProtos.PartitionInfo maxSizePartitionInfo = app.getMaxSizePartitionInfo();
+        if (maxSizePartitionInfo != null) {
+          if (maxSizePartitionInfoForAllServer == null
+              || maxSizePartitionInfo.getSize() > maxSizePartitionInfoForAllServer.getSize()) {
+            maxSizePartitionInfoForAllServer = maxSizePartitionInfo;
+          }
+        }
       }
+    }
+    if (maxSizePartitionInfoForAllServer != null) {
+      appInfoVO.setMaxSizePartitionInfo(
+          PartitionInfo.fromProto(maxSizePartitionInfoForAllServer).toString());
     }
     return appInfoVO;
   }
