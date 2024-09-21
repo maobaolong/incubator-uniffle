@@ -238,6 +238,10 @@ public class ShuffleTaskInfo {
     return partitionDataSizes.keySet();
   }
 
+  public Set<Integer> getPartitionIds(int shuffleId) {
+    return partitionDataSizes.get(shuffleId).keySet();
+  }
+
   public void incBlockNumber(int shuffleId, int partitionId, int delta) {
     long blockCount =
         this.partitionBlockCounters
