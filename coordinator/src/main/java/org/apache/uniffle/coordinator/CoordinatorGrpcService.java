@@ -353,7 +353,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
       String user = request.getUser();
       auditContext.withAppId(appId);
       auditContext.withArgs("user=" + user);
-      // TODO(wenlongwlli): should be fixed
+      coordinatorServer.getApplicationManager().unregisterApplicationInfo(appId, user);
       LOG.debug("Got a unregistered application info: {}", appId);
       ApplicationInfoResponse response =
           ApplicationInfoResponse.newBuilder().setRetMsg("").setStatus(StatusCode.SUCCESS).build();

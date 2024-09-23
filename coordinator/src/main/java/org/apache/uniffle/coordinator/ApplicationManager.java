@@ -164,10 +164,8 @@ public class ApplicationManager implements Closeable {
     }
   }
 
-  private void addToAppHistory(String user, AppInfo appInfo, StatusCode statusCode) {
+  private void addToAppHistory(String user, AppInfo appInfo) {
     if (coordinatorServer != null && user != null && coordinatorAppHistoryManager != null) {
-      appInfo.setExitCode(statusCode.toString());
-      appInfo.setFinishTime(System.currentTimeMillis());
       AppInfoVO appInfoVO = coordinatorServer.getAppInfoV0(user, appInfo);
       coordinatorAppHistoryManager.addAppInfo(appInfoVO);
       // remove the remain appInfo in serverNode
@@ -189,12 +187,8 @@ public class ApplicationManager implements Closeable {
       LOG.error("unregisterApplicationInfo: appId={} user={} appId not found.", appId, user);
       return;
     }
-    if (quotaManager != null) {
-      quotaManager.unregisterApplicationInfo(appId, appAndTime);
-    } else {
-      appAndTime.remove(appId);
-    }
-    addToAppHistory(user, appInfo, StatusCode.SUCCESS);
+    appInfo.setExitCode(StatusCode.SUCCESS.toString());
+    appInfo.setFinishTime(System.currentTimeMillis());
   }
 
   public void refreshAppId(String appId) {
@@ -387,24 +381,31 @@ public class ApplicationManager implements Closeable {
     // but the registration of shuffle fails, resulting in no normal heartbeat, and no normal update
     // of uuid to appId.
     // Therefore, an expiration time is set to automatically remove expired uuids
-    Set<String> expiredAppIds = Sets.newHashSet();
+    Set<String> invalidAppIds = Sets.newHashSet();
     try {
       for (Map<String, AppInfo> appAndTimes : appAndNums) {
         for (Map.Entry<String, AppInfo> appAndTime : appAndTimes.entrySet()) {
           String appId = appAndTime.getKey();
           AppInfo lastReport = appAndTime.getValue();
           appIds.put(appId, lastReport);
-          if (System.currentTimeMillis() - lastReport.getUpdateTime() > expired) {
-            expiredAppIds.add(appId);
+          if (lastReport.getExitCode().equals(StatusCode.SUCCESS.toString())) {
+            invalidAppIds.add(appId);
             appAndTimes.remove(appId);
             String user = appIdToUser.remove(appId);
-            addToAppHistory(user, lastReport, StatusCode.TIMEOUT);
+            addToAppHistory(user, lastReport);
+          } else if (System.currentTimeMillis() - lastReport.getUpdateTime() > expired) {
+            invalidAppIds.add(appId);
+            appAndTimes.remove(appId);
+            String user = appIdToUser.remove(appId);
+            lastReport.setExitCode(StatusCode.TIMEOUT.toString());
+            lastReport.setFinishTime(System.currentTimeMillis());
+            addToAppHistory(user, lastReport);
           }
         }
       }
       LOG.info("Start to check status for {} applications.", appIds.size());
-      for (String appId : expiredAppIds) {
-        LOG.info("Remove expired application : {}.", appId);
+      for (String appId : invalidAppIds) {
+        LOG.info("Remove invalidAppIds application : {}.", appId);
         appIds.remove(appId);
         if (appIdToRemoteStorageInfo.containsKey(appId)) {
           decRemoteStorageCounter(appIdToRemoteStorageInfo.get(appId).getPath());
