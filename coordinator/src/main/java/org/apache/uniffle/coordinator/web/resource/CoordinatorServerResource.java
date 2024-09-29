@@ -35,6 +35,7 @@ import org.apache.uniffle.common.util.Constants;
 import org.apache.uniffle.common.util.RssUtils;
 import org.apache.uniffle.common.util.ThreadUtils;
 import org.apache.uniffle.common.web.resource.BaseResource;
+import org.apache.uniffle.common.web.resource.ConfOpsResource;
 import org.apache.uniffle.common.web.resource.LogResouce;
 import org.apache.uniffle.common.web.resource.MetricResource;
 import org.apache.uniffle.common.web.resource.PrometheusMetricResource;
@@ -111,6 +112,11 @@ public class CoordinatorServerResource extends BaseResource {
     StringBuilder builder = new StringBuilder();
     ThreadUtils.printThreadInfo(builder, "");
     return builder.toString();
+  }
+
+  @Path("/confOps")
+  public Class<ConfOpsResource> getConfOps() {
+    return ConfOpsResource.class;
   }
 
   @GET
