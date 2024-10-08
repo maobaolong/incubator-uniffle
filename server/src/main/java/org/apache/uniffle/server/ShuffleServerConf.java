@@ -720,6 +720,12 @@ public class ShuffleServerConf extends RssBaseConf {
           .defaultValue(false)
           .withDescription("Whether to enable app detail log");
 
+  public static final ConfigOption<Integer> RSS_BLOCK_SIZE_STATISTIC_TOP_N =
+      ConfigOptions.key("rss.server.block.size.statistic.top.n")
+          .intType()
+          .defaultValue(3)
+          .withDescription("The topN num of block size for statistic.");
+
   public ShuffleServerConf() {}
 
   public ShuffleServerConf(String fileName) {

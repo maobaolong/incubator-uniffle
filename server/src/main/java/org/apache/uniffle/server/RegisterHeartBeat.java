@@ -17,6 +17,7 @@
 
 package org.apache.uniffle.server;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -114,6 +115,28 @@ public class RegisterHeartBeat {
       int jettyPort,
       long startTimeMs,
       List<RssProtos.ApplicationInfo> appInfos) {
+    return sendHeartBeat(id, ip, grpcPort, usedMemory, preAllocatedMemory, availableMemory,
+        eventNumInFlush, tags, serverStatus, localStorageInfo, nettyPort, jettyPort, startTimeMs,
+        appInfos, Collections.EMPTY_LIST);
+  }
+
+  @VisibleForTesting
+  public boolean sendHeartBeat(
+      String id,
+      String ip,
+      int grpcPort,
+      long usedMemory,
+      long preAllocatedMemory,
+      long availableMemory,
+      int eventNumInFlush,
+      Set<String> tags,
+      ServerStatus serverStatus,
+      Map<String, StorageInfo> localStorageInfo,
+      int nettyPort,
+      int jettyPort,
+      long startTimeMs,
+      List<RssProtos.ApplicationInfo> appInfos,
+      List<String> blockLengthTopN) {
     AtomicBoolean sendSuccessfully = new AtomicBoolean(false);
     // use `rss.server.heartbeat.interval` as the timeout option
     RssSendHeartBeatRequest request =
@@ -132,7 +155,8 @@ public class RegisterHeartBeat {
             nettyPort,
             jettyPort,
             startTimeMs,
-            appInfos);
+            appInfos,
+            blockLengthTopN);
 
     ThreadUtils.executeTasks(
         heartBeatExecutorService,

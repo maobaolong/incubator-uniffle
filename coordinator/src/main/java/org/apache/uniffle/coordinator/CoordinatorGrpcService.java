@@ -249,6 +249,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
       }
       // combine appInfo list from oldServerNode to serverNode
       serverNode.combineAppInfos(oldServerNode);
+      serverNode.combineBlockTopN(oldServerNode);
 
       coordinatorServer.getClusterManager().add(serverNode);
       final ShuffleServerHeartBeatResponse response =
@@ -580,7 +581,8 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
         request.getStartTimeMs(),
         request.getVersion(),
         request.getGitCommitId(),
-        request.getAppInfosList());
+        request.getAppInfosList(),
+        request.getBlockTopNList());
   }
 
   /**

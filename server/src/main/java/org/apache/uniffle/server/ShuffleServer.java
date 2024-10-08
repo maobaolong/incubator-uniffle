@@ -628,7 +628,8 @@ public class ShuffleServer {
         shuffleServer.getNettyPort(),
         shuffleServer.getJettyPort(),
         shuffleServer.getStartTimeMs(),
-        shuffleServer.getAppInfos());
+        shuffleServer.getAppInfos(),
+        shuffleServer.getBlockLengthTopN());
   }
 
   public ShuffleMergeManager getShuffleMergeManager() {
@@ -637,5 +638,9 @@ public class ShuffleServer {
 
   public boolean isRemoteMergeEnable() {
     return remoteMergeEnable;
+  }
+
+  public List<String> getBlockLengthTopN() {
+    return shuffleBufferManager.getBlockLengthTopN();
   }
 }

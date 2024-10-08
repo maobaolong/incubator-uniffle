@@ -64,6 +64,15 @@ public class ServerNode implements Comparable<ServerNode> {
     }
   }
 
+  public void combineBlockTopN(ServerNode oldServerNode) {
+    if (oldServerNode == null) {
+      return;
+    }
+    if (serverNodeVO.getBlockTopN().size() == 0) {
+      serverNodeVO.getBlockTopN().addAll(oldServerNode.getBlockTopN());
+    }
+  }
+
   public ServerNode(String id) {
     this(id, "", 0, 0, 0, 0, 0, Sets.newHashSet(), ServerStatus.EXCLUDED);
   }
@@ -199,6 +208,7 @@ public class ServerNode implements Comparable<ServerNode> {
         startTime,
         "",
         "",
+        Collections.emptyList(),
         Collections.emptyList());
   }
 
@@ -218,7 +228,8 @@ public class ServerNode implements Comparable<ServerNode> {
       long startTime,
       String version,
       String gitCommitId,
-      List<RssProtos.ApplicationInfo> appInfos) {
+      List<RssProtos.ApplicationInfo> appInfos,
+      List<String> blockTopN) {
     this.serverNodeVO =
         new ServerNodeVO(
             id,
@@ -235,7 +246,8 @@ public class ServerNode implements Comparable<ServerNode> {
             jettyPort,
             startTime,
             version,
-            gitCommitId);
+            gitCommitId,
+            blockTopN);
     this.appIdToInfos = new ConcurrentHashMap<>();
     for (RssProtos.ApplicationInfo app : appInfos) {
       this.appIdToInfos.put(app.getAppId(), app);
@@ -300,6 +312,14 @@ public class ServerNode implements Comparable<ServerNode> {
     return serverNodeVO.getStorageInfo();
   }
 
+  public void setBlockTopN(List<String> blockTopN) {
+    serverNodeVO.setBlockTopN(blockTopN);
+  }
+
+  public List<String> getBlockTopN() {
+    return serverNodeVO.getBlockTopN();
+  }
+
   @Override
   public String toString() {
     return "ServerNode with id["
@@ -332,6 +352,8 @@ public class ServerNode implements Comparable<ServerNode> {
         + serverNodeVO.getVersion()
         + "], gitCommitId["
         + serverNodeVO.getGitCommitId()
+        + "], blockTopN["
+        + serverNodeVO.getBlockTopN()
         + "]";
   }
 

@@ -17,6 +17,9 @@
 
 package org.apache.uniffle.coordinator.web.vo;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,9 +54,10 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
   private long startTime = -1;
   private String version;
   private String gitCommitId;
+  private List<String> blockTopN;
 
   public ServerNodeVO(String id) {
-    this(id, "", 0, 0, 0, 0, 0, Sets.newHashSet(), ServerStatus.EXCLUDED);
+    this(id, "", 0, 0, 0, 0, 0, Sets.newHashSet(), ServerStatus.EXCLUDED, Collections.EMPTY_LIST);
   }
 
   // Only for test
@@ -65,7 +69,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
       long preAllocatedMemory,
       long availableMemory,
       int eventNumInFlush,
-      Set<String> tags) {
+      Set<String> tags,
+      List<String> blockTopN) {
     this(
         id,
         ip,
@@ -76,30 +81,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
         eventNumInFlush,
         tags,
         ServerStatus.ACTIVE,
-        Maps.newHashMap());
-  }
-
-  public ServerNodeVO(
-      String id,
-      String ip,
-      int port,
-      long usedMemory,
-      long preAllocatedMemory,
-      long availableMemory,
-      int eventNumInFlush,
-      Set<String> tags,
-      ServerStatus status) {
-    this(
-        id,
-        ip,
-        port,
-        usedMemory,
-        preAllocatedMemory,
-        availableMemory,
-        eventNumInFlush,
-        tags,
-        status,
-        Maps.newHashMap());
+        Maps.newHashMap(),
+        blockTopN);
   }
 
   public ServerNodeVO(
@@ -112,7 +95,33 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
       int eventNumInFlush,
       Set<String> tags,
       ServerStatus status,
-      Map<String, StorageInfo> storageInfoMap) {
+      List<String> blockTopN) {
+    this(
+        id,
+        ip,
+        port,
+        usedMemory,
+        preAllocatedMemory,
+        availableMemory,
+        eventNumInFlush,
+        tags,
+        status,
+        Maps.newHashMap(),
+        blockTopN);
+  }
+
+  public ServerNodeVO(
+      String id,
+      String ip,
+      int port,
+      long usedMemory,
+      long preAllocatedMemory,
+      long availableMemory,
+      int eventNumInFlush,
+      Set<String> tags,
+      ServerStatus status,
+      Map<String, StorageInfo> storageInfoMap,
+      List<String> blockTopN) {
     this(
         id,
         ip,
@@ -126,7 +135,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
         storageInfoMap,
         -1,
         -1,
-        -1);
+        -1,
+        blockTopN);
   }
 
   public ServerNodeVO(
@@ -140,7 +150,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
       Set<String> tags,
       ServerStatus status,
       Map<String, StorageInfo> storageInfoMap,
-      int nettyPort) {
+      int nettyPort,
+      List<String> blockTopN) {
     this(
         id,
         ip,
@@ -154,7 +165,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
         storageInfoMap,
         nettyPort,
         -1,
-        -1L);
+        -1L,
+        blockTopN);
   }
 
   public ServerNodeVO(
@@ -170,7 +182,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
       Map<String, StorageInfo> storageInfoMap,
       int nettyPort,
       int jettyPort,
-      long startTime) {
+      long startTime,
+      List<String> blockTopN) {
     this(
         id,
         ip,
@@ -186,7 +199,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
         -1,
         -1L,
         "",
-        "");
+        "",
+        blockTopN);
   }
 
   public ServerNodeVO(
@@ -204,7 +218,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
       int jettyPort,
       long startTime,
       String version,
-      String gitCommitId) {
+      String gitCommitId,
+      List<String> blockTopN) {
     this.id = id;
     this.ip = ip;
     this.grpcPort = grpcPort;
@@ -226,6 +241,7 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
     this.startTime = startTime;
     this.version = version;
     this.gitCommitId = gitCommitId;
+    this.blockTopN = new ArrayList<>(blockTopN);
   }
 
   @Override
@@ -260,6 +276,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
         + version
         + "], gitCommitId["
         + gitCommitId
+        + "], blockTopN["
+        + blockTopN
         + "]";
   }
 

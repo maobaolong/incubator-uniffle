@@ -17,9 +17,12 @@
 
 package org.apache.uniffle.server.buffer;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -89,6 +92,9 @@ public class ShuffleBufferManager {
   // appId -> shuffleId -> shuffle size in buffer
   protected Map<String, Map<Integer, AtomicLong>> shuffleSizeMap = JavaUtils.newConcurrentMap();
   private final boolean appBlockSizeMetricEnabled;
+  private int blockLengthTopNNum;
+  private List<String> blockLengthBucket;
+  private DecimalFormat df = new DecimalFormat("0%");
 
   public ShuffleBufferManager(
       ShuffleServerConf conf, ShuffleFlushManager shuffleFlushManager, boolean nettyServerEnabled) {
@@ -145,6 +151,14 @@ public class ShuffleBufferManager {
     appBlockSizeMetricEnabled =
         conf.getBoolean(ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_ENABLED);
     shuffleBufferType = conf.get(ShuffleServerConf.SERVER_SHUFFLE_BUFFER_TYPE);
+    blockLengthTopNNum = conf.getInteger(ShuffleServerConf.RSS_BLOCK_SIZE_STATISTIC_TOP_N);
+    blockLengthBucket =
+        new ArrayList<>(
+            Arrays.asList(
+                conf.get(ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_BUCKETS)
+                    .trim()
+                    .split(",")));
+    blockLengthBucket.add("inf");
 
     ShuffleServerMetrics.addLabeledCacheGauge(
         BLOCK_COUNT_IN_BUFFER_POOL,
@@ -791,5 +805,44 @@ public class ShuffleBufferManager {
 
   public void setUsedMemory(long usedMemory) {
     this.usedMemory.set(usedMemory);
+  }
+
+  public List<String> getBlockLengthTopN() {
+    double[] bucketValues =
+        ShuffleServerMetrics.appHistogramWriteBlockSize.collect().get(0).samples.stream()
+            .filter(sample -> sample.name.endsWith("_bucket"))
+            .mapToDouble(sample -> sample.value)
+            .toArray();
+
+    List<String> result = new ArrayList<>();
+    Map<Integer, Double> unsortedMap = new HashMap<>();
+    Map<Integer, Double> sortedMap = new LinkedHashMap<>();
+    if (bucketValues.length > 0) {
+      // get actual bucket size
+      for (int i = bucketValues.length - 1; i > 0; i--) {
+        unsortedMap.put(i, bucketValues[i] - bucketValues[i - 1]);
+      }
+      unsortedMap.put(0, bucketValues[0]);
+      unsortedMap.entrySet().stream()
+          .sorted(Map.Entry.<Integer, Double>comparingByValue().reversed())
+          .forEachOrdered(x -> sortedMap.put(x.getKey(), x.getValue()));
+      double bucketValueSum = bucketValues[bucketValues.length - 1];
+      if (bucketValueSum > 0) {
+        double topNNum = blockLengthTopNNum;
+        for (Map.Entry<Integer, Double> entry : sortedMap.entrySet()) {
+          result.add(
+              blockLengthBucket.get(entry.getKey())
+                  + "/"
+                  + String.format("%.0f", entry.getValue())
+                  + "/"
+                  + df.format(entry.getValue() / bucketValueSum));
+          topNNum--;
+          if (topNNum == 0) {
+            break;
+          }
+        }
+      }
+    }
+    return result;
   }
 }

@@ -105,6 +105,16 @@
           </div>
         </template>
       </el-table-column>
+      <el-table-column
+          prop="blockTopN"
+          label="BlockTopN"
+          min-width="100">
+        <template v-slot="{ row }">
+          <div v-for="(item, index) in row.blockTopN" :key="index">
+            <span>{{ item }}</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column v-if="isShowRemove" label="Operations(admin)">
         <template v-slot:default="scope">
           <el-button size="small" type="danger" @click="showDeleteConfirm(scope.row)">
