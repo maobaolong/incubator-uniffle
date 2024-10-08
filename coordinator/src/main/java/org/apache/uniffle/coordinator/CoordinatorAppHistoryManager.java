@@ -50,6 +50,7 @@ public class CoordinatorAppHistoryManager {
   private final CoordinatorConf conf;
 
   private Path path = null;
+  private FileSystem fs = null;
   private HadoopFileWriter hadoopFileWriter = null;
   private int batchSize = 0;
   private long flushIntervalMs = 0;
@@ -75,21 +76,26 @@ public class CoordinatorAppHistoryManager {
     String historyFile = this.conf.getString(CoordinatorConf.COORDINATOR_APP_HISTORY_PATH);
     if (historyFile != null && !historyFile.isEmpty()) {
       // Convert relative path to absolute path
-      if (historyFile.startsWith("file://./")) {
-        String absPath = new File(historyFile.substring(7)).getAbsolutePath();
-        historyFile = "file://" + absPath;
-      }
+      historyFile = convertToHadoopPath(historyFile);
       this.path = new Path(historyFile);
-      FileSystem fileSystem =
+      this.fs =
           HadoopFilesystemProvider.getFilesystem(
               "rss_coordinator_app_history", path, this.conf.getHadoopConf());
-      this.hadoopFileWriter = new HadoopFileWriter(fileSystem, path, this.conf.getHadoopConf());
+      this.hadoopFileWriter = new HadoopFileWriter(fs, path, this.conf.getHadoopConf());
       this.batchSize = this.conf.getInteger(CoordinatorConf.COORDINATOR_APP_HISTORY_BATCH_SIZE);
       this.flushIntervalMs =
           this.conf.getLong(CoordinatorConf.COORDINATOR_APP_HISTORY_FLUSH_INTERVAL_MS);
       startPersistentThread();
       loadAppInfo();
     }
+  }
+
+  public static String convertToHadoopPath(String path) throws Exception {
+    if (path.startsWith("file://./")) {
+      String absPath = new File(path.substring(7)).getAbsolutePath();
+      path = "file://" + absPath;
+    }
+    return path;
   }
 
   public void startPersistentThread() {

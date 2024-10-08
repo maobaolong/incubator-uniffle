@@ -22,9 +22,23 @@ public class ShuffleInfo {
   private long assignmentTime;
   private int partitionNum;
 
+  public ShuffleInfo() {}
+
   public ShuffleInfo(int shuffleId, long assignmentTime, int partitionNum) {
     this.shuffleId = shuffleId;
     this.assignmentTime = assignmentTime;
+    this.partitionNum = partitionNum;
+  }
+
+  public void setShuffleId(int shuffleId) {
+    this.shuffleId = shuffleId;
+  }
+
+  public void setAssignmentTime(long assignmentTime) {
+    this.assignmentTime = assignmentTime;
+  }
+
+  public void setPartitionNum(int partitionNum) {
     this.partitionNum = partitionNum;
   }
 

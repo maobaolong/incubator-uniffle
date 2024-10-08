@@ -17,8 +17,19 @@
 
 package org.apache.uniffle.coordinator;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.jupiter.api.Test;
 
+import org.apache.uniffle.common.filesystem.HadoopFilesystemProvider;
+import org.apache.uniffle.common.rpc.StatusCode;
 import org.apache.uniffle.common.util.ExitUtils;
 import org.apache.uniffle.common.util.ExitUtils.ExitException;
 import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
@@ -88,5 +99,78 @@ public class CoordinatorServerTest {
     AppInfo appInfo = createAppInfo("application_1703049085550_19283617_1724740334479", 0);
     AppInfoVO appInfoVO = cs1.getAppInfoV0(user, appInfo);
     assertEquals(appInfoVO.getUrl(), "http://localhost/application_1703049085550_19283617/test");
+  }
+
+  @Test
+  public void testAppHistoryManager() throws Exception {
+    String pathStr = "file://./test_app_history.txt";
+    CoordinatorConf coordinatorConf = new CoordinatorConf();
+    coordinatorConf.setString(CoordinatorConf.COORDINATOR_APP_HISTORY_PATH, pathStr);
+    coordinatorConf.setLong(CoordinatorConf.COORDINATOR_APP_HISTORY_FLUSH_INTERVAL_MS, 10);
+    // Make sure the history file not exist.
+    Path path = new Path(CoordinatorAppHistoryManager.convertToHadoopPath(pathStr));
+    FileSystem fs =
+        HadoopFilesystemProvider.getFilesystem(
+            "rss_coordinator_app_history", path, coordinatorConf.getHadoopConf());
+    Boolean exists = fs.exists(path);
+    assertEquals(false, exists);
+    try {
+      {
+        CoordinatorAppHistoryManager appHistoryManager =
+            new CoordinatorAppHistoryManager(coordinatorConf);
+        List<AppInfoVO> appInfos = appHistoryManager.getAppInfos(10);
+        assertEquals(0, appInfos.size());
+
+        Map<Integer, ShuffleInfo> shuffleInfo = new HashMap<>();
+        shuffleInfo.put(0, new ShuffleInfo(0, 1728378906904L, 10));
+
+        // add app info
+        AppInfoVO appInfoVO =
+            new AppInfoVO(
+                "user",
+                "application_01",
+                0,
+                0,
+                StatusCode.SUCCESS.toString(),
+                0,
+                "1.0",
+                "123456",
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "http://localhost/application_01/test",
+                null,
+                null,
+                shuffleInfo,
+                "");
+        appHistoryManager.addAppInfo(appInfoVO);
+        Thread.sleep(100); // wait for flush to storage
+        appInfos = appHistoryManager.getAppInfos(10);
+        assertEquals(appInfos.size(), 1);
+      }
+      {
+        // Load history app from history file
+        CoordinatorAppHistoryManager appHistoryManager =
+            new CoordinatorAppHistoryManager(coordinatorConf);
+        List<AppInfoVO> appInfos = appHistoryManager.getAppInfos(10);
+        assertEquals(1, appInfos.size());
+      }
+    } finally {
+      // clean up
+      FileStatus[] allFiles = fs.listStatus(path.getParent());
+
+      // Filter files that match our naming pattern
+      List<FileStatus> relevantFiles =
+          Arrays.stream(allFiles)
+              .filter(file -> file.getPath().getName().startsWith(path.getName()))
+              .collect(Collectors.toList());
+      for (FileStatus file : relevantFiles) {
+        fs.delete(file.getPath(), true);
+      }
+    }
   }
 }
