@@ -301,6 +301,7 @@ message ShuffleServerHeartBeatRequest {
   optional int64 startTimeMs = 24;
   repeated ApplicationInfo appInfos = 25;
   repeated string blockTopN = 26;
+  int32 appWithNode = 27;
 }
 
 message ShuffleServerHeartBeatResponse {

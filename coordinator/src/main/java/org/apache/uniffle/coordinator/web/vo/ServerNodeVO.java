@@ -55,6 +55,7 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
   private String version;
   private String gitCommitId;
   private List<String> blockTopN;
+  private int appWithNode;
 
   public ServerNodeVO(String id) {
     this(id, "", 0, 0, 0, 0, 0, Sets.newHashSet(), ServerStatus.EXCLUDED, Collections.EMPTY_LIST);
@@ -200,7 +201,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
         -1L,
         "",
         "",
-        blockTopN);
+        blockTopN,
+        0);
   }
 
   public ServerNodeVO(
@@ -219,7 +221,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
       long startTime,
       String version,
       String gitCommitId,
-      List<String> blockTopN) {
+      List<String> blockTopN,
+      int appWithNode) {
     this.id = id;
     this.ip = ip;
     this.grpcPort = grpcPort;
@@ -242,6 +245,7 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
     this.version = version;
     this.gitCommitId = gitCommitId;
     this.blockTopN = new ArrayList<>(blockTopN);
+    this.appWithNode = appWithNode;
   }
 
   @Override
@@ -278,6 +282,8 @@ public class ServerNodeVO implements Comparable<ServerNodeVO> {
         + gitCommitId
         + "], blockTopN["
         + blockTopN
+        + "] + appWithNode["
+        + appWithNode
         + "]";
   }
 

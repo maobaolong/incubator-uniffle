@@ -129,7 +129,8 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
       int jettyPort,
       long startTimeMs,
       List<RssProtos.ApplicationInfo> appInfos,
-      List<String> blockLengthTopN) {
+      List<String> blockLengthTopN,
+      int appWithNode) {
     ShuffleServerId serverId =
         ShuffleServerId.newBuilder()
             .setId(id)
@@ -153,6 +154,7 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
             .setGitCommitId(Constants.REVISION_SHORT)
             .addAllAppInfos(appInfos)
             .addAllBlockTopN(blockLengthTopN)
+            .setAppWithNode(appWithNode)
             .build();
 
     RssProtos.StatusCode status;
@@ -231,7 +233,8 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
             request.getJettyPort(),
             request.getStartTimeMs(),
             request.getAppInfos(),
-            request.getBlockLengthTopN());
+            request.getBlockLengthTopN(),
+            request.getAppWithNode());
 
     RssSendHeartBeatResponse response;
     RssProtos.StatusCode statusCode = rpcResponse.getStatus();

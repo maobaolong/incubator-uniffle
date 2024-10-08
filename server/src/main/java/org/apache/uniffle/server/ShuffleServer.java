@@ -629,7 +629,8 @@ public class ShuffleServer {
         shuffleServer.getJettyPort(),
         shuffleServer.getStartTimeMs(),
         shuffleServer.getAppInfos(),
-        shuffleServer.getBlockLengthTopN());
+        shuffleServer.getBlockLengthTopN(),
+        shuffleServer.getShuffleTaskManager().getShuffleTaskInfos().size());
   }
 
   public ShuffleMergeManager getShuffleMergeManager() {

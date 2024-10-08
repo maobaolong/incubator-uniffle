@@ -122,6 +122,7 @@
           </el-button>
         </template>
       </el-table-column>
+      <el-table-column prop="appWithNode" label="appWithNode" min-width="80" sortable />
     </el-table>
     <el-dialog v-model="showLogDialog" fullscreen>
       <LogFileList

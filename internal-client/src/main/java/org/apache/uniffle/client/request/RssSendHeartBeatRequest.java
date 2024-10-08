@@ -44,6 +44,7 @@ public class RssSendHeartBeatRequest {
 
   private final List<RssProtos.ApplicationInfo> appInfos;
   private final List<String> blockLengthTopN;
+  private int appWithNode;
 
   public RssSendHeartBeatRequest(
       String shuffleServerId,
@@ -61,7 +62,8 @@ public class RssSendHeartBeatRequest {
       int jettyPort,
       long startTimeMs,
       List<RssProtos.ApplicationInfo> appInfos,
-      List<String> blockLengthTopN) {
+      List<String> blockLengthTopN,
+      int appWithNode) {
     this.shuffleServerId = shuffleServerId;
     this.shuffleServerIp = shuffleServerIp;
     this.shuffleServerPort = shuffleServerPort;
@@ -78,6 +80,7 @@ public class RssSendHeartBeatRequest {
     this.startTimeMs = startTimeMs;
     this.appInfos = appInfos;
     this.blockLengthTopN = blockLengthTopN;
+    this.appWithNode = appWithNode;
   }
 
   public String getShuffleServerId() {
@@ -142,5 +145,9 @@ public class RssSendHeartBeatRequest {
 
   public List<String> getBlockLengthTopN() {
     return blockLengthTopN;
+  }
+
+  public int getAppWithNode() {
+    return appWithNode;
   }
 }

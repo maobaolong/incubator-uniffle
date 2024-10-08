@@ -90,7 +90,8 @@ public class RegisterHeartBeat {
                 shuffleServer.getNettyPort(),
                 shuffleServer.getJettyPort(),
                 shuffleServer.getStartTimeMs(),
-                shuffleServer.getAppInfos());
+                shuffleServer.getAppInfos(),
+                shuffleServer.getShuffleTaskManager().getShuffleTaskInfos().size());
           } catch (Exception e) {
             LOG.warn("Error happened when send heart beat to coordinator");
           }
@@ -114,10 +115,25 @@ public class RegisterHeartBeat {
       int nettyPort,
       int jettyPort,
       long startTimeMs,
-      List<RssProtos.ApplicationInfo> appInfos) {
-    return sendHeartBeat(id, ip, grpcPort, usedMemory, preAllocatedMemory, availableMemory,
-        eventNumInFlush, tags, serverStatus, localStorageInfo, nettyPort, jettyPort, startTimeMs,
-        appInfos, Collections.EMPTY_LIST);
+      List<RssProtos.ApplicationInfo> appInfos,
+      int appWithNode) {
+    return sendHeartBeat(
+        id,
+        ip,
+        grpcPort,
+        usedMemory,
+        preAllocatedMemory,
+        availableMemory,
+        eventNumInFlush,
+        tags,
+        serverStatus,
+        localStorageInfo,
+        nettyPort,
+        jettyPort,
+        startTimeMs,
+        appInfos,
+        Collections.EMPTY_LIST,
+        appWithNode);
   }
 
   @VisibleForTesting
@@ -136,7 +152,8 @@ public class RegisterHeartBeat {
       int jettyPort,
       long startTimeMs,
       List<RssProtos.ApplicationInfo> appInfos,
-      List<String> blockLengthTopN) {
+      List<String> blockLengthTopN,
+      int appWithNode) {
     AtomicBoolean sendSuccessfully = new AtomicBoolean(false);
     // use `rss.server.heartbeat.interval` as the timeout option
     RssSendHeartBeatRequest request =
@@ -156,7 +173,8 @@ public class RegisterHeartBeat {
             jettyPort,
             startTimeMs,
             appInfos,
-            blockLengthTopN);
+            blockLengthTopN,
+            appWithNode);
 
     ThreadUtils.executeTasks(
         heartBeatExecutorService,
