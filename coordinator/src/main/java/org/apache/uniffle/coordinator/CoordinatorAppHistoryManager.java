@@ -153,7 +153,8 @@ public class CoordinatorAppHistoryManager {
       byte[] data = hadoopFileReader.read(offset, (int) readSize);
       String dataStr = new String(data, StandardCharsets.UTF_8);
       String[] lines = dataStr.split("\n");
-      for (String line : lines) {
+      for (int i = 0; i < lines.length; i++) {
+        String line = lines[i];
         if (line.isEmpty()) {
           continue;
         }
@@ -161,7 +162,10 @@ public class CoordinatorAppHistoryManager {
           AppInfoVO appInfoVO = objectMapper.readValue(line, AppInfoVO.class);
           cachedAppInfoMap.put(appInfoVO.getAppId(), appInfoVO);
         } catch (JsonProcessingException e) {
-          LOG.warn("Skipping invalid JSON line: {}. Error: {}", line, e.getMessage(), e);
+          // Only log warnings for lines after the first one
+          if (i > 0) {
+            LOG.warn("Skipping invalid JSON line: {}. Error: {}", line, e.getMessage(), e);
+          }
         }
       }
     } catch (IllegalStateException e) {
