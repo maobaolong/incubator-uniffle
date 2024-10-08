@@ -1472,11 +1472,9 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
       auditLogger = AUDIT_LOGGER;
     }
     ServerRpcAuditContext auditContext = new ServerRpcAuditContext(auditLogger);
+    auditContext.withCreationTimeNs(System.nanoTime());
     if (auditLogger != null) {
-      auditContext
-          .withCommand(command)
-          .withFrom(ClientContextServerInterceptor.getIpAddress())
-          .withCreationTimeNs(System.nanoTime());
+      auditContext.withCommand(command).withFrom(ClientContextServerInterceptor.getIpAddress());
     }
     return auditContext;
   }
