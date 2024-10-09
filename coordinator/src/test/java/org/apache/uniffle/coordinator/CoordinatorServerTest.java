@@ -107,13 +107,25 @@ public class CoordinatorServerTest {
     CoordinatorConf coordinatorConf = new CoordinatorConf();
     coordinatorConf.setString(CoordinatorConf.COORDINATOR_APP_HISTORY_PATH, pathStr);
     coordinatorConf.setLong(CoordinatorConf.COORDINATOR_APP_HISTORY_FLUSH_INTERVAL_MS, 10);
+    coordinatorConf.setInteger(CoordinatorConf.COORDINATOR_APP_HISTORY_FILE_ROTATE_SIZE, 500);
     // Make sure the history file not exist.
     Path path = new Path(CoordinatorAppHistoryManager.convertToHadoopPath(pathStr));
     FileSystem fs =
         HadoopFilesystemProvider.getFilesystem(
             "rss_coordinator_app_history", path, coordinatorConf.getHadoopConf());
-    Boolean exists = fs.exists(path);
-    assertEquals(false, exists);
+    {
+      // clean old files
+      FileStatus[] allFiles = fs.listStatus(path.getParent());
+
+      // Filter files that match our naming pattern
+      List<FileStatus> relevantFiles =
+          Arrays.stream(allFiles)
+              .filter(file -> file.getPath().getName().startsWith(path.getName()))
+              .collect(Collectors.toList());
+      for (FileStatus file : relevantFiles) {
+        fs.delete(file.getPath(), true);
+      }
+    }
     try {
       {
         CoordinatorAppHistoryManager appHistoryManager =
@@ -158,6 +170,52 @@ public class CoordinatorServerTest {
             new CoordinatorAppHistoryManager(coordinatorConf);
         List<AppInfoVO> appInfos = appHistoryManager.getAppInfos(10);
         assertEquals(1, appInfos.size());
+
+        Map<Integer, ShuffleInfo> shuffleInfo = new HashMap<>();
+        shuffleInfo.put(1, new ShuffleInfo(1, 1728378906904L, 10));
+        // Trigger rotate
+        AppInfoVO appInfoVO =
+            new AppInfoVO(
+                "user",
+                "application_02",
+                0,
+                0,
+                StatusCode.SUCCESS.toString(),
+                0,
+                "1.0",
+                "123456",
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "http://localhost/application_02/test",
+                null,
+                null,
+                null,
+                "");
+        appHistoryManager.addAppInfo(appInfoVO);
+        Thread.sleep(100); // wait for flush to storage
+        appInfos = appHistoryManager.getAppInfos(10);
+        assertEquals(appInfos.size(), 2);
+      }
+      {
+        // Check the history path, history file has been rotated
+        FileStatus[] allFiles = fs.listStatus(path.getParent());
+        // Filter files that match our naming pattern
+        List<FileStatus> relevantFiles =
+            Arrays.stream(allFiles)
+                .filter(file -> file.getPath().getName().startsWith(path.getName()))
+                .collect(Collectors.toList());
+        assertEquals(2, relevantFiles.size());
+
+        // Get the history app num from all history file and rotated file.
+        CoordinatorAppHistoryManager appHistoryManager =
+            new CoordinatorAppHistoryManager(coordinatorConf);
+        List<AppInfoVO> appInfos = appHistoryManager.getAppInfos(10);
+        assertEquals(2, appInfos.size());
       }
     } finally {
       // clean up

@@ -20,16 +20,22 @@ package org.apache.uniffle.coordinator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -55,11 +61,15 @@ public class CoordinatorAppHistoryManager {
   private int batchSize = 0;
   private long flushIntervalMs = 0;
 
+  private final long rotateSize;
+
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   public CoordinatorAppHistoryManager(CoordinatorConf conf) throws Exception {
     this.conf = conf;
     this.isRunning = true;
+    this.rotateSize =
+        this.conf.getInteger(CoordinatorConf.COORDINATOR_APP_HISTORY_FILE_ROTATE_SIZE);
     this.appInfoQueue =
         new LinkedBlockingQueue<>(
             this.conf.getInteger(CoordinatorConf.COORDINATOR_APP_HISTORY_CACHE_MAX_SIZE));
@@ -146,48 +156,77 @@ public class CoordinatorAppHistoryManager {
   }
 
   public void loadAppInfo() {
-    HadoopFileReader hadoopFileReader = null;
     try {
-      hadoopFileReader = new HadoopFileReader(path, this.conf.getHadoopConf());
-      // read last N bytes, make sure to read the last cachedAppInfoSize AppInfoVOs
-      long readSize = cachedAppInfoSize * 1024L;
-      long fileSize = hadoopFileReader.getFileLen();
-      if (fileSize < readSize) {
-        readSize = fileSize;
+      FileSystem fs = path.getFileSystem(conf.getHadoopConf());
+      FileStatus[] allFiles = fs.listStatus(path.getParent());
+
+      // Filter files that match our naming pattern
+      List<FileStatus> relevantFiles =
+          Arrays.stream(allFiles)
+              .filter(file -> file.getPath().getName().startsWith(path.getName()))
+              .collect(Collectors.toList());
+
+      // Sort relevant files in reverse order (newest first)
+      relevantFiles.sort(Comparator.comparing(FileStatus::getModificationTime).reversed());
+
+      int loadedAppInfoCount = 0;
+      for (FileStatus file : relevantFiles) {
+        if (loadedAppInfoCount >= cachedAppInfoSize) {
+          break;
+        }
+
+        loadedAppInfoCount +=
+            loadAppInfoFromFile(file.getPath(), cachedAppInfoSize - loadedAppInfoCount);
       }
-      long offset = fileSize - readSize;
+    } catch (IOException e) {
+      LOG.error("Failed to list or read app history files", e);
+    }
+  }
+
+  private int loadAppInfoFromFile(Path filePath, int remainingCount) {
+    HadoopFileReader hadoopFileReader = null;
+    int loadedCount = 0;
+    try {
+      hadoopFileReader = new HadoopFileReader(filePath, this.conf.getHadoopConf());
+      long fileSize = hadoopFileReader.getFileLen();
+      long readSize = Math.min(fileSize, remainingCount * 1024L);
+      long offset = Math.max(0, fileSize - readSize);
+
       byte[] data = hadoopFileReader.read(offset, (int) readSize);
       String dataStr = new String(data, StandardCharsets.UTF_8);
       String[] lines = dataStr.split("\n");
-      for (int i = 0; i < lines.length; i++) {
-        String line = lines[i];
+
+      for (int i = lines.length - 1; i >= 0 && loadedCount < remainingCount; i--) {
+        String line = lines[i].trim();
         if (line.isEmpty()) {
           continue;
         }
         try {
           AppInfoVO appInfoVO = objectMapper.readValue(line, AppInfoVO.class);
           cachedAppInfoMap.put(appInfoVO.getAppId(), appInfoVO);
+          loadedCount++;
         } catch (JsonProcessingException e) {
-          // Only log warnings for lines after the first one
-          if (i > 0) {
-            LOG.warn("Skipping invalid JSON line: {}. Error: {}", line, e.getMessage(), e);
-          }
+          //          if (i < lines.length - 1) {
+          LOG.warn(
+              "Skipping invalid JSON line in file {}: {}. Error: {}",
+              filePath,
+              line,
+              e.getMessage());
+          //          }
         }
       }
-    } catch (IllegalStateException e) {
-      LOG.error(
-          "load app info from {} failed, got IllegalStateException: {}", path, e.getMessage());
     } catch (Exception e) {
-      LOG.error("load app info from {} failed, got Exception: {}", path, e.getMessage());
+      LOG.error("Failed to load app info from file: {}", filePath, e);
     } finally {
       if (hadoopFileReader != null) {
         try {
           hadoopFileReader.close();
         } catch (IOException e) {
-          LOG.error("close hadoopFileReader from {} failed, Exception: {}", path, e.getMessage());
+          LOG.error("Failed to close HadoopFileReader for file: {}", filePath, e);
         }
       }
     }
+    return loadedCount;
   }
 
   public void persistentAppInfo(List<AppInfoVO> appInfos) {
@@ -201,9 +240,40 @@ public class CoordinatorAppHistoryManager {
                     StandardCharsets.UTF_8)); // Add a newline character to separate JSON objects
       }
       hadoopFileWriter.flush();
+      checkAndRotateFile();
     } catch (IOException e) {
       LOG.error("write data failed, Exception: {}", e.getMessage());
     }
+  }
+
+  private void checkAndRotateFile() throws IOException {
+    if (hadoopFileWriter == null) {
+      LOG.warn("hadoopFileWriter is null but expected not null, reopen it path {}", path);
+      hadoopFileWriter = new HadoopFileWriter(fs, path, conf.getHadoopConf());
+    }
+    if (hadoopFileWriter.getPos() < rotateSize) {
+      return;
+    }
+
+    // Generate the new file name with the specified timestamp format
+    LocalDateTime now = LocalDateTime.now();
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+    String timestamp = now.format(formatter);
+    Path newPath = new Path(path.getParent(), path.getName() + "." + timestamp);
+
+    // Rename the current file
+    FileSystem fs = path.getFileSystem(conf.getHadoopConf());
+    if (!fs.rename(path, newPath)) {
+      throw new IOException("Failed to rename file during rotation");
+    }
+    // close pre handler
+    hadoopFileWriter.close();
+    hadoopFileWriter = null;
+
+    // Create a new file with the original name
+    hadoopFileWriter = new HadoopFileWriter(fs, path, conf.getHadoopConf());
+
+    LOG.debug("Rotated app history file from {} to {}", path, newPath);
   }
 
   public void close() {

@@ -293,6 +293,11 @@ public class CoordinatorConf extends RssBaseConf {
           .stringType()
           .defaultValue("")
           .withDescription("The list to display for application spark config.");
+  public static final ConfigOption<Integer> COORDINATOR_APP_HISTORY_FILE_ROTATE_SIZE =
+      ConfigOptions.key("rss.coordinator.app.history.file.rotate.size")
+          .intType()
+          .defaultValue(500 * 1024 * 1024)
+          .withDescription("The rotate size for app history file.");
 
   public CoordinatorConf() {}
 
