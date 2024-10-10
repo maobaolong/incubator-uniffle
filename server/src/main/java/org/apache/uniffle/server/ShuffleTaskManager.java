@@ -242,7 +242,8 @@ public class ShuffleTaskManager {
     topNShuffleDataSizeOfAppCalcTask = new TopNShuffleDataSizeOfAppCalcTask(this, conf);
     topNShuffleDataSizeOfAppCalcTask.start();
 
-    ShuffleServerMetrics.addLabeledGauge(REQUIRE_BUFFER_COUNT, requireBufferIds::size);
+    ShuffleServerMetrics.addLabeledGauge(
+        REQUIRE_BUFFER_COUNT, () -> (double) requireBufferIds.size());
   }
 
   public ReentrantReadWriteLock.WriteLock getAppWriteLock(String appId) {

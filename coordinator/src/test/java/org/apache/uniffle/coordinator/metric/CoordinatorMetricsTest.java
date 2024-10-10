@@ -101,7 +101,7 @@ public class CoordinatorMetricsTest {
       }
       actualMetrics++;
     }
-    assertTrue(actualMetrics > 0);
+    assertEquals(10, actualMetrics);
   }
 
   @Test

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.uniffle.common.config.RssBaseConf;
-import org.apache.uniffle.common.executor.ThreadPoolManager;
 import org.apache.uniffle.common.metrics.GRPCMetrics;
 import org.apache.uniffle.common.util.Constants;
 import org.apache.uniffle.common.util.ExitUtils;
@@ -58,7 +58,7 @@ public class GrpcServer implements ServerInterface {
   private Server server;
   private final int port;
   private int listenPort;
-  private final GrpcThreadPoolExecutor pool;
+  private final ExecutorService pool;
   private List<Pair<BindableService, List<ServerInterceptor>>> servicesWithInterceptors;
   private GRPCMetrics grpcMetrics;
   private RssBaseConf rssConf;
@@ -82,12 +82,6 @@ public class GrpcServer implements ServerInterface {
             Queues.newLinkedBlockingQueue(Integer.MAX_VALUE),
             ThreadUtils.getThreadFactory("Grpc"),
             grpcMetrics);
-    ThreadPoolManager.registerThreadPool(
-        "Grpc",
-        () -> conf.getInteger(RssBaseConf.RPC_EXECUTOR_SIZE),
-        () -> conf.getInteger(RssBaseConf.RPC_EXECUTOR_SIZE) * 2,
-        () -> 10L,
-        pool);
   }
 
   // This method is only used for the sake of synchronizing one test
@@ -240,7 +234,6 @@ public class GrpcServer implements ServerInterface {
       LOG.info("GRPC server stopped!");
     }
     if (pool != null) {
-      ThreadPoolManager.unregister(pool);
       pool.shutdown();
     }
   }

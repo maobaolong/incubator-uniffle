@@ -26,13 +26,12 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import org.apache.commons.lang3.StringUtils;
 
-import org.apache.uniffle.common.metrics.CommonMetrics;
 import org.apache.uniffle.common.metrics.MetricsManager;
 import org.apache.uniffle.common.util.Constants;
 import org.apache.uniffle.common.util.JavaUtils;
 import org.apache.uniffle.common.util.RssUtils;
 
-public class CoordinatorMetrics extends CommonMetrics {
+public class CoordinatorMetrics {
 
   private static final String TOTAL_SERVER_NUM = "total_server_num";
   private static final String RUNNING_APP_NUM = "running_app_num";
@@ -59,6 +58,9 @@ public class CoordinatorMetrics extends CommonMetrics {
   public static Counter counterTotalLoadDeniedRequest;
   public static final Map<String, Gauge> GAUGE_USED_REMOTE_STORAGE = JavaUtils.newConcurrentMap();
 
+  private static MetricsManager metricsManager;
+  private static boolean isRegister = false;
+
   public static synchronized void register(CollectorRegistry collectorRegistry) {
     if (!isRegister) {
       Map<String, String> labels = Maps.newHashMap();
@@ -76,8 +78,13 @@ public class CoordinatorMetrics extends CommonMetrics {
 
   @VisibleForTesting
   public static void clear() {
-    CommonMetrics.clear();
+    isRegister = false;
     GAUGE_USED_REMOTE_STORAGE.clear();
+    CollectorRegistry.defaultRegistry.clear();
+  }
+
+  public static CollectorRegistry getCollectorRegistry() {
+    return metricsManager.getCollectorRegistry();
   }
 
   public static void addDynamicGaugeForRemoteStorage(String storageHost) {
@@ -96,7 +103,7 @@ public class CoordinatorMetrics extends CommonMetrics {
     }
   }
 
-  protected static void setUpMetrics() {
+  private static void setUpMetrics() {
     gaugeTotalServerNum = metricsManager.addGauge(TOTAL_SERVER_NUM);
     gaugeExcludeServerNum = metricsManager.addGauge(EXCLUDE_SERVER_NUM);
     gaugeUnhealthyServerNum = metricsManager.addGauge(UNHEALTHY_SERVER_NUM);
