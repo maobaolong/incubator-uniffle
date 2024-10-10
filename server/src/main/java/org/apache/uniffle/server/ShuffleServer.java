@@ -602,7 +602,6 @@ public class ShuffleServer {
               .setLocalTotalSize(taskInfo.getOnLocalFileDataSize())
               .setHadoopTotalSize(taskInfo.getOnHadoopDataSize())
               .setTotalSize(taskInfo.getTotalDataSize())
-              .setMaxSizePartitionInfo(taskInfo.getMaxSizePartitionInfo().toProto())
               .build();
 
       appInfos.add(applicationInfo);
@@ -610,6 +609,7 @@ public class ShuffleServer {
     return appInfos;
   }
 
+  @VisibleForTesting
   public void sendHeartbeat() {
     ShuffleServer shuffleServer = this;
     registerHeartBeat.sendHeartBeat(
