@@ -35,7 +35,6 @@ import org.apache.uniffle.common.util.Constants;
 import org.apache.uniffle.common.util.RssUtils;
 import org.apache.uniffle.common.util.ThreadUtils;
 import org.apache.uniffle.common.web.resource.BaseResource;
-import org.apache.uniffle.common.web.resource.ConfOpsResource;
 import org.apache.uniffle.common.web.resource.LogResouce;
 import org.apache.uniffle.common.web.resource.MetricResource;
 import org.apache.uniffle.common.web.resource.PrometheusMetricResource;
@@ -123,10 +122,5 @@ public class CoordinatorServerResource extends BaseResource {
   @Path("/logs/{file}")
   public Class<LogResouce> getCoordinatorLog(@PathParam("file") String file) {
     return LogResouce.class;
-  }
-
-  @Path("/confOps")
-  public Class<ConfOpsResource> getConfOps() {
-    return ConfOpsResource.class;
   }
 }
