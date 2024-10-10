@@ -54,8 +54,6 @@ import org.apache.uniffle.server.ShuffleServerConf;
 import org.apache.uniffle.server.ShuffleServerMetrics;
 import org.apache.uniffle.server.ShuffleTaskManager;
 
-import static org.apache.uniffle.server.ShuffleServerMetrics.BLOCK_COUNT;
-
 public class ShuffleBufferManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(ShuffleBufferManager.class);
@@ -143,16 +141,6 @@ public class ShuffleBufferManager {
     appBlockSizeMetricEnabled =
         conf.getBoolean(ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_ENABLED);
     shuffleBufferType = conf.get(ShuffleServerConf.SERVER_SHUFFLE_BUFFER_TYPE);
-    ShuffleServerMetrics.addLabeledCacheGauge(
-        BLOCK_COUNT,
-        () ->
-            (double)
-                bufferPool.values().stream()
-                    .flatMap(innerMap -> innerMap.values().stream())
-                    .flatMap(rangeMap -> rangeMap.asMapOfRanges().values().stream())
-                    .mapToInt(shuffleBuffer -> shuffleBuffer.getBlockCount())
-                    .sum(),
-        2 * 60 * 1000L /* 2 minutes */);
   }
 
   public void setShuffleTaskManager(ShuffleTaskManager taskManager) {
