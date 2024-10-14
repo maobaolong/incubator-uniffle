@@ -897,7 +897,12 @@ public class ShuffleTaskManager {
       }
       partitionInfoSummary
           .append("The maxSizePartitionInfo: ")
-          .append(shuffleTaskInfo.getMaxSizePartitionInfo());
+          .append(shuffleTaskInfo.getMaxSizePartitionInfo())
+          .append("\n");
+      partitionInfoSummary
+          .append("The mostCountPartitionInfo: ")
+          .append(shuffleTaskInfo.getMostBlockPartitionInfo())
+          .append("\n");
       LOG.info("Removing app summary info: {}", partitionInfoSummary);
 
       partitionsToBlockIds.remove(appId);

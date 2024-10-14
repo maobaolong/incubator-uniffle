@@ -283,6 +283,7 @@ message ApplicationInfo {
   int64 hadoopTotalSize = 7;
   int64 totalSize = 8;
   PartitionInfo maxSizePartitionInfo = 9;
+  PartitionInfo mostBlockPartitionInfo = 10;
 }
 
 message ShuffleServerHeartBeatRequest {

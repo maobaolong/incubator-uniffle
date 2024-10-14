@@ -109,7 +109,14 @@
           </template>
         </el-table-column>
         <el-table-column prop="partitionNum" label="PartitionNum" min-width="180" />
-        <el-table-column prop="maxSizePartitionInfo" label="maxSizePartitionInfo" min-width="300" />
+        <el-table-column
+            prop="maxPartitionInfo"
+            label="maxPartition"
+            min-width="300">
+          <template v-slot="{ row }">
+            <div class="mb-4" v-html="row.maxPartitionInfo"/>
+          </template>
+        </el-table-column>
         <el-table-column
           prop="memorySize"
           label="MemorySize"

@@ -348,6 +348,7 @@ public class CoordinatorServer {
             applicationManager.getAppShuffleInfo(appInfo.getAppId()),
             "");
     RssProtos.PartitionInfo maxSizePartitionInfoForAllServer = null;
+    RssProtos.PartitionInfo mostBlockPartitionInfoForAllServer = null;
     for (ServerNode server : clusterManager.list()) {
       Map<String, RssProtos.ApplicationInfo> appIdToInfos = server.getAppIdToInfos();
       if (appIdToInfos.containsKey(appInfoVO.getAppId())) {
@@ -366,11 +367,23 @@ public class CoordinatorServer {
             maxSizePartitionInfoForAllServer = maxSizePartitionInfo;
           }
         }
+        RssProtos.PartitionInfo mostBlockPartitionInfo = app.getMostBlockPartitionInfo();
+        if (mostBlockPartitionInfo != null) {
+          if (mostBlockPartitionInfoForAllServer == null
+              || mostBlockPartitionInfo.getBlockCount()
+                  > mostBlockPartitionInfoForAllServer.getBlockCount()) {
+            mostBlockPartitionInfoForAllServer = mostBlockPartitionInfo;
+          }
+        }
       }
     }
     if (maxSizePartitionInfoForAllServer != null) {
-      appInfoVO.setMaxSizePartitionInfo(
-          PartitionInfo.fromProto(maxSizePartitionInfoForAllServer).toString());
+      appInfoVO.setMaxPartitionInfo(
+          "size:"
+              + PartitionInfo.fromProto(maxSizePartitionInfoForAllServer)
+              + "<br>"
+              + ",count:"
+              + PartitionInfo.fromProto(mostBlockPartitionInfoForAllServer));
     }
     return appInfoVO;
   }

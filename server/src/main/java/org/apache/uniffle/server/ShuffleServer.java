@@ -603,6 +603,7 @@ public class ShuffleServer {
               .setHadoopTotalSize(taskInfo.getOnHadoopDataSize())
               .setTotalSize(taskInfo.getTotalDataSize())
               .setMaxSizePartitionInfo(taskInfo.getMaxSizePartitionInfo().toProto())
+              .setMostBlockPartitionInfo(taskInfo.getMostBlockPartitionInfo().toProto())
               .build();
 
       appInfos.add(applicationInfo);

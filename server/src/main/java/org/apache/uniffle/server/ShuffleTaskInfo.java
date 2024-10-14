@@ -60,6 +60,9 @@ public class ShuffleTaskInfo {
 
   /** shuffleId, partitionId, partitionSize */
   private final PartitionInfo maxSizePartitionInfo = new PartitionInfo();
+
+  private final PartitionInfo mostBlockPartitionInfo = new PartitionInfo();
+
   /** shuffleId -> partitionId -> partition shuffle data size */
   private Map<Integer, Map<Integer, Long>> partitionDataSizes;
   /** shuffleId -> huge partitionIds set */
@@ -246,8 +249,23 @@ public class ShuffleTaskInfo {
     long blockCount =
         this.partitionBlockCounters
             .computeIfAbsent(shuffleId, x -> JavaUtils.newConcurrentMap())
-            .computeIfAbsent(partitionId, x -> new AtomicLong())
-            .addAndGet(delta);
+            .compute(
+                partitionId,
+                (k, x) -> {
+                  if (x == null) {
+                    x = new AtomicLong();
+                  }
+                  long count = x.addAndGet(delta);
+                  if (count > mostBlockPartitionInfo.getBlockCount()) {
+                    mostBlockPartitionInfo.update(
+                        partitionId,
+                        shuffleId,
+                        getPartitionDataSize(shuffleId, partitionId),
+                        count);
+                  }
+                  return x;
+                })
+            .get();
     if (maxSizePartitionInfo.isCurrentPartition(shuffleId, partitionId)) {
       maxSizePartitionInfo.setBlockCount(blockCount);
     }
@@ -279,6 +297,10 @@ public class ShuffleTaskInfo {
 
   public long getPartitionNum() {
     return partitionDataSizes.values().stream().mapToLong(Map::size).sum();
+  }
+
+  public PartitionInfo getMostBlockPartitionInfo() {
+    return mostBlockPartitionInfo;
   }
 
   @Override
