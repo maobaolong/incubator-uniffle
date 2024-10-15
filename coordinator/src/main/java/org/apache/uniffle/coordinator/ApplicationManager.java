@@ -34,8 +34,6 @@ import java.util.regex.Pattern;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Range;
@@ -57,6 +55,7 @@ import org.apache.uniffle.coordinator.strategy.storage.LowestIOSampleCostSelectS
 import org.apache.uniffle.coordinator.strategy.storage.RankValue;
 import org.apache.uniffle.coordinator.strategy.storage.SelectStorageStrategy;
 import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
+import org.apache.uniffle.proto.RssProtos;
 
 public class ApplicationManager implements Closeable {
 
@@ -82,7 +81,7 @@ public class ApplicationManager implements Closeable {
   private boolean hasErrorInStatusCheck = false;
 
   private CoordinatorServer coordinatorServer;
-  private CoordinatorAppHistoryManager coordinatorAppHistoryManager = null;
+  private final CoordinatorAppHistoryManager coordinatorAppHistoryManager;
 
   /* appId -> shuffleId -> shuffleInfo */
   private Map<String, Map<Integer, ShuffleInfo>> appToShuffleInfo;
@@ -164,9 +163,10 @@ public class ApplicationManager implements Closeable {
     }
   }
 
-  private void addToAppHistory(String user, AppInfo appInfo) {
+  private void addToAppHistory(
+      String user, AppInfo appInfo, RssProtos.ApplicationInfo serverAppInfo) {
     if (coordinatorServer != null && user != null && coordinatorAppHistoryManager != null) {
-      AppInfoVO appInfoVO = coordinatorServer.getAppInfoV0(user, appInfo);
+      AppInfoVO appInfoVO = coordinatorServer.createAppInfoVO(user, appInfo, serverAppInfo);
       coordinatorAppHistoryManager.addAppInfo(appInfoVO);
       // remove the remain appInfo in serverNode
       for (ServerNode serverNode : coordinatorServer.getClusterManager().list()) {
@@ -176,7 +176,6 @@ public class ApplicationManager implements Closeable {
   }
 
   public void unregisterApplicationInfo(String appId, String user) {
-
     Map<String, AppInfo> appAndTime = currentUserAndApp.get(user);
     if (appAndTime == null) {
       LOG.warn("unregisterApplicationInfo: appId={} user={} user not found.", appId, user);
@@ -374,55 +373,63 @@ public class ApplicationManager implements Closeable {
   }
 
   protected void statusCheck() {
-    List<Map<String, AppInfo>> appAndNums = Lists.newArrayList(currentUserAndApp.values());
-    Map<String, AppInfo> appIds = Maps.newHashMap();
-    // The reason for setting an expired uuid here is that there is a scenario where accessCluster
-    // succeeds,
-    // but the registration of shuffle fails, resulting in no normal heartbeat, and no normal update
-    // of uuid to appId.
-    // Therefore, an expiration time is set to automatically remove expired uuids
-    Set<String> invalidAppIds = Sets.newHashSet();
-    try {
-      for (Map<String, AppInfo> appAndTimes : appAndNums) {
-        for (Map.Entry<String, AppInfo> appAndTime : appAndTimes.entrySet()) {
-          String appId = appAndTime.getKey();
-          AppInfo lastReport = appAndTime.getValue();
-          appIds.put(appId, lastReport);
-          if (lastReport.getExitCode().equals(StatusCode.SUCCESS.toString())) {
-            invalidAppIds.add(appId);
-            appAndTimes.remove(appId);
-            String user = appIdToUser.remove(appId);
-            addToAppHistory(user, lastReport);
-          } else if (System.currentTimeMillis() - lastReport.getUpdateTime() > expired) {
-            invalidAppIds.add(appId);
-            appAndTimes.remove(appId);
-            String user = appIdToUser.remove(appId);
-            lastReport.setExitCode(StatusCode.TIMEOUT.toString());
-            lastReport.setFinishTime(System.currentTimeMillis());
-            addToAppHistory(user, lastReport);
-          }
-        }
-      }
-      LOG.info("Start to check status for {} applications.", appIds.size());
-      for (String appId : invalidAppIds) {
-        LOG.info("Remove invalidAppIds application : {}.", appId);
-        appIds.remove(appId);
-        if (appIdToRemoteStorageInfo.containsKey(appId)) {
-          decRemoteStorageCounter(appIdToRemoteStorageInfo.get(appId).getPath());
-          appIdToRemoteStorageInfo.remove(appId);
-          appToShuffleInfo.remove(appId);
-        }
-      }
-      CoordinatorMetrics.gaugeRunningAppNum.set(appIds.size());
-      updateRemoteStorageMetrics();
-      if (quotaManager != null) {
-        quotaManager.updateQuotaMetrics();
-      }
-    } catch (Exception e) {
-      // the flag is only for test case
-      hasErrorInStatusCheck = true;
-      LOG.warn("Error happened in statusCheck", e);
+    long currentTime = System.currentTimeMillis();
+    Map<String, AppInfo> normalAppIds = new HashMap<>();
+    Map<String, AppInfo> invalidAppIds = new HashMap<>();
+
+    currentUserAndApp
+        .values()
+        .forEach(
+            appAndTimes ->
+                appAndTimes.forEach(
+                    (appId, lastReport) -> {
+                      if (lastReport.getExitCode().equals(StatusCode.SUCCESS.toString())) {
+                        invalidAppIds.put(appId, lastReport);
+                        appAndTimes.remove(appId);
+                      } else if (currentTime - lastReport.getUpdateTime() > expired) {
+                        lastReport.setExitCode(StatusCode.TIMEOUT.toString());
+                        lastReport.setFinishTime(System.currentTimeMillis());
+                        invalidAppIds.put(appId, lastReport);
+                        appAndTimes.remove(appId);
+                      } else {
+                        normalAppIds.put(appId, lastReport);
+                      }
+                    }));
+
+    if (!invalidAppIds.isEmpty()) {
+      handleInvalidApps(invalidAppIds);
     }
+
+    CoordinatorMetrics.gaugeRunningAppNum.set(normalAppIds.size());
+    updateRemoteStorageMetrics();
+    if (quotaManager != null) {
+      quotaManager.updateQuotaMetrics();
+    }
+  }
+
+  private void handleInvalidApps(Map<String, AppInfo> invalidAppIds) {
+    Map<String, RssProtos.ApplicationInfo> appIdToInfos;
+    if (coordinatorServer != null) {
+      appIdToInfos = coordinatorServer.collectAppIdToInfo(invalidAppIds.keySet());
+    } else {
+      appIdToInfos = new HashMap<>();
+    }
+
+    invalidAppIds.forEach(
+        (appId, appInfo) -> {
+          String user = appIdToUser.remove(appId);
+          RssProtos.ApplicationInfo serverAppInfo = appIdToInfos.get(appId);
+          if (serverAppInfo != null) {
+            addToAppHistory(user, appInfo, serverAppInfo);
+          }
+          if (appIdToRemoteStorageInfo.containsKey(appId)) {
+            decRemoteStorageCounter(appIdToRemoteStorageInfo.get(appId).getPath());
+            appIdToRemoteStorageInfo.remove(appId);
+            appToShuffleInfo.remove(appId);
+          }
+        });
+
+    LOG.info("Removed {} invalid applications.", invalidAppIds.size());
   }
 
   private void updateRemoteStorageMetrics() {

@@ -21,9 +21,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import io.prometheus.client.CollectorRegistry;
 import org.apache.hadoop.conf.Configuration;
@@ -303,20 +305,66 @@ public class CoordinatorServer {
     return rpcListenPort;
   }
 
-  public AppInfoVO getAppInfoV0(String user, AppInfo appInfo) {
+  public Map<String, RssProtos.ApplicationInfo> collectAppIdToInfo(Set<String> appIds) {
+    return clusterManager.list().stream()
+        .flatMap(server -> server.getAppIdToInfos().entrySet().stream())
+        // if appIds is empty, return all app infos
+        .filter(entry -> appIds.isEmpty() || appIds.contains(entry.getKey()))
+        .collect(
+            Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, this::mergeApplicationInfo));
+  }
+
+  private RssProtos.ApplicationInfo mergeApplicationInfo(
+      RssProtos.ApplicationInfo info1, RssProtos.ApplicationInfo info2) {
+    RssProtos.PartitionInfo maxSizePartitionInfo =
+        info1.hasMaxSizePartitionInfo() ? info1.getMaxSizePartitionInfo() : null;
+    RssProtos.PartitionInfo mostBlockPartitionInfo =
+        info1.hasMostBlockPartitionInfo() ? info1.getMostBlockPartitionInfo() : null;
+    if (maxSizePartitionInfo == null) {
+      maxSizePartitionInfo = info2.getMaxSizePartitionInfo();
+    } else {
+      if (info2.hasMaxSizePartitionInfo()
+          && (info2.getMaxSizePartitionInfo().getSize() > maxSizePartitionInfo.getSize())) {
+        maxSizePartitionInfo = info2.getMaxSizePartitionInfo();
+      }
+    }
+    if (mostBlockPartitionInfo == null) {
+      mostBlockPartitionInfo = info2.getMostBlockPartitionInfo();
+    } else {
+      if (info2.hasMaxSizePartitionInfo()
+          && (info2.getMostBlockPartitionInfo().getBlockCount()
+              > mostBlockPartitionInfo.getBlockCount())) {
+        mostBlockPartitionInfo = info2.getMostBlockPartitionInfo();
+      }
+    }
+
+    return RssProtos.ApplicationInfo.newBuilder()
+        .setPartitionNum(info1.getPartitionNum() + info2.getPartitionNum())
+        .setMemorySize(info1.getMemorySize() + info2.getMemorySize())
+        .setLocalFileNum(info1.getLocalFileNum() + info2.getLocalFileNum())
+        .setLocalTotalSize(info1.getLocalTotalSize() + info2.getLocalTotalSize())
+        .setHadoopFileNum(info1.getHadoopFileNum() + info2.getHadoopFileNum())
+        .setHadoopTotalSize(info1.getHadoopTotalSize() + info2.getHadoopTotalSize())
+        .setTotalSize(info1.getTotalSize() + info2.getTotalSize())
+        .setMaxSizePartitionInfo(maxSizePartitionInfo)
+        .setMostBlockPartitionInfo(mostBlockPartitionInfo)
+        .build();
+  }
+
+  private String generateAppUrl(String appId) {
     String regex = coordinatorConf.getString(CoordinatorConf.RSS_APPID_REG_PATTERN);
     Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    Matcher matcher = pattern.matcher(appInfo.getAppId());
-    String url = "";
-    String extractedAppId = appInfo.getAppId();
+    Matcher matcher = pattern.matcher(appId);
+    String extractedAppId = appId;
     if (matcher.find()) {
       extractedAppId = matcher.group(1);
     }
     String urlTemplate = coordinatorConf.getString(CoordinatorConf.RSS_APPID_URL_TEMPLATE);
-    url = urlTemplate.replace("{appId}", extractedAppId);
+    return urlTemplate.replace("{appId}", extractedAppId);
+  }
 
+  private Map<String, String> filterAppConf(Map<String, String> appConf) {
     Map<String, String> displayAppConf = new HashMap<>();
-    Map<String, String> appConf = appInfo.getAppConf();
     if (appConf != null) {
       for (Map.Entry<String, String> entry : appConf.entrySet()) {
         if (this.appConfShowList.contains(entry.getKey())) {
@@ -324,68 +372,43 @@ public class CoordinatorServer {
         }
       }
     }
+    return displayAppConf;
+  }
 
-    AppInfoVO appInfoVO =
-        new AppInfoVO(
-            user,
-            appInfo.getAppId(),
-            appInfo.getUpdateTime(),
-            appInfo.getRegistrationTime(),
-            appInfo.getExitCode(),
-            appInfo.getFinishTime(),
-            appInfo.getVersion(),
-            appInfo.getGitCommitId(),
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            url,
-            displayAppConf,
-            appConf,
-            applicationManager.getAppShuffleInfo(appInfo.getAppId()),
-            "");
-    RssProtos.PartitionInfo maxSizePartitionInfoForAllServer = null;
-    RssProtos.PartitionInfo mostBlockPartitionInfoForAllServer = null;
-    for (ServerNode server : clusterManager.list()) {
-      Map<String, RssProtos.ApplicationInfo> appIdToInfos = server.getAppIdToInfos();
-      if (appIdToInfos.containsKey(appInfoVO.getAppId())) {
-        RssProtos.ApplicationInfo app = appIdToInfos.get(appInfoVO.getAppId());
-        appInfoVO.setPartitionNum(appInfoVO.getPartitionNum() + app.getPartitionNum());
-        appInfoVO.setMemorySize(appInfoVO.getMemorySize() + app.getMemorySize());
-        appInfoVO.setLocalFileNum(appInfoVO.getLocalFileNum() + app.getLocalFileNum());
-        appInfoVO.setLocalTotalSize(appInfoVO.getLocalTotalSize() + app.getLocalTotalSize());
-        appInfoVO.setHadoopFileNum(appInfoVO.getHadoopFileNum() + app.getHadoopFileNum());
-        appInfoVO.setHadoopTotalSize(appInfoVO.getHadoopTotalSize() + app.getHadoopTotalSize());
-        appInfoVO.setTotalSize(appInfoVO.getTotalSize() + app.getTotalSize());
-        RssProtos.PartitionInfo maxSizePartitionInfo = app.getMaxSizePartitionInfo();
-        if (maxSizePartitionInfo != null) {
-          if (maxSizePartitionInfoForAllServer == null
-              || maxSizePartitionInfo.getSize() > maxSizePartitionInfoForAllServer.getSize()) {
-            maxSizePartitionInfoForAllServer = maxSizePartitionInfo;
-          }
-        }
-        RssProtos.PartitionInfo mostBlockPartitionInfo = app.getMostBlockPartitionInfo();
-        if (mostBlockPartitionInfo != null) {
-          if (mostBlockPartitionInfoForAllServer == null
-              || mostBlockPartitionInfo.getBlockCount()
-                  > mostBlockPartitionInfoForAllServer.getBlockCount()) {
-            mostBlockPartitionInfoForAllServer = mostBlockPartitionInfo;
-          }
-        }
-      }
-    }
-    if (maxSizePartitionInfoForAllServer != null) {
-      appInfoVO.setMaxPartitionInfo(
-          "size:"
-              + PartitionInfo.fromProto(maxSizePartitionInfoForAllServer)
-              + "<br>"
-              + ",count:"
-              + PartitionInfo.fromProto(mostBlockPartitionInfoForAllServer));
-    }
-    return appInfoVO;
+  public AppInfoVO createAppInfoVO(
+      String user, AppInfo appInfo, RssProtos.ApplicationInfo serverInfo) {
+    String url = generateAppUrl(appInfo.getAppId());
+    Map<String, String> displayAppConf = filterAppConf(appInfo.getAppConf());
+
+    String partitionInfo =
+        serverInfo.hasMaxSizePartitionInfo()
+            ? "size:"
+                + PartitionInfo.fromProto(serverInfo.getMaxSizePartitionInfo())
+                + "<br>"
+                + ",count:"
+                + PartitionInfo.fromProto(serverInfo.getMostBlockPartitionInfo())
+            : "";
+    return new AppInfoVO(
+        user,
+        appInfo.getAppId(),
+        appInfo.getUpdateTime(),
+        appInfo.getRegistrationTime(),
+        appInfo.getExitCode(),
+        appInfo.getFinishTime(),
+        appInfo.getVersion(),
+        appInfo.getGitCommitId(),
+        serverInfo.getPartitionNum(),
+        serverInfo.getMemorySize(),
+        serverInfo.getLocalFileNum(),
+        serverInfo.getLocalTotalSize(),
+        serverInfo.getHadoopFileNum(),
+        serverInfo.getHadoopTotalSize(),
+        serverInfo.getTotalSize(),
+        url,
+        displayAppConf,
+        appInfo.getAppConf(),
+        applicationManager.getAppShuffleInfo(appInfo.getAppId()),
+        partitionInfo);
   }
 
   public void setAppShuffleInfo(String appId, int shuffleId, int partitionNum) {

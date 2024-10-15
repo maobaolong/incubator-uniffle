@@ -17,10 +17,13 @@
 
 package org.apache.uniffle.coordinator;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.FileStatus;
@@ -33,10 +36,13 @@ import org.apache.uniffle.common.rpc.StatusCode;
 import org.apache.uniffle.common.util.ExitUtils;
 import org.apache.uniffle.common.util.ExitUtils.ExitException;
 import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
+import org.apache.uniffle.proto.RssProtos;
 
 import static org.apache.uniffle.coordinator.AppInfo.createAppInfo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class CoordinatorServerTest {
 
@@ -97,8 +103,51 @@ public class CoordinatorServerTest {
     CoordinatorServer cs1 = new CoordinatorServer(coordinatorConf);
     String user = "user01";
     AppInfo appInfo = createAppInfo("application_1703049085550_19283617_1724740334479", 0);
-    AppInfoVO appInfoVO = cs1.getAppInfoV0(user, appInfo);
+    AppInfoVO appInfoVO =
+        cs1.createAppInfoVO(user, appInfo, RssProtos.ApplicationInfo.getDefaultInstance());
     assertEquals(appInfoVO.getUrl(), "http://localhost/application_1703049085550_19283617/test");
+  }
+
+  @Test
+  public void testCollectAppIdToInfo() throws Exception {
+    final CoordinatorConf coordinatorConf = new CoordinatorConf();
+    final CoordinatorServer coordinatorServer = new CoordinatorServer(coordinatorConf);
+
+    final ClusterManager mockClusterManager = mock(ClusterManager.class);
+    final ServerNode mockServer1 = mock(ServerNode.class);
+    final ServerNode mockServer2 = mock(ServerNode.class);
+
+    Map<String, RssProtos.ApplicationInfo> appInfos1 = new HashMap<>();
+    appInfos1.put("app1", RssProtos.ApplicationInfo.newBuilder().setPartitionNum(10).build());
+    appInfos1.put("app2", RssProtos.ApplicationInfo.newBuilder().setPartitionNum(20).build());
+
+    Map<String, RssProtos.ApplicationInfo> appInfos2 = new HashMap<>();
+    appInfos2.put("app2", RssProtos.ApplicationInfo.newBuilder().setPartitionNum(30).build());
+    appInfos2.put("app3", RssProtos.ApplicationInfo.newBuilder().setPartitionNum(40).build());
+
+    when(mockServer1.getAppIdToInfos()).thenReturn(appInfos1);
+    when(mockServer2.getAppIdToInfos()).thenReturn(appInfos2);
+    when(mockClusterManager.list()).thenReturn(Arrays.asList(mockServer1, mockServer2));
+
+    Field clusterManagerField = CoordinatorServer.class.getDeclaredField("clusterManager");
+    clusterManagerField.setAccessible(true);
+    clusterManagerField.set(coordinatorServer, mockClusterManager);
+
+    Map<String, RssProtos.ApplicationInfo> result1 =
+        coordinatorServer.collectAppIdToInfo(new HashSet<>());
+    assertEquals(3, result1.size());
+    assertEquals(10, result1.get("app1").getPartitionNum());
+    assertEquals(50, result1.get("app2").getPartitionNum()); // 20 + 30
+    assertEquals(40, result1.get("app3").getPartitionNum());
+
+    Set<String> specificAppIds = new HashSet<>(Arrays.asList("app1", "app3"));
+    Map<String, RssProtos.ApplicationInfo> result2 =
+        coordinatorServer.collectAppIdToInfo(specificAppIds);
+    assertEquals(2, result2.size());
+    assertEquals(10, result2.get("app1").getPartitionNum());
+    assertEquals(40, result2.get("app3").getPartitionNum());
+
+    coordinatorServer.stopServer();
   }
 
   @Test
@@ -148,7 +197,7 @@ public class CoordinatorServerTest {
                 shuffleInfo,
                 "");
         appHistoryManager.addAppInfo(appInfoVO);
-        Thread.sleep(100); // wait for flush to storage
+        Thread.sleep(500); // wait for flush to storage
         appInfos = appHistoryManager.getAppInfos(10);
         assertEquals(appInfos.size(), 1);
       }

@@ -19,6 +19,7 @@ package org.apache.uniffle.coordinator.web.resource;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletContext;
@@ -41,6 +42,7 @@ import org.apache.uniffle.coordinator.CoordinatorServer;
 import org.apache.uniffle.coordinator.metric.CoordinatorMetrics;
 import org.apache.uniffle.coordinator.web.vo.AppInfoVO;
 import org.apache.uniffle.coordinator.web.vo.UserAppNumVO;
+import org.apache.uniffle.proto.RssProtos;
 
 @Produces({MediaType.APPLICATION_JSON})
 public class ApplicationResource extends BaseResource {
@@ -97,23 +99,26 @@ public class ApplicationResource extends BaseResource {
   public Response<List<AppInfoVO>> getAppInfoList() {
     return execute(
         () -> {
-          List<AppInfoVO> userToAppList = new ArrayList<>();
+          List<AppInfoVO> appInfoList = new ArrayList<>();
           Map<String, Map<String, AppInfo>> currentUserAndApp =
               getApplicationManager().getCurrentUserAndApp();
-          for (Map.Entry<String, Map<String, AppInfo>> userAppIdTimestampMap :
-              currentUserAndApp.entrySet()) {
-            for (Map.Entry<String, AppInfo> appIdTimestampMap :
-                userAppIdTimestampMap.getValue().entrySet()) {
-              AppInfo appInfo = appIdTimestampMap.getValue();
-              AppInfoVO appInfoVO =
-                  getCoordinatorServer().getAppInfoV0(userAppIdTimestampMap.getKey(), appInfo);
-              userToAppList.add(appInfoVO);
-            }
-          }
-          userToAppList.addAll(getApplicationManager().getCachedAppInfos(userToAppList.size()));
-          // Display is inverted by the submission time of the application.
-          userToAppList.sort(Comparator.reverseOrder());
-          return userToAppList;
+          Map<String, RssProtos.ApplicationInfo> appIdToInfo =
+              getCoordinatorServer().collectAppIdToInfo(new HashSet<>());
+
+          currentUserAndApp.forEach(
+              (user, appInfoMap) -> {
+                appInfoMap.forEach(
+                    (appId, appInfo) -> {
+                      AppInfoVO appInfoVO =
+                          getCoordinatorServer()
+                              .createAppInfoVO(user, appInfo, appIdToInfo.get(appId));
+                      appInfoList.add(appInfoVO);
+                    });
+              });
+
+          appInfoList.addAll(getApplicationManager().getCachedAppInfos(appInfoList.size()));
+          appInfoList.sort(Comparator.reverseOrder());
+          return appInfoList;
         });
   }
 
