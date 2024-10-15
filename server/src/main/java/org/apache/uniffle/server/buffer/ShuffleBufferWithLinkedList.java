@@ -49,17 +49,17 @@ public class ShuffleBufferWithLinkedList extends AbstractShuffleBuffer {
 
   @Override
   public long append(ShufflePartitionedData data) {
-    long size = 0;
+    long mSize = 0;
 
     synchronized (this) {
       for (ShufflePartitionedBlock block : data.getBlockList()) {
         blocks.add(block);
-        size += block.getSize();
+        mSize += block.getSize();
       }
-      this.size += size;
+      size += mSize;
     }
 
-    return size;
+    return mSize;
   }
 
   @Override
