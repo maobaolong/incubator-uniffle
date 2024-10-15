@@ -57,20 +57,19 @@ public class ShuffleBufferWithSkipList extends AbstractShuffleBuffer {
   }
 
   @Override
-  public synchronized long append(ShufflePartitionedData data) {
-    if (closed) {
-      return BUFFER_CLOSED;
-    }
-    long currentSize = 0;
+  public long append(ShufflePartitionedData data) {
+    long size = 0;
 
-    for (ShufflePartitionedBlock block : data.getBlockList()) {
-      blocksMap.put(block.getBlockId(), block);
-      blockCount++;
-      currentSize += block.getSize();
+    synchronized (this) {
+      for (ShufflePartitionedBlock block : data.getBlockList()) {
+        blocksMap.put(block.getBlockId(), block);
+        blockCount++;
+        size += block.getSize();
+      }
+      this.size += size;
     }
-    this.size += currentSize;
 
-    return currentSize;
+    return size;
   }
 
   @Override
@@ -112,8 +111,7 @@ public class ShuffleBufferWithSkipList extends AbstractShuffleBuffer {
   }
 
   @Override
-  public synchronized long release() {
-    closed = true;
+  public long release() {
     Throwable lastException = null;
     int failedReleaseSize = 0;
     long releaseSize = 0;

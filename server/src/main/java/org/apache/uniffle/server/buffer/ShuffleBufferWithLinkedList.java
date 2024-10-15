@@ -48,19 +48,18 @@ public class ShuffleBufferWithLinkedList extends AbstractShuffleBuffer {
   }
 
   @Override
-  public synchronized long append(ShufflePartitionedData data) {
-    if (closed) {
-      return BUFFER_CLOSED;
-    }
-    long currentSize = 0;
+  public long append(ShufflePartitionedData data) {
+    long size = 0;
 
-    for (ShufflePartitionedBlock block : data.getBlockList()) {
-      blocks.add(block);
-      currentSize += block.getSize();
+    synchronized (this) {
+      for (ShufflePartitionedBlock block : data.getBlockList()) {
+        blocks.add(block);
+        size += block.getSize();
+      }
+      this.size += size;
     }
-    this.size += currentSize;
 
-    return currentSize;
+    return size;
   }
 
   @Override
@@ -111,8 +110,7 @@ public class ShuffleBufferWithLinkedList extends AbstractShuffleBuffer {
   }
 
   @Override
-  public synchronized long release() {
-    closed = true;
+  public long release() {
     Throwable lastException = null;
     int failedReleaseSize = 0;
     long releaseSize = 0;
