@@ -111,26 +111,8 @@ public class ShuffleBufferWithSkipList extends AbstractShuffleBuffer {
   }
 
   @Override
-  public long release() {
-    Throwable lastException = null;
-    int failedReleaseSize = 0;
-    long releaseSize = 0;
-    for (ShufflePartitionedBlock spb : blocksMap.values()) {
-      try {
-        spb.getData().release();
-        releaseSize += spb.getSize();
-      } catch (Throwable t) {
-        lastException = t;
-        failedReleaseSize += spb.getSize();
-      }
-    }
-    if (lastException != null) {
-      LOG.warn(
-          "Failed to release shuffle blocks with size {}. Maybe it released by others",
-          failedReleaseSize,
-          lastException);
-    }
-    return releaseSize;
+  public void release() {
+    blocksMap.values().forEach(spb -> spb.getData().release());
   }
 
   @Override

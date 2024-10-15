@@ -37,7 +37,7 @@ import org.apache.uniffle.server.ShuffleDataFlushEvent;
 
 public abstract class AbstractShuffleBuffer implements ShuffleBuffer {
 
-  protected static final Logger LOG = LoggerFactory.getLogger(AbstractShuffleBuffer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractShuffleBuffer.class);
 
   protected long size;
 
