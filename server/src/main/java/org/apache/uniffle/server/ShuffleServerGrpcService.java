@@ -33,7 +33,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.netty.buffer.ByteBuf;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.roaringbitmap.longlong.Roaring64NavigableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1398,14 +1398,12 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
     return ret;
   }
 
-  private Triple<Long, Long, ShufflePartitionedBlock[]> toPartitionedBlock(
-      List<ShuffleBlock> blocks) {
+  private Pair<Long, ShufflePartitionedBlock[]> toPartitionedBlock(List<ShuffleBlock> blocks) {
     if (blocks == null || blocks.size() == 0) {
-      return Triple.of(0L, 0L, new ShufflePartitionedBlock[] {});
+      return Pair.of(0L, new ShufflePartitionedBlock[] {});
     }
     ShufflePartitionedBlock[] ret = new ShufflePartitionedBlock[blocks.size()];
     long size = 0L;
-    long length = 0L;
     int i = 0;
     for (ShuffleBlock block : blocks) {
       ByteBuf data = ByteBufUtils.byteStringToByteBuf(block.getData());
@@ -1418,10 +1416,9 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
               block.getTaskAttemptId(),
               data);
       size += ret[i].getSize();
-      length += ret[i].getLength();
       i++;
     }
-    return Triple.of(size, length, ret);
+    return Pair.of(size, ret);
   }
 
   private Map<Integer, long[]> toPartitionBlocksMap(List<PartitionToBlockIds> partitionToBlockIds) {
