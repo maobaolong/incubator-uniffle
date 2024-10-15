@@ -158,7 +158,6 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
       }
       String responseMessage = "OK";
       try {
-        shuffleServer.sendHeartbeat();
         shuffleServer.getShuffleTaskManager().removeShuffleDataAsync(appId);
 
       } catch (Exception e) {
@@ -198,7 +197,6 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
       }
       String responseMessage = "OK";
       try {
-        shuffleServer.sendHeartbeat();
         shuffleServer.getShuffleTaskManager().removeShuffleDataAsync(appId, shuffleId);
       } catch (Exception e) {
         status = StatusCode.INTERNAL_ERROR;
