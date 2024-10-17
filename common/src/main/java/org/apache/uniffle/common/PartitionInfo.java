@@ -17,6 +17,7 @@
 
 package org.apache.uniffle.common;
 
+import org.apache.uniffle.common.util.UnitConverter;
 import org.apache.uniffle.proto.RssProtos;
 
 public class PartitionInfo {
@@ -51,7 +52,8 @@ public class PartitionInfo {
   @Override
   public String toString() {
     return String.format(
-        "[id=%s, shuffleId=%s, size=%s, blockCount=%s]", id, shuffleId, size, blockCount);
+        "[id=%s, shuffleId=%s, size=%s, blockCount=%s]",
+        id, shuffleId, UnitConverter.formatSize(size), blockCount);
   }
 
   public RssProtos.PartitionInfo toProto() {
