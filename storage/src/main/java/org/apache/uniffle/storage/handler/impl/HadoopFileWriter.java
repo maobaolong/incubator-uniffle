@@ -125,4 +125,8 @@ public class HadoopFileWriter implements FileWriter, Closeable {
     IOUtils.copyBytes(inputStream, fsDataOutputStream, bufferSize);
     return fsDataOutputStream.getPos() - start;
   }
+
+  public long getPos() throws IOException {
+    return fsDataOutputStream.getPos();
+  }
 }
