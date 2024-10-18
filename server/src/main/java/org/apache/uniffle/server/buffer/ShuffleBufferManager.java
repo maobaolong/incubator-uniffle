@@ -94,7 +94,7 @@ public class ShuffleBufferManager {
   protected Map<String, Map<Integer, AtomicLong>> shuffleSizeMap = JavaUtils.newConcurrentMap();
   private final boolean appBlockSizeMetricEnabled;
   private int blockLengthTopNNum;
-  private List<String> blockLengthBucket;
+  private List<String> blockLengthBucket = new ArrayList<>();
   private DecimalFormat df = new DecimalFormat("0%");
 
   public ShuffleBufferManager(
@@ -153,13 +153,13 @@ public class ShuffleBufferManager {
         conf.getBoolean(ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_ENABLED);
     shuffleBufferType = conf.get(ShuffleServerConf.SERVER_SHUFFLE_BUFFER_TYPE);
     blockLengthTopNNum = conf.getInteger(ShuffleServerConf.RSS_BLOCK_SIZE_STATISTIC_TOP_N);
-    blockLengthBucket =
-        new ArrayList<>(
-            Arrays.asList(
-                conf.get(ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_BUCKETS)
-                    .trim()
-                    .split(",")));
-    blockLengthBucket.add("inf");
+    String[] buckets =
+        conf.get(ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_BUCKETS).trim().split(",");
+    blockLengthBucket.add("0-" + buckets[0]);
+    for (int i = 0; i < buckets.length - 1; i++) {
+      blockLengthBucket.add(buckets[i] + "-" + buckets[i + 1]);
+    }
+    blockLengthBucket.add(buckets[buckets.length - 1] + "-inf");
 
     ShuffleServerMetrics.addLabeledCacheGauge(
         BLOCK_COUNT_IN_BUFFER_POOL,

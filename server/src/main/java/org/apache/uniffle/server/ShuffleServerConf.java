@@ -648,10 +648,10 @@ public class ShuffleServerConf extends RssBaseConf {
   public static final ConfigOption<String> APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_BUCKETS =
       ConfigOptions.key("rss.server.metrics.blockSizeStatistics.buckets")
           .stringType()
-          .defaultValue("32kb,64kb,128kb,256kb,512kb,1mb,2mb,4mb,8mb,16mb")
+          .defaultValue("32KB,64KB,128KB,256KB,512KB,1MB,2MB,4MB,8MB,16MB")
           .withDescription(
               "A comma-separated block size list, where each value"
-                  + " can be suffixed with a memory size unit, such as kb or k, mb or m, etc.");
+                  + " can be suffixed with a memory size unit, such as KB or K, MB or M, etc.");
 
   public static final ConfigOption<Long> STORAGE_REMOVE_RESOURCE_OPERATION_TIMEOUT_SEC =
       ConfigOptions.key("rss.server.storage.resourceRemoveOperationTimeoutSec")
