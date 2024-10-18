@@ -433,6 +433,7 @@ public class LocalStorageManager extends SingleStorageManager {
     Map<String, StorageInfo> result = Maps.newHashMap();
     for (LocalStorage storage : localStorages) {
       String mountPoint = storage.getMountPoint();
+      long diskFree = storage.getDiskAvailableBytes();
       long capacity = storage.getCapacity();
       long wroteBytes = storage.getServiceUsedBytes();
       StorageStatus status = StorageStatus.NORMAL;
@@ -445,7 +446,7 @@ public class LocalStorageManager extends SingleStorageManager {
       if (media == null) {
         media = StorageMedia.UNKNOWN;
       }
-      StorageInfo info = new StorageInfo(mountPoint, media, capacity, wroteBytes, status);
+      StorageInfo info = new StorageInfo(mountPoint, media, diskFree, capacity, wroteBytes, status);
       result.put(mountPoint, info);
     }
     return result;

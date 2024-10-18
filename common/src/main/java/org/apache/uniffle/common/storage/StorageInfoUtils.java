@@ -39,6 +39,7 @@ public class StorageInfoUtils {
           new StorageInfo(
               val.getMountPoint(),
               StorageMedia.fromProto(val.getStorageMedia()),
+              val.getDiskFree() > 0 ? val.getDiskFree() : -1,
               val.getCapacity(),
               val.getUsedBytes(),
               StorageStatus.fromProto(val.getStatus()));

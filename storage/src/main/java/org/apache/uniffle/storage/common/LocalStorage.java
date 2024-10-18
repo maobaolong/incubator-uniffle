@@ -267,6 +267,10 @@ public class LocalStorage extends AbstractStorage {
     this.diskAvailableBytes = bytes;
   }
 
+  public long getDiskAvailableBytes() {
+    return diskAvailableBytes;
+  }
+
   public void updateServiceUsedBytes(long usedBytes) {
     this.serviceUsedBytes = usedBytes;
   }

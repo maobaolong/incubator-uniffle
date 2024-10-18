@@ -375,6 +375,7 @@ message StorageInfo {
   int64 writingSpeed1H = 7; // writing speed of last hour
   int64 numOfWritingFailures = 8; // number of writing failures since start up.
   StorageStatus status = 9;
+  int64 diskFree = 10;
 }
 
 service CoordinatorServer {

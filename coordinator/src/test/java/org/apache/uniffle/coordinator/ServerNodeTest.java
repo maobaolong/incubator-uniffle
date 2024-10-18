@@ -56,7 +56,8 @@ public class ServerNodeTest {
     // default constructor creates ServerNode with zero size of LocalStorage
     assertEquals(0, sn1.getStorageInfo().size());
     Map<String, StorageInfo> localStorageInfo = Maps.newHashMap();
-    StorageInfo info = new StorageInfo("/mnt", StorageMedia.SSD, 100L, 60L, StorageStatus.NORMAL);
+    StorageInfo info =
+        new StorageInfo("/mnt", StorageMedia.SSD, 100L, 100L, 60L, StorageStatus.NORMAL);
     localStorageInfo.put("/mnt", info);
     ServerNode sn2 =
         new ServerNode(

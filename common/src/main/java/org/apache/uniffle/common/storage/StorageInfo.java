@@ -24,6 +24,7 @@ import org.apache.uniffle.proto.RssProtos;
 public class StorageInfo {
   private String mountPoint;
   private StorageMedia type;
+  private long diskFree;
   private long capacity;
   private long usedBytes;
   // -1 indicates these field is not used and shall not be serialized to proto.
@@ -35,8 +36,19 @@ public class StorageInfo {
 
   public StorageInfo(
       String mountPoint, StorageMedia type, long capacity, long usedBytes, StorageStatus status) {
+    this(mountPoint, type, -1, capacity, usedBytes, status);
+  }
+
+  public StorageInfo(
+      String mountPoint,
+      StorageMedia type,
+      long diskFree,
+      long capacity,
+      long usedBytes,
+      StorageStatus status) {
     this.mountPoint = mountPoint;
     this.type = type;
+    this.diskFree = diskFree;
     this.capacity = capacity;
     this.usedBytes = usedBytes;
     this.writingSpeed1M = -1;
@@ -49,6 +61,7 @@ public class StorageInfo {
   public StorageInfo(
       String mountPoint,
       StorageMedia type,
+      long diskFree,
       long capacity,
       long usedBytes,
       long writingSpeed1M,
@@ -58,6 +71,7 @@ public class StorageInfo {
       StorageStatus status) {
     this.mountPoint = mountPoint;
     this.type = type;
+    this.diskFree = diskFree;
     this.capacity = capacity;
     this.usedBytes = usedBytes;
     this.writingSpeed1M = writingSpeed1M;
@@ -72,6 +86,7 @@ public class StorageInfo {
         RssProtos.StorageInfo.newBuilder()
             .setMountPoint(mountPoint)
             .setStorageMedia(type.toProto())
+            .setDiskFree(diskFree)
             .setCapacity(capacity)
             .setUsedBytes(usedBytes)
             .setStatus(status.toProto());
@@ -104,6 +119,10 @@ public class StorageInfo {
     return usedBytes;
   }
 
+  public long getDiskFree() {
+    return diskFree;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -121,7 +140,8 @@ public class StorageInfo {
         && writingSpeed5M == that.writingSpeed5M
         && writingSpeed1H == that.writingSpeed1H
         && numberOfWritingFailures == that.numberOfWritingFailures
-        && status == that.status;
+        && status == that.status
+        && diskFree == that.diskFree;
   }
 
   @Override
@@ -131,6 +151,7 @@ public class StorageInfo {
     hash = (19 * hash) + Objects.hashCode(type);
     hash = (37 * hash) + (int) capacity;
     hash = (37 * hash) + (int) usedBytes;
+    hash = (37 * hash) + (int) diskFree;
     hash = (37 * hash) + (int) writingSpeed1M;
     hash = (37 * hash) + (int) writingSpeed5M;
     hash = (37 * hash) + (int) writingSpeed1H;

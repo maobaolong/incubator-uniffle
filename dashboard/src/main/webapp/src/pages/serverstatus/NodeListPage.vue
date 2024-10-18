@@ -55,13 +55,15 @@
       />
       <el-table-column prop="eventNumInFlush" label="FlushNum" min-width="80" sortable />
       <el-table-column
-          label="Disk(used/free)"
+          label="used/free/diskFree"
           min-width="180"
       >
         <template v-slot="{ row }">
           {{ memFormatter(row, 'used', calculateNodeUsedStorage(row)) }}
           /
           {{ memFormatter(row, 'free', calculateNodeFreeStorage(row)) }}
+          /
+          {{ memFormatter(row, 'diskFree', calculateNodeDiskFreeStorage(row)) }}
         </template>
       </el-table-column>
       <el-table-column prop="status" label="Status" min-width="80" sortable />
@@ -364,6 +366,12 @@ export default {
         return total + Math.max(0, storage.capacity - storage.usedBytes);
       }, 0);
     }
+    const calculateNodeDiskFreeStorage = (row) => {
+      if (!row.storageInfo) return 0;
+      return Object.values(row.storageInfo).reduce((total, storage) => {
+        return total + storage.diskFree;
+      }, 0);
+    }
     async function handlerServerLog(serverRow) {
       const targetAddress = combinedRequestAddress(serverRow)
       selectedServerId.value = serverRow.id
@@ -385,6 +393,7 @@ export default {
       dateFormatter,
       calculateNodeUsedStorage,
       calculateNodeFreeStorage,
+      calculateNodeDiskFreeStorage,
       showLogDialog,
       selectedServerId,
       selectedTargetAddress

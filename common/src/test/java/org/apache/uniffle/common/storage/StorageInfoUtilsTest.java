@@ -56,7 +56,8 @@ public class StorageInfoUtilsTest {
   public void testToProto() {
     // empty input
     assertEquals(0, toProto(Maps.newHashMap()).size());
-    StorageInfo info = new StorageInfo("/mnt", StorageMedia.HDD, 100, 95, StorageStatus.NORMAL);
+    StorageInfo info =
+        new StorageInfo("/mnt", StorageMedia.HDD, 100, 100, 95, StorageStatus.NORMAL);
     Map<String, StorageInfo> tmp = Maps.newHashMap();
     tmp.put("/mnt", info);
     Map<String, RssProtos.StorageInfo> result = toProto(tmp);
