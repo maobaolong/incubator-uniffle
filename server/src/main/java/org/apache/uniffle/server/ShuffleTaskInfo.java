@@ -341,6 +341,8 @@ public class ShuffleTaskInfo {
         + UnitConverter.formatSize(onHadoopDataSize.get())
         + ", maxSizePartitionInfo="
         + maxSizePartitionInfo
+        + ", mostBlockPartitionInfo="
+        + mostBlockPartitionInfo
         + ", shuffleDetailInfo="
         + shuffleDetailInfos
         + '}';
