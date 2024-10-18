@@ -822,6 +822,10 @@ public class ShuffleBufferManager {
     this.bufferFlushThreshold = bufferFlushThreshold;
   }
 
+  public ShuffleBufferType getShuffleBufferType() {
+    return shuffleBufferType;
+  }
+
   public List<String> getBlockLengthTopN() {
     double[] bucketValues =
         ShuffleServerMetrics.appHistogramWriteBlockSize.collect().get(0).samples.stream()
