@@ -726,6 +726,12 @@ public class ShuffleServerConf extends RssBaseConf {
           .defaultValue(3)
           .withDescription("The topN num of block size for statistic.");
 
+  public static final ConfigOption<Boolean> SERVER_STOP_UNREGISTER_ENABLE =
+      ConfigOptions.key("rss.server.stop.unregister.enable")
+          .booleanType()
+          .defaultValue(false)
+          .withDescription("Stop to unregister app");
+
   public ShuffleServerConf() {}
 
   public ShuffleServerConf(String fileName) {

@@ -771,6 +771,9 @@ public class ShuffleTaskManager {
   }
 
   public void checkResourceStatus() {
+    if (conf.getBoolean(ShuffleServerConf.SERVER_STOP_UNREGISTER_ENABLE)) {
+      return;
+    }
     try {
       Set<String> appNames = Sets.newHashSet(shuffleTaskInfos.keySet());
       // remove applications which is timeout according to rss.server.app.expired.withoutHeartbeat
@@ -1037,6 +1040,13 @@ public class ShuffleTaskManager {
   }
 
   public void removeShuffleDataAsync(String appId) {
+    if (conf.getBoolean(ShuffleServerConf.SERVER_STOP_UNREGISTER_ENABLE)) {
+      LOG.warn(
+          "Conf {} is true, stop unregistering shuffle data for appId {}",
+          ShuffleServerConf.SERVER_STOP_UNREGISTER_ENABLE.key(),
+          appId);
+      return;
+    }
     expiredAppIdQueue.add(new AppUnregisterPurgeEvent(appId, getUserByAppId(appId)));
   }
 
