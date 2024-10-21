@@ -169,6 +169,7 @@ public class ShuffleFlushManager {
       int maxConcurrencyPerPartitionToWrite = getMaxConcurrencyPerPartitionWrite(event);
       CreateShuffleWriteHandlerRequest request =
           new CreateShuffleWriteHandlerRequest(
+              this.shuffleServerConf,
               storageType,
               event.getAppId(),
               event.getShuffleId(),
