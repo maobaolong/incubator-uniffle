@@ -637,10 +637,30 @@ public class ApplicationManager implements Closeable {
   public void setAppShuffleInfo(String appId, int shuffleId, int partitionNum) {
     appToShuffleInfo
         .computeIfAbsent(appId, id -> new HashMap<>())
-        .put(shuffleId, new ShuffleInfo(shuffleId, System.currentTimeMillis(), partitionNum));
+        .put(shuffleId, new ShuffleInfo(shuffleId, partitionNum));
   }
 
   public Map<Integer, ShuffleInfo> getAppShuffleInfo(String appId) {
     return appToShuffleInfo.getOrDefault(appId, Collections.emptyMap());
+  }
+
+  public void updateAppShuffleInfo(Map<String, RssProtos.ApplicationInfo> applicationInfoMap) {
+    for (Map.Entry<String, RssProtos.ApplicationInfo> entry : applicationInfoMap.entrySet()) {
+      String appId = entry.getKey();
+      Map<Integer, Long> shuffleStartTimeMap = entry.getValue().getShuffleStartTimeMap();
+      for (Map.Entry<Integer, Long> entry1 : shuffleStartTimeMap.entrySet()) {
+        updateAppShuffleInfo(appId, entry1.getKey(), entry1.getValue());
+      }
+    }
+  }
+
+  private void updateAppShuffleInfo(String appId, int shuffleId, long startTime) {
+    Map<Integer, ShuffleInfo> shuffleInfoMap = appToShuffleInfo.get(appId);
+    if (shuffleInfoMap != null) {
+      ShuffleInfo info = shuffleInfoMap.get(shuffleId);
+      if (info != null) {
+        info.setStartTime(startTime);
+      }
+    }
   }
 }

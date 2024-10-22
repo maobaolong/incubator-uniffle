@@ -104,7 +104,7 @@
             min-width="180">
           <template v-slot="{ row }">
             <div v-for="(value, key) in row.shuffleInfo" :key="key">
-              <span>{{ formatTime(value.assignmentTime) }}-{{ key }}-{{ value.partitionNum }}</span>
+              <span>{{ formatTime(value.startTime) }}-{{ key }}-{{ value.partitionNum }}</span>
             </div>
           </template>
         </el-table-column>

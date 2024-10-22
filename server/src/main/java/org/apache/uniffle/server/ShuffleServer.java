@@ -604,6 +604,7 @@ public class ShuffleServer {
               .setTotalSize(taskInfo.getTotalDataSize())
               .setMaxSizePartitionInfo(taskInfo.getMaxSizePartitionInfo().toProto())
               .setMostBlockPartitionInfo(taskInfo.getMostBlockPartitionInfo().toProto())
+              .putAllShuffleStartTime(taskInfo.getShuffleStartTime())
               .build();
 
       appInfos.add(applicationInfo);

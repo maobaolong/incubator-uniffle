@@ -47,6 +47,9 @@ const dateFormatter = (row, column, cellValue) => {
 }
 
 function formatTime(timestamp) {
+  if (timestamp === 0) {
+    return 'N/A';
+  }
   const assignmentTime = new Date(timestamp);
   const hours = assignmentTime.getHours();
   const minutes = assignmentTime.getMinutes();

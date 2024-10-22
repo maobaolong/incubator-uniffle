@@ -19,14 +19,13 @@ package org.apache.uniffle.coordinator;
 
 public class ShuffleInfo {
   private int shuffleId;
-  private long assignmentTime;
+  private long startTime;
   private int partitionNum;
 
   public ShuffleInfo() {}
 
-  public ShuffleInfo(int shuffleId, long assignmentTime, int partitionNum) {
+  public ShuffleInfo(int shuffleId, int partitionNum) {
     this.shuffleId = shuffleId;
-    this.assignmentTime = assignmentTime;
     this.partitionNum = partitionNum;
   }
 
@@ -34,8 +33,10 @@ public class ShuffleInfo {
     this.shuffleId = shuffleId;
   }
 
-  public void setAssignmentTime(long assignmentTime) {
-    this.assignmentTime = assignmentTime;
+  public void setStartTime(long startTime) {
+    if (this.startTime == 0) {
+      this.startTime = startTime;
+    }
   }
 
   public void setPartitionNum(int partitionNum) {
@@ -46,8 +47,8 @@ public class ShuffleInfo {
     return shuffleId;
   }
 
-  public long getAssignmentTime() {
-    return assignmentTime;
+  public long getStartTime() {
+    return startTime;
   }
 
   public int getPartitionNum() {

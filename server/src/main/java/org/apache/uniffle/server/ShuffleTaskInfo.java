@@ -17,6 +17,7 @@
 
 package org.apache.uniffle.server;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -78,6 +79,8 @@ public class ShuffleTaskInfo {
   /** shuffleId -> shuffleDetailInfo */
   private final Map<Integer, ShuffleDetailInfo> shuffleDetailInfos;
 
+  private final Map<Integer, Long> shuffleStartTime;
+
   private final Map<Integer, Integer> latestStageAttemptNumbers;
 
   public ShuffleTaskInfo(String appId) {
@@ -94,6 +97,7 @@ public class ShuffleTaskInfo {
     this.partitionBlockCounters = JavaUtils.newConcurrentMap();
     this.latestStageAttemptNumbers = JavaUtils.newConcurrentMap();
     this.shuffleDetailInfos = JavaUtils.newConcurrentMap();
+    this.shuffleStartTime = new HashMap<>();
   }
 
   public Long getCurrentTimes() {
@@ -315,6 +319,13 @@ public class ShuffleTaskInfo {
 
   public ShuffleDetailInfo getShuffleDetailInfo(int shuffleId) {
     return shuffleDetailInfos.get(shuffleId);
+  }
+
+  public Map<Integer, Long> getShuffleStartTime() {
+    for (Map.Entry<Integer, ShuffleDetailInfo> entry : shuffleDetailInfos.entrySet()) {
+      shuffleStartTime.putIfAbsent(entry.getKey(), entry.getValue().getStartTime());
+    }
+    return shuffleStartTime;
   }
 
   public long getPartitionNum() {

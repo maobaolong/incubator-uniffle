@@ -259,6 +259,7 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
       if (LOG.isDebugEnabled()) {
         LOG.debug("Got heartbeat from {}", serverNode);
       }
+      coordinatorServer.getApplicationManager().updateAppShuffleInfo(serverNode.getAppIdToInfos());
       auditContext.withStatusCode(response.getStatus());
       responseObserver.onNext(response);
       responseObserver.onCompleted();

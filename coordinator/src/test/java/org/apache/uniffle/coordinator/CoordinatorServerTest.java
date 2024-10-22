@@ -183,7 +183,7 @@ public class CoordinatorServerTest {
         assertEquals(0, appInfos.size());
 
         Map<Integer, ShuffleInfo> shuffleInfo = new HashMap<>();
-        shuffleInfo.put(0, new ShuffleInfo(0, 1728378906904L, 10));
+        shuffleInfo.put(0, new ShuffleInfo(0, 10));
 
         // add app info
         AppInfoVO appInfoVO =
@@ -221,7 +221,7 @@ public class CoordinatorServerTest {
         assertEquals(1, appInfos.size());
 
         Map<Integer, ShuffleInfo> shuffleInfo = new HashMap<>();
-        shuffleInfo.put(1, new ShuffleInfo(1, 1728378906904L, 10));
+        shuffleInfo.put(1, new ShuffleInfo(1, 10));
         // Trigger rotate
         AppInfoVO appInfoVO =
             new AppInfoVO(

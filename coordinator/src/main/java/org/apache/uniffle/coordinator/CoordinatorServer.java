@@ -320,6 +320,8 @@ public class CoordinatorServer {
         info1.hasMaxSizePartitionInfo() ? info1.getMaxSizePartitionInfo() : null;
     RssProtos.PartitionInfo mostBlockPartitionInfo =
         info1.hasMostBlockPartitionInfo() ? info1.getMostBlockPartitionInfo() : null;
+    Map<Integer, Long> startTime = new HashMap<>();
+    startTime.putAll(info1.getShuffleStartTimeMap());
     if (maxSizePartitionInfo == null) {
       maxSizePartitionInfo = info2.getMaxSizePartitionInfo();
     } else {
@@ -337,6 +339,15 @@ public class CoordinatorServer {
         mostBlockPartitionInfo = info2.getMostBlockPartitionInfo();
       }
     }
+    for (Map.Entry<Integer, Long> entry : info2.getShuffleStartTimeMap().entrySet()) {
+      if (!startTime.containsKey(entry.getKey())) {
+        startTime.put(entry.getKey(), entry.getValue());
+      } else {
+        if (startTime.get(entry.getKey()) > entry.getValue()) {
+          startTime.put(entry.getKey(), entry.getValue());
+        }
+      }
+    }
 
     return RssProtos.ApplicationInfo.newBuilder()
         .setPartitionNum(info1.getPartitionNum() + info2.getPartitionNum())
@@ -348,6 +359,7 @@ public class CoordinatorServer {
         .setTotalSize(info1.getTotalSize() + info2.getTotalSize())
         .setMaxSizePartitionInfo(maxSizePartitionInfo)
         .setMostBlockPartitionInfo(mostBlockPartitionInfo)
+        .putAllShuffleStartTime(startTime)
         .build();
   }
 
