@@ -415,7 +415,10 @@ public class RssShuffleManager extends RssShuffleManagerBase {
   protected void registerCoordinator() {
     String coordinators = RssSparkShuffleUtils.getCoordinatorQuorumStr(sparkConf);
     LOG.info("Registering coordinators {}", coordinators);
-    shuffleWriteClient.registerCoordinators(coordinators);
+    shuffleWriteClient.registerCoordinators(
+        coordinators,
+        this.sparkConf.get(RssSparkConfig.RSS_CLIENT_RETRY_INTERVAL_MAX),
+        this.sparkConf.get(RssSparkConfig.RSS_CLIENT_RETRY_MAX));
   }
 
   public CompletableFuture<Long> sendData(AddBlockEvent event) {

@@ -60,11 +60,11 @@ import org.apache.spark.shuffle.handle.StageAttemptShuffleHandleInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.uniffle.client.api.CoordinatorClient;
 import org.apache.uniffle.client.api.ShuffleManagerClient;
 import org.apache.uniffle.client.api.ShuffleWriteClient;
 import org.apache.uniffle.client.factory.CoordinatorClientFactory;
 import org.apache.uniffle.client.factory.ShuffleManagerClientFactory;
+import org.apache.uniffle.client.impl.grpc.CoordinatorGrpcRetryableClient;
 import org.apache.uniffle.client.request.RssFetchClientConfRequest;
 import org.apache.uniffle.client.request.RssPartitionToShuffleServerRequest;
 import org.apache.uniffle.client.response.RssFetchClientConfResponse;
@@ -399,10 +399,17 @@ public abstract class RssShuffleManagerBase implements RssShuffleManagerInterfac
   protected static void fetchAndApplyDynamicConf(SparkConf sparkConf) {
     String clientType = sparkConf.get(RssSparkConfig.RSS_CLIENT_TYPE);
     String coordinators = RssSparkShuffleUtils.getCoordinatorQuorumStr(sparkConf);
+    long retryIntervalMs = sparkConf.get(RssSparkConfig.RSS_CLIENT_RETRY_INTERVAL_MAX);
+    int retryTimes = sparkConf.get(RssSparkConfig.RSS_CLIENT_RETRY_MAX);
+    int heartbeatThread = sparkConf.get(RssSparkConfig.RSS_CLIENT_HEARTBEAT_THREAD_NUM);
     CoordinatorClientFactory coordinatorClientFactory = CoordinatorClientFactory.getInstance();
-    List<CoordinatorClient> coordinatorClients =
+    CoordinatorGrpcRetryableClient coordinatorClient =
         coordinatorClientFactory.createCoordinatorClient(
-            ClientType.valueOf(clientType), coordinators);
+            ClientType.valueOf(clientType),
+            coordinators,
+            retryIntervalMs,
+            retryTimes,
+            heartbeatThread);
 
     int timeoutMs =
         sparkConf.getInt(
@@ -416,18 +423,11 @@ public abstract class RssShuffleManagerBase implements RssShuffleManagerInterfac
     }
     RssFetchClientConfRequest request =
         new RssFetchClientConfRequest(timeoutMs, user, Collections.emptyMap());
-    for (CoordinatorClient client : coordinatorClients) {
-      RssFetchClientConfResponse response = client.fetchClientConf(request);
-      if (response.getStatusCode() == StatusCode.SUCCESS) {
-        LOG.info("Success to get conf from {}", client.getDesc());
-        RssSparkShuffleUtils.applyDynamicClientConf(sparkConf, response.getClientConf());
-        break;
-      } else {
-        LOG.warn("Fail to get conf from {}", client.getDesc());
-      }
+    RssFetchClientConfResponse response = coordinatorClient.fetchClientConf(request);
+    if (response.getStatusCode() == StatusCode.SUCCESS) {
+      RssSparkShuffleUtils.applyDynamicClientConf(sparkConf, response.getClientConf());
     }
-
-    coordinatorClients.forEach(CoordinatorClient::close);
+    coordinatorClient.close();
   }
 
   @Override
@@ -906,31 +906,28 @@ public abstract class RssShuffleManagerBase implements RssShuffleManagerInterfac
     int retryTimes = sparkConf.get(RssSparkConfig.RSS_CLIENT_ASSIGNMENT_RETRY_TIMES);
     faultyServerIds.addAll(rssStageResubmitManager.getServerIdBlackList());
     try {
-      return RetryUtils.retry(
-          () -> {
-            ShuffleAssignmentsInfo response =
-                shuffleWriteClient.getShuffleAssignments(
-                    id.get(),
-                    shuffleId,
-                    partitionNum,
-                    partitionNumPerRange,
-                    assignmentTags,
-                    assignmentShuffleServerNumber,
-                    estimateTaskConcurrency,
-                    faultyServerIds,
-                    stageId,
-                    stageAttemptNumber,
-                    reassign);
-            LOG.info("Finished reassign");
-            if (reassignmentHandler != null) {
-              response = reassignmentHandler.apply(response);
-            }
-            registerShuffleServers(
-                id.get(), shuffleId, response.getServerToPartitionRanges(), getRemoteStorageInfo());
-            return response.getPartitionToServers();
-          },
-          retryInterval,
-          retryTimes);
+      ShuffleAssignmentsInfo response =
+          shuffleWriteClient.getShuffleAssignments(
+              id.get(),
+              shuffleId,
+              partitionNum,
+              partitionNumPerRange,
+              assignmentTags,
+              assignmentShuffleServerNumber,
+              estimateTaskConcurrency,
+              faultyServerIds,
+              stageId,
+              stageAttemptNumber,
+              reassign,
+              retryInterval,
+              retryTimes);
+      LOG.info("Finished reassign");
+      if (reassignmentHandler != null) {
+        response = reassignmentHandler.apply(response);
+      }
+      registerShuffleServers(
+          id.get(), shuffleId, response.getServerToPartitionRanges(), getRemoteStorageInfo());
+      return response.getPartitionToServers();
     } catch (Throwable throwable) {
       throw new RssException("registerShuffle failed!", throwable);
     }
@@ -956,6 +953,8 @@ public abstract class RssShuffleManagerBase implements RssShuffleManagerInterfac
     try {
       return RetryUtils.retry(
           () -> {
+            // retry zero times in shuffleWriteClient.getShuffleAssignments, let
+            // getShuffleAssignments and registerShuffleServers in one retry func
             ShuffleAssignmentsInfo response =
                 shuffleWriteClient.getShuffleAssignments(
                     appId,
@@ -968,7 +967,9 @@ public abstract class RssShuffleManagerBase implements RssShuffleManagerInterfac
                     faultyServerIds,
                     stageId,
                     stageAttemptNumber,
-                    reassign);
+                    reassign,
+                    0,
+                    0);
             registerShuffleServers(
                 appId,
                 shuffleId,
@@ -980,7 +981,7 @@ public abstract class RssShuffleManagerBase implements RssShuffleManagerInterfac
           retryInterval,
           retryTimes);
     } catch (Throwable throwable) {
-      throw new RssException("registerShuffle failed!", throwable);
+      throw new RssException("getShuffleAssignments or registerShuffle failed!", throwable);
     }
   }
 

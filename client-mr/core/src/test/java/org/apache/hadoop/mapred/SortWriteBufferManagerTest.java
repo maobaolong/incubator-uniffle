@@ -543,7 +543,7 @@ public class SortWriteBufferManagerTest {
     }
 
     @Override
-    public void registerCoordinators(String coordinators) {}
+    public void registerCoordinators(String coordinators, long retryIntervalMs, int retryTimes) {}
 
     @Override
     public Map<String, String> fetchClientConf(int timeoutMs) {
@@ -587,7 +587,9 @@ public class SortWriteBufferManagerTest {
         Set<String> faultyServerIds,
         int stageId,
         int stageAttemptNumber,
-        boolean reassign) {
+        boolean reassign,
+        long retryIntervalMs,
+        int retryTimes) {
       return null;
     }
 

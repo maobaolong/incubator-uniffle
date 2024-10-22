@@ -86,6 +86,9 @@ public class MockedShuffleWriteClient implements ShuffleWriteClient {
   public void registerCoordinators(String coordinators) {}
 
   @Override
+  public void registerCoordinators(String coordinators, long retryIntervalMs, int retryTimes) {}
+
+  @Override
   public Map<String, String> fetchClientConf(int timeoutMs) {
     return null;
   }
@@ -131,7 +134,9 @@ public class MockedShuffleWriteClient implements ShuffleWriteClient {
       Set<String> faultyServerIds,
       int stageId,
       int stageAttemptNumber,
-      boolean reassign) {
+      boolean reassign,
+      long retryIntervalMs,
+      int retryTimes) {
     return null;
   }
 

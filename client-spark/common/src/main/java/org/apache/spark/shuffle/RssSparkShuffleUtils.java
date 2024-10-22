@@ -41,9 +41,9 @@ import org.apache.spark.storage.BlockManagerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.uniffle.client.api.CoordinatorClient;
 import org.apache.uniffle.client.api.ShuffleManagerClient;
 import org.apache.uniffle.client.factory.CoordinatorClientFactory;
+import org.apache.uniffle.client.impl.grpc.CoordinatorGrpcRetryableClient;
 import org.apache.uniffle.client.request.RssReportShuffleFetchFailureRequest;
 import org.apache.uniffle.client.response.RssReportShuffleFetchFailureResponse;
 import org.apache.uniffle.client.util.ClientUtils;
@@ -104,12 +104,15 @@ public class RssSparkShuffleUtils {
     return instance;
   }
 
-  public static List<CoordinatorClient> createCoordinatorClients(SparkConf sparkConf) {
+  public static CoordinatorGrpcRetryableClient createCoordinatorClients(SparkConf sparkConf) {
     String clientType = sparkConf.get(RssSparkConfig.RSS_CLIENT_TYPE);
     String coordinators = getCoordinatorQuorumStr(sparkConf);
+    long retryIntervalMs = sparkConf.get(RssSparkConfig.RSS_CLIENT_RETRY_INTERVAL_MAX);
+    int retryTimes = sparkConf.get(RssSparkConfig.RSS_CLIENT_RETRY_MAX);
+    int heartbeatThread = sparkConf.get(RssSparkConfig.RSS_CLIENT_HEARTBEAT_THREAD_NUM);
     CoordinatorClientFactory coordinatorClientFactory = CoordinatorClientFactory.getInstance();
     return coordinatorClientFactory.createCoordinatorClient(
-        ClientType.valueOf(clientType), coordinators);
+        ClientType.valueOf(clientType), coordinators, retryIntervalMs, retryTimes, heartbeatThread);
   }
 
   public static String getCoordinatorQuorumStr(SparkConf sparkConf) {
