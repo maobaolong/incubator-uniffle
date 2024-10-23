@@ -27,7 +27,6 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.roaringbitmap.longlong.Roaring64NavigableMap;
 import org.slf4j.Logger;
@@ -45,7 +44,7 @@ import org.apache.uniffle.server.flush.EventRetryException;
 import org.apache.uniffle.server.storage.StorageManager;
 import org.apache.uniffle.storage.common.LocalStorage;
 import org.apache.uniffle.storage.common.Storage;
-import org.apache.uniffle.storage.handler.api.ShuffleWriteHandler;
+import org.apache.uniffle.storage.handler.api.ShuffleWriteHandlerWrapper;
 import org.apache.uniffle.storage.request.CreateShuffleWriteHandlerRequest;
 
 import static org.apache.uniffle.server.ShuffleServerConf.SERVER_MAX_CONCURRENCY_OF_ONE_PARTITION;
@@ -181,15 +180,16 @@ public class ShuffleFlushManager {
               storageDataReplica,
               user,
               maxConcurrencyPerPartitionToWrite);
-      Pair<ShuffleWriteHandler, Boolean> pair;
+      ShuffleWriteHandlerWrapper handlerWrapper;
       try {
-        pair = storage.getOrCreateWriteHandler(request);
+        handlerWrapper = storage.getOrCreateWriteHandler(request);
       } catch (Exception e) {
-        LOG.warn("Failed to create write handler for event: {}", event, e);
+        LOG.warn("Failed to create write handlerWrapper for event: {}", event, e);
         throw new EventRetryException(e);
       }
+
       long startTime = System.currentTimeMillis();
-      boolean writeSuccess = storageManager.write(storage, pair.getLeft(), event);
+      boolean writeSuccess = storageManager.write(storage, handlerWrapper.getHandler(), event);
       if (!writeSuccess) {
         throw new EventRetryException();
       }
@@ -203,7 +203,9 @@ public class ShuffleFlushManager {
         AUDIT_LOGGER.info(
             String.format(
                 "%s|%s|%d|%s|%s|%s|%d|%s|%s|%d|%d",
-                pair.getRight() ? AuditType.CREATE.getValue() : AuditType.WRITE.getValue(),
+                handlerWrapper.isNewlyCreated()
+                    ? AuditType.CREATE.getValue()
+                    : AuditType.WRITE.getValue(),
                 event.getAppId(),
                 event.getShuffleId(),
                 event.getStartPartition() + "_" + event.getEndPartition(),
@@ -218,9 +220,11 @@ public class ShuffleFlushManager {
       if (null != shuffleTaskInfo) {
         String storageHost = event.getUnderStorage().getStorageHost();
         if (LocalStorage.STORAGE_HOST.equals(storageHost)) {
-          shuffleTaskInfo.addOnLocalFileDataSize(event.getEncodedLength(), pair.getRight());
+          shuffleTaskInfo.addOnLocalFileDataSize(
+              event.getEncodedLength(), handlerWrapper.isNewlyCreated());
         } else {
-          shuffleTaskInfo.addOnHadoopDataSize(event.getEncodedLength(), pair.getRight());
+          shuffleTaskInfo.addOnHadoopDataSize(
+              event.getEncodedLength(), handlerWrapper.isNewlyCreated());
         }
       }
     } finally {
