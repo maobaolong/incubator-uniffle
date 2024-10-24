@@ -599,9 +599,9 @@ public class CoordinatorGrpcService extends CoordinatorServerGrpc.CoordinatorSer
       auditLogger = AUDIT_LOGGER;
     }
     CoordinatorRpcAuditContext auditContext = new CoordinatorRpcAuditContext(auditLogger);
-    auditContext.withCreationTimeNs(System.nanoTime());
+    auditContext.withCommand(command).withCreationTimeNs(System.nanoTime());
     if (auditLogger != null) {
-      auditContext.withCommand(command).withFrom(ClientContextServerInterceptor.getIpAddress());
+      auditContext.withFrom(ClientContextServerInterceptor.getIpAddress());
     }
     return auditContext;
   }

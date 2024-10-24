@@ -35,6 +35,7 @@ import org.apache.uniffle.common.metrics.MetricsManager;
 import org.apache.uniffle.common.util.Constants;
 import org.apache.uniffle.storage.common.LocalStorage;
 
+import static org.apache.uniffle.common.metrics.RPCMetrics.registerRpcExecutionCounters;
 import static org.apache.uniffle.common.util.Constants.METRICS_APP_LABEL_NAME;
 
 public class ShuffleServerMetrics {
@@ -531,6 +532,8 @@ public class ShuffleServerMetrics {
             .help("top N of on hadoop shuffle data size for app level")
             .labelNames("app_id")
             .register(metricsManager.getCollectorRegistry());
+
+    registerRpcExecutionCounters(metricsManager);
   }
 
   public static <T extends Number> void addLabeledGauge(String name, Supplier<T> supplier) {

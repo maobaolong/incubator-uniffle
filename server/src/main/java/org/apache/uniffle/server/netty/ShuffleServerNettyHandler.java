@@ -912,9 +912,9 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
       auditLogger = AUDIT_LOGGER;
     }
     ServerRpcAuditContext auditContext = new ServerRpcAuditContext(auditLogger);
-    auditContext.withCreationTimeNs(System.nanoTime());
+    auditContext.withCommand(command).withCreationTimeNs(System.nanoTime());
     if (auditLogger != null) {
-      auditContext.withCommand(command).withFrom(transportClient.getSocketAddress().toString());
+      auditContext.withFrom(transportClient.getSocketAddress().toString());
     }
     return auditContext;
   }

@@ -23,23 +23,11 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
 import io.prometheus.client.Counter;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import org.apache.uniffle.common.rpc.StatusCode;
 
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGEEightySecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGEFiftySecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGEFortySecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGEHundredSecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGENinetySecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGEOneSecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGESeventySecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGESixtySecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGETenSecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGEThirtySecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeGETwentySecond;
-import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTimeLTOneSecond;
+import static org.apache.uniffle.common.metrics.RPCMetrics.counterRpcExecutionTime;
 
 /** Context for rpc audit logging. */
 public abstract class RpcAuditContext implements Closeable {
@@ -52,8 +40,11 @@ public abstract class RpcAuditContext implements Closeable {
   private long creationTimeNs;
   protected long executionTimeNs;
   protected String executionTimeLevel;
-  protected static final RangeMap<Long, Pair<String, Counter.Child>> executionTimeNsLevelMap =
-      TreeRangeMap.create();
+  protected static final RangeMap<Long, Integer> executionTimeNsLevelMap = TreeRangeMap.create();
+  protected static final String[] labels = {
+    "<1s", ">=1s", ">=10s", ">=20s", ">=30s", ">=40s", ">=50s", ">=60s", ">=70s", ">=80s", ">=90s",
+    ">=100s"
+  };
 
   static {
     long[] thresholds = {
@@ -71,33 +62,11 @@ public abstract class RpcAuditContext implements Closeable {
       100000000000L
     };
 
-    String[] labels = {
-      "<1s", ">=1s", ">=10s", ">=20s", ">=30s", ">=40s", ">=50s", ">=60s", ">=70s", ">=80s",
-      ">=90s", ">=100s"
-    };
-
-    Counter.Child[] counters = {
-      counterRpcExecutionTimeLTOneSecond,
-      counterRpcExecutionTimeGEOneSecond,
-      counterRpcExecutionTimeGETenSecond,
-      counterRpcExecutionTimeGETwentySecond,
-      counterRpcExecutionTimeGEThirtySecond,
-      counterRpcExecutionTimeGEFortySecond,
-      counterRpcExecutionTimeGEFiftySecond,
-      counterRpcExecutionTimeGESixtySecond,
-      counterRpcExecutionTimeGESeventySecond,
-      counterRpcExecutionTimeGEEightySecond,
-      counterRpcExecutionTimeGENinetySecond,
-      counterRpcExecutionTimeGEHundredSecond
-    };
-
     for (int i = 0; i < thresholds.length - 1; i++) {
-      executionTimeNsLevelMap.put(
-          Range.closedOpen(thresholds[i], thresholds[i + 1]), Pair.of(labels[i], counters[i]));
+      executionTimeNsLevelMap.put(Range.closedOpen(thresholds[i], thresholds[i + 1]), i);
     }
     executionTimeNsLevelMap.put(
-        Range.closed(thresholds[thresholds.length - 1], Long.MAX_VALUE),
-        Pair.of(labels[labels.length - 1], counters[labels.length - 1]));
+        Range.closed(thresholds[thresholds.length - 1], Long.MAX_VALUE), thresholds.length - 1);
   }
 
   public RpcAuditContext(Logger log) {
@@ -188,12 +157,18 @@ public abstract class RpcAuditContext implements Closeable {
   @Override
   public void close() {
     executionTimeNs = System.nanoTime() - creationTimeNs;
-    Pair<String, Counter.Child> pair = executionTimeNsLevelMap.get(executionTimeNs);
-    if (pair != null) {
-      executionTimeLevel = pair.getLeft();
-      Counter.Child counter = pair.getRight();
-      if (counter != null) {
-        counter.inc();
+    Integer index = executionTimeNsLevelMap.get(executionTimeNs);
+    if (index != null) {
+      executionTimeLevel = labels[index];
+      Counter.Child all = counterRpcExecutionTime.labels("all", executionTimeLevel);
+      if (all != null) {
+        all.inc();
+      }
+      if (command != null) {
+        Counter.Child rpc = counterRpcExecutionTime.labels(command, executionTimeLevel);
+        if (rpc != null) {
+          rpc.inc();
+        }
       }
     }
 

@@ -32,6 +32,8 @@ import org.apache.uniffle.common.util.Constants;
 import org.apache.uniffle.common.util.JavaUtils;
 import org.apache.uniffle.common.util.RssUtils;
 
+import static org.apache.uniffle.common.metrics.RPCMetrics.registerRpcExecutionCounters;
+
 public class CoordinatorMetrics {
 
   private static final String TOTAL_SERVER_NUM = "total_server_num";
@@ -118,5 +120,6 @@ public class CoordinatorMetrics {
         metricsManager.addCounter(TOTAL_CANDIDATES_DENIED_REQUEST);
     counterTotalQuotaDeniedRequest = metricsManager.addCounter(TOTAL_QUOTA_DENIED_REQUEST);
     counterTotalLoadDeniedRequest = metricsManager.addCounter(TOTAL_LOAD_DENIED_REQUEST);
+    registerRpcExecutionCounters(metricsManager);
   }
 }
