@@ -69,6 +69,18 @@ public class JavaUtils {
     }
   }
 
+  public static String getClassLoadedPath(Class clazz) {
+    String loadedPath = "failed to get class loaded path";
+    if (clazz == null
+        || clazz.getProtectionDomain() == null
+        || clazz.getProtectionDomain().getCodeSource() == null
+        || clazz.getProtectionDomain().getCodeSource().getLocation() == null) {
+      return loadedPath;
+    }
+    loadedPath = clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
+    return loadedPath;
+  }
+
   /**
    * For JDK8, there is bug for ConcurrentHashMap#computeIfAbsent, checking the key existence to
    * speed up. See details in issue #519

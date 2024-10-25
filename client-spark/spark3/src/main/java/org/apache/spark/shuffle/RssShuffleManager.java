@@ -76,6 +76,7 @@ import org.apache.uniffle.common.exception.RssException;
 import org.apache.uniffle.common.exception.RssFetchFailedException;
 import org.apache.uniffle.common.rpc.GrpcServer;
 import org.apache.uniffle.common.util.BlockIdLayout;
+import org.apache.uniffle.common.util.Constants;
 import org.apache.uniffle.common.util.JavaUtils;
 import org.apache.uniffle.common.util.RssUtils;
 import org.apache.uniffle.common.util.ThreadUtils;
@@ -503,7 +504,17 @@ public class RssShuffleManager extends RssShuffleManagerBase {
   public <K, V> ShuffleWriter<K, V> getWriter(
       ShuffleHandle handle, long mapId, TaskContext context, ShuffleWriteMetricsReporter metrics) {
     if (!(handle instanceof RssShuffleHandle)) {
-      throw new RssException("Unexpected ShuffleHandle:" + handle.getClass().getName());
+      String loadedPath = JavaUtils.getClassLoadedPath(handle.getClass());
+      String errorMessage =
+          String.format(
+              "Unexpected ShuffleHandle:%s, loaded by classloader %s from %s. but should be loaded by %s from %s. RSS client version is %s",
+              handle.getClass().getName(),
+              handle.getClass().getClassLoader(),
+              loadedPath,
+              RssShuffleHandle.class.getClassLoader(),
+              JavaUtils.getClassLoadedPath(RssShuffleHandle.class),
+              Constants.VERSION_AND_REVISION_SHORT);
+      throw new RssException(errorMessage);
     }
     RssShuffleHandle<K, V, ?> rssHandle = (RssShuffleHandle<K, V, ?>) handle;
     setPusherAppId(rssHandle);
