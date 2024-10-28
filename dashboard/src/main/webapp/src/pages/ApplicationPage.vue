@@ -122,6 +122,7 @@
           label="MemorySize"
           min-width="180"
           :formatter="memFormatter"
+          sortable
         />
         <el-table-column label="HadoopFile" min-width="180">
           <template v-slot="{ row }">
@@ -146,6 +147,7 @@
           label="TotalSize"
           min-width="180"
           :formatter="memFormatter"
+          sortable
         />
         <el-table-column
           label="URL"
