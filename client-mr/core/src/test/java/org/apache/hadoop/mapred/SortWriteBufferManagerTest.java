@@ -726,7 +726,8 @@ public class SortWriteBufferManagerTest {
         ShuffleDataDistributionType distributionType,
         int maxConcurrencyPerPartitionToWrite,
         int stageAttemptNumber,
-        RssProtos.MergeContext mergeContext) {}
+        RssProtos.MergeContext mergeContext,
+        Map<String, String> properties) {}
 
     @Override
     public boolean sendCommit(

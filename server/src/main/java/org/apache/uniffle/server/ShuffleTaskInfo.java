@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import org.roaringbitmap.longlong.Roaring64NavigableMap;
@@ -82,6 +83,7 @@ public class ShuffleTaskInfo {
   private final Map<Integer, Long> shuffleStartTime;
 
   private final Map<Integer, Integer> latestStageAttemptNumbers;
+  private Map<String, String> properties;
 
   public ShuffleTaskInfo(String appId) {
     this.appId = appId;
@@ -357,5 +359,14 @@ public class ShuffleTaskInfo {
         + ", shuffleDetailInfo="
         + shuffleDetailInfos
         + '}';
+  }
+
+  public void setProperties(Map<String, String> properties) {
+    Map<String, String> filteredProperties =
+        properties.entrySet().stream()
+            .filter(entry -> entry.getKey().contains(".rss."))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    this.properties = filteredProperties;
+    LOGGER.info("{} set properties to {}", appId, properties);
   }
 }
