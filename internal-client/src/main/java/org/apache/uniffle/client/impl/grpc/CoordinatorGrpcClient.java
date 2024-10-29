@@ -274,14 +274,16 @@ public class CoordinatorGrpcClient extends GrpcClient implements CoordinatorClie
 
   @Override
   public RssApplicationInfoResponse registerApplicationInfo(RssApplicationInfoRequest request) {
-    ApplicationInfoRequest rpcRequest =
+    ApplicationInfoRequest.Builder rpcRequestBuilder =
         ApplicationInfoRequest.newBuilder()
             .setAppId(request.getAppId())
             .setUser(request.getUser())
             .setVersion(Constants.VERSION)
-            .setGitCommitId(Constants.REVISION_SHORT)
-            .putAllAppConf(request.getAppConf())
-            .build();
+            .setGitCommitId(Constants.REVISION_SHORT);
+    if (request.getAppConf() != null) {
+      rpcRequestBuilder.putAllAppConf(request.getAppConf());
+    }
+    ApplicationInfoRequest rpcRequest = rpcRequestBuilder.build();
     ApplicationInfoResponse rpcResponse =
         blockingStub
             .withDeadlineAfter(request.getTimeoutMs(), TimeUnit.MILLISECONDS)
