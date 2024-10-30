@@ -255,6 +255,7 @@ public class ShuffleBufferManager {
               b -> {
                 int blockSize = b.getDataLength();
                 ShuffleServerMetrics.appHistogramWriteBlockSize.labels(appId).observe(blockSize);
+                ShuffleServerMetrics.appHistogramWriteBlockSize.labels("all").observe(blockSize);
               });
     }
     LOG.debug(
@@ -828,10 +829,7 @@ public class ShuffleBufferManager {
 
   public List<String> getBlockLengthTopN() {
     double[] bucketValues =
-        ShuffleServerMetrics.appHistogramWriteBlockSize.collect().get(0).samples.stream()
-            .filter(sample -> sample.name.endsWith("_bucket"))
-            .mapToDouble(sample -> sample.value)
-            .toArray();
+        ShuffleServerMetrics.appHistogramWriteBlockSize.labels("all").get().buckets;
 
     List<String> result = new ArrayList<>();
     Map<Integer, Double> unsortedMap = new HashMap<>();

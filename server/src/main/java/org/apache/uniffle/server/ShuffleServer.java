@@ -648,6 +648,6 @@ public class ShuffleServer {
   }
 
   public List<String> getBlockLengthTopN() {
-    return Collections.emptyList();
+    return shuffleBufferManager.getBlockLengthTopN();
   }
 }
