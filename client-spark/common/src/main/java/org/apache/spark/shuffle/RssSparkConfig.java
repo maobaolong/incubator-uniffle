@@ -450,6 +450,10 @@ public class RssSparkConfig {
                           + "colons"))
           .createWithDefault("");
 
+  public static final ConfigEntry<String> RSS_DELEGATED_SHUFFLE_MANAGER_CLASS =
+      createStringBuilder(new ConfigBuilder("spark.rss.delegated.shuffleManagerClass"))
+          .createWithDefault("");
+
   // spark2 doesn't have this key defined
   public static final String SPARK_SHUFFLE_COMPRESS_KEY = "spark.shuffle.compress";
 
