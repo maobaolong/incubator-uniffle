@@ -108,6 +108,12 @@ public class ServerResource extends BaseResource {
     return Response.success(serverList);
   }
 
+  @GET
+  @Path("/nodesIp")
+  public Response<String> getAllNodesIp() {
+    return execute(() -> getClusterManager().getAllNodesIp());
+  }
+
   @Authorization
   @POST
   @Path("/cancelDecommission")

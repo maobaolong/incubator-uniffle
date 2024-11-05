@@ -375,6 +375,11 @@ public class SimpleClusterManager implements ClusterManager {
   }
 
   @Override
+  public String getAllNodesIp() {
+    return servers.values().stream().map(ServerNode::getIp).collect(Collectors.joining(";"));
+  }
+
+  @Override
   public boolean deleteLostServerById(String serverId) {
     if (StringUtils.isNotBlank(serverId)) {
       return lostNodes.remove(new ServerNode(serverId));

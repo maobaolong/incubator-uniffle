@@ -155,3 +155,7 @@ export function getShuffleServerLogFile(logFile, params, headers) {
   headers.Accept = 'text/plain'
   return http.get(`/shuffleServer/logs/${logFile}`, params, headers, 0)
 }
+
+export function getAllServerIp(params, headers) {
+  return http.get('/server/nodesIp', params, headers, 0)
+}

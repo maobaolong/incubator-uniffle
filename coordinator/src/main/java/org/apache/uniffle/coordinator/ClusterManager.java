@@ -69,6 +69,8 @@ public interface ClusterManager extends Closeable {
   /** @return list all server nodes in the cluster */
   List<ServerNode> list();
 
+  String getAllNodesIp();
+
   boolean deleteLostServerById(String serverId);
 
   int getShuffleNodesMax();

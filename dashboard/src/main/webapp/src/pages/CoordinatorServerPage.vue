@@ -79,6 +79,7 @@
                 <el-button type="success" @click="handlerPromMetrics">Prometheus Metrics</el-button>
                 <el-button type="info" @click="handlerStacks">Stacks</el-button>
                 <el-button type="info" @click="handleCoordinatorLog">log</el-button>
+                <el-button type="info" @click="copyAllServerIp">ServerIps</el-button>
               </div>
             </el-descriptions-item>
             <el-descriptions-item>
@@ -130,6 +131,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
+  getAllServerIp,
   getCoordinatorConf,
   getCoordinatorMetrics,
   getCoordinatorPrometheusMetrics,
@@ -151,6 +153,26 @@ export default {
     const currentServerStore = useCurrentServerStore()
     const showLogDialog = ref(false)
     const selectedServerId = ref('')
+
+    async function copyAllServerIp() {
+      try {
+        const response = await getAllServerIp()
+        if (response.status >= 200 && response.status < 300) {
+          const ipData = response.data.data;
+          const textarea = document.createElement('textarea');
+          textarea.value = ipData;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          ElMessage.success('IP addresses copied to clipboard.');
+        } else {
+          ElMessage.error('Request failed.')
+        }
+      } catch (err) {
+        ElMessage.error('Internal error.')
+      }
+    }
 
     async function getCoordinatorServerConfPage() {
       const res = await getCoordinatorConf()
@@ -273,7 +295,8 @@ export default {
       showLogDialog,
       selectedServerId,
       searchKeyword,
-      dateFormatter
+      dateFormatter,
+      copyAllServerIp
     }
   }
 }
