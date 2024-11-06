@@ -755,6 +755,12 @@ public class ShuffleServerConf extends RssBaseConf {
           .defaultValue(false)
           .withDescription("Stop to unregister app");
 
+  public static final ConfigOption<String> SERVER_FLUSH_EVENT_HANDLE_STRATEGY_CLASS =
+      ConfigOptions.key("rss.server.flushEventHandlerStrategyClass")
+          .stringType()
+          .defaultValue(DefaultFlushEventHandler.class.getName())
+          .withDescription("The flush event handler strategy class");
+
   public ShuffleServerConf() {}
 
   public ShuffleServerConf(String fileName) {

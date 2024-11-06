@@ -163,22 +163,30 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
     }
   }
 
+  protected void initLocalFileFlushEventExecutor() {
+    localFileThreadPoolExecutor =
+        createFlushEventExecutor(
+            () ->
+                shuffleServerConf.getInteger(
+                    ShuffleServerConf.SERVER_FLUSH_LOCALFILE_THREAD_POOL_SIZE),
+            "LocalFileFlushEventThreadPool");
+  }
+
+  protected void initHadoopFlushEventExecutor() {
+    hadoopThreadPoolExecutor =
+        createFlushEventExecutor(
+            () ->
+                shuffleServerConf.getInteger(
+                    ShuffleServerConf.SERVER_FLUSH_HADOOP_THREAD_POOL_SIZE),
+            "HadoopFlushEventThreadPool");
+  }
+
   protected void initFlushEventExecutor() {
     if (StorageType.withLocalfile(storageType)) {
-      localFileThreadPoolExecutor =
-          createFlushEventExecutor(
-              () ->
-                  shuffleServerConf.getInteger(
-                      ShuffleServerConf.SERVER_FLUSH_LOCALFILE_THREAD_POOL_SIZE),
-              "LocalFileFlushEventThreadPool");
+      initLocalFileFlushEventExecutor();
     }
     if (StorageType.withHadoop(storageType)) {
-      hadoopThreadPoolExecutor =
-          createFlushEventExecutor(
-              () ->
-                  shuffleServerConf.getInteger(
-                      ShuffleServerConf.SERVER_FLUSH_HADOOP_THREAD_POOL_SIZE),
-              "HadoopFlushEventThreadPool");
+      initHadoopFlushEventExecutor();
     }
     fallbackThreadPoolExecutor = createFlushEventExecutor(() -> 5, "FallBackFlushEventThreadPool");
     ShuffleServerMetrics.addLabeledGauge(EVENT_QUEUE_SIZE, () -> (double) flushQueue.size());
@@ -199,6 +207,26 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
     }
   }
 
+  protected Executor getLocalFileThreadPoolExecutor(ShuffleDataFlushEvent event) {
+    ShuffleServerMetrics.gaugeLocalfileFlushThreadPoolQueueSize.inc();
+    return localFileThreadPoolExecutor;
+  }
+
+  protected Executor getHadoopThreadPoolExecutor(ShuffleDataFlushEvent event) {
+    ShuffleServerMetrics.gaugeHadoopFlushThreadPoolQueueSize.inc();
+    return hadoopThreadPoolExecutor;
+  }
+
+  protected Executor getFallbackThreadPoolExecutor(ShuffleDataFlushEvent event) {
+    ShuffleServerMetrics.gaugeFallbackFlushThreadPoolQueueSize.inc();
+    return fallbackThreadPoolExecutor;
+  }
+
+  @VisibleForTesting
+  public Executor getFallbackThreadPoolExecutor() {
+    return fallbackThreadPoolExecutor;
+  }
+
   protected void dispatchEvent() {
     try {
       ShuffleDataFlushEvent event = flushQueue.take();
@@ -208,15 +236,12 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
       // pending event will be delegated to fallback threadPool
       if (!event.isPended()) {
         if (storage instanceof HadoopStorage) {
-          dedicatedExecutor = hadoopThreadPoolExecutor;
-          ShuffleServerMetrics.gaugeHadoopFlushThreadPoolQueueSize.inc();
+          dedicatedExecutor = getHadoopThreadPoolExecutor(event);
         } else if (storage instanceof LocalStorage) {
-          dedicatedExecutor = localFileThreadPoolExecutor;
-          ShuffleServerMetrics.gaugeLocalfileFlushThreadPoolQueueSize.inc();
+          dedicatedExecutor = getLocalFileThreadPoolExecutor(event);
         }
       } else {
-        dedicatedExecutor = fallbackThreadPoolExecutor;
-        ShuffleServerMetrics.gaugeFallbackFlushThreadPoolQueueSize.inc();
+        dedicatedExecutor = getFallbackThreadPoolExecutor();
       }
 
       CompletableFuture.runAsync(
@@ -254,10 +279,5 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
   @Override
   public void stop() {
     stopped = true;
-  }
-
-  @VisibleForTesting
-  public Executor getFallbackThreadPoolExecutor() {
-    return fallbackThreadPoolExecutor;
   }
 }

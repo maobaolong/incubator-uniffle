@@ -37,6 +37,7 @@ import org.apache.uniffle.storage.handler.api.ServerReadHandler;
 import org.apache.uniffle.storage.handler.api.ShuffleWriteHandler;
 import org.apache.uniffle.storage.handler.impl.LocalFileServerReadHandler;
 import org.apache.uniffle.storage.handler.impl.LocalFileWriteHandler;
+import org.apache.uniffle.storage.handler.impl.LocalFileWriteWithoutLockHandler;
 import org.apache.uniffle.storage.request.CreateShuffleReadHandlerRequest;
 import org.apache.uniffle.storage.request.CreateShuffleWriteHandlerRequest;
 
@@ -131,14 +132,25 @@ public class LocalStorage extends AbstractStorage {
 
   @Override
   ShuffleWriteHandler newWriteHandler(CreateShuffleWriteHandlerRequest request) {
-    return new LocalFileWriteHandler(
-        request.getRssBaseConf(),
-        request.getAppId(),
-        request.getShuffleId(),
-        request.getStartPartition(),
-        request.getEndPartition(),
-        basePath,
-        request.getFileNamePrefix());
+    if (request.isWithLock()) {
+      return new LocalFileWriteHandler(
+          request.getRssBaseConf(),
+          request.getAppId(),
+          request.getShuffleId(),
+          request.getStartPartition(),
+          request.getEndPartition(),
+          basePath,
+          request.getFileNamePrefix());
+    } else {
+      return new LocalFileWriteWithoutLockHandler(
+          request.getRssBaseConf(),
+          request.getAppId(),
+          request.getShuffleId(),
+          request.getStartPartition(),
+          request.getEndPartition(),
+          basePath,
+          request.getFileNamePrefix());
+    }
   }
 
   @Override

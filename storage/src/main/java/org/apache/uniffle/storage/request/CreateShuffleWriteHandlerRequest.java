@@ -36,6 +36,7 @@ public class CreateShuffleWriteHandlerRequest {
   private int storageDataReplica;
   private String user;
   private int maxFileNumber;
+  private boolean withLock;
 
   @VisibleForTesting
   public CreateShuffleWriteHandlerRequest(
@@ -77,6 +78,36 @@ public class CreateShuffleWriteHandlerRequest {
       int storageDataReplica,
       String user,
       int maxFileNumber) {
+    this(
+        rssBaseConf,
+        storageType,
+        appId,
+        shuffleId,
+        startPartition,
+        endPartition,
+        storageBasePaths,
+        fileNamePrefix,
+        conf,
+        storageDataReplica,
+        user,
+        maxFileNumber,
+        true);
+  }
+
+  public CreateShuffleWriteHandlerRequest(
+      RssBaseConf rssBaseConf,
+      String storageType,
+      String appId,
+      int shuffleId,
+      int startPartition,
+      int endPartition,
+      String[] storageBasePaths,
+      String fileNamePrefix,
+      Configuration conf,
+      int storageDataReplica,
+      String user,
+      int maxFileNumber,
+      boolean withLock) {
     this.rssBaseConf = rssBaseConf;
     this.storageType = storageType;
     this.appId = appId;
@@ -89,6 +120,7 @@ public class CreateShuffleWriteHandlerRequest {
     this.storageDataReplica = storageDataReplica;
     this.user = user;
     this.maxFileNumber = maxFileNumber;
+    this.withLock = withLock;
   }
 
   public RssBaseConf getRssBaseConf() {
@@ -141,5 +173,9 @@ public class CreateShuffleWriteHandlerRequest {
 
   public int getMaxFileNumber() {
     return maxFileNumber;
+  }
+
+  public boolean isWithLock() {
+    return withLock;
   }
 }
