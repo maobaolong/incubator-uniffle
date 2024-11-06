@@ -24,6 +24,9 @@ import moment from 'moment'
  * @returns {string}
  */
 const memFormatter = (row, column, cellValue) => {
+  if (cellValue === undefined) {
+    return 'N/A';
+  }
   const arrUnit = ['B', 'K', 'M', 'G', 'T', 'P']
   const baseStep = 1024
   const unitCount = arrUnit.length
