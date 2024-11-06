@@ -109,10 +109,12 @@ public class ApplicationResource extends BaseResource {
               (user, appInfoMap) -> {
                 appInfoMap.forEach(
                     (appId, appInfo) -> {
-                      AppInfoVO appInfoVO =
-                          getCoordinatorServer()
-                              .createAppInfoVO(user, appInfo, appIdToInfo.get(appId));
-                      appInfoList.add(appInfoVO);
+                      if (appIdToInfo.containsKey(appId)) {
+                        AppInfoVO appInfoVO =
+                            getCoordinatorServer()
+                                .createAppInfoVO(user, appInfo, appIdToInfo.get(appId));
+                        appInfoList.add(appInfoVO);
+                      }
                     });
               });
 
