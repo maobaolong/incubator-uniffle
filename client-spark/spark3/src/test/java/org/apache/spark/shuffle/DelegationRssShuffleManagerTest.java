@@ -53,6 +53,9 @@ public class DelegationRssShuffleManagerTest extends RssShuffleManagerTestBase {
     conf.set(RssSparkConfig.RSS_COORDINATOR_QUORUM.key(), "m1:8001,m2:8002");
     conf.set("spark.rss.storage.type", StorageType.LOCALFILE.name());
     conf.set(RssSparkConfig.RSS_TEST_MODE_ENABLE, true);
+    conf.set(
+        RssSparkConfig.RSS_DELEGATED_SHUFFLE_MANAGER_CLASS,
+        RssShuffleManager.class.getCanonicalName());
     assertCreateRssShuffleManager(conf);
 
     conf = new SparkConf();
@@ -106,6 +109,9 @@ public class DelegationRssShuffleManagerTest extends RssShuffleManagerTestBase {
     conf.set(RssSparkConfig.RSS_COORDINATOR_QUORUM.key(), "m1:8001,m2:8002");
     conf.set("spark.rss.storage.type", StorageType.LOCALFILE.name());
     conf.set(RssSparkConfig.RSS_TEST_MODE_ENABLE, true);
+    conf.set(
+        RssSparkConfig.RSS_DELEGATED_SHUFFLE_MANAGER_CLASS,
+        RssShuffleManager.class.getCanonicalName());
     assertCreateRssShuffleManager(conf);
 
     setupMockedRssShuffleUtils(ACCESS_DENIED);

@@ -85,8 +85,18 @@ public class DelegationRssShuffleManager implements ShuffleManager {
         sparkConf.set("spark.rss.quota.uuid", uuid);
         shuffleManager = new RssShuffleManager(sparkConf, true);
         sparkConf.set(RssSparkConfig.RSS_ENABLED.key(), "true");
-        sparkConf.set("spark.shuffle.manager", RssShuffleManager.class.getCanonicalName());
         LOG.info("Use RssShuffleManager");
+
+        String delegatedRssShuffleManager =
+            sparkConf.get(RssSparkConfig.RSS_DELEGATED_SHUFFLE_MANAGER_CLASS.key(), "");
+        if (StringUtils.isNotEmpty(delegatedRssShuffleManager)) {
+          sparkConf.set("spark.shuffle.manager", delegatedRssShuffleManager);
+          LOG.info("Sets spark.shuffle.manager to {}", delegatedRssShuffleManager);
+        } else {
+          LOG.info(
+              "Do not reset spark.shuffle.manager, use {} which set by driver.",
+              sparkConf.get("spark.shuffle.manager", ""));
+        }
         return shuffleManager;
       } catch (Exception exception) {
         LOG.warn(
