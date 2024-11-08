@@ -118,6 +118,11 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
         return;
       }
 
+      if (e instanceof EventInvalidException) {
+        event.doCleanup();
+        return;
+      }
+
       ShuffleServerMetrics.counterTotalDroppedEventNum.inc();
       ShuffleServerMetrics.counterTotalFailedWrittenEventNum.inc();
       if (e instanceof EventDiscardException) {
@@ -130,11 +135,6 @@ public class DefaultFlushEventHandler implements FlushEventHandler {
             event,
             System.currentTimeMillis() - start,
             event.getEncodedLength());
-        return;
-      }
-
-      if (e instanceof EventInvalidException) {
-        event.doCleanup();
         return;
       }
 

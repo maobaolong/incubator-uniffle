@@ -194,6 +194,11 @@ public class ShuffleFlushManager {
       long startTime = System.currentTimeMillis();
       boolean writeSuccess = storageManager.write(storage, handlerWrapper.getHandler(), event);
       if (!writeSuccess) {
+        LOG.error(
+            "Failed to write event: {}, storage {}, event queue size {}",
+            event,
+            storage.getStoragePath(),
+            eventHandler.getEventNumInFlush());
         throw new EventRetryException();
       }
       long endTime = System.currentTimeMillis();
