@@ -83,6 +83,7 @@ public abstract class SingleStorageManager implements StorageManager {
       // we can't update them in storage module
       StorageWriteMetrics metrics = createStorageWriteMetrics(event, writeTime);
       ShuffleServerMetrics.counterTotalWriteTime.inc(metrics.getWriteTime());
+      ShuffleServerMetrics.summaryHandlerWriteTime.observe(metrics.getWriteTime());
       ShuffleServerMetrics.counterWriteTotal.inc();
       if (metrics.getWriteTime() > writeSlowThreshold) {
         ShuffleServerMetrics.counterWriteSlow.inc();
