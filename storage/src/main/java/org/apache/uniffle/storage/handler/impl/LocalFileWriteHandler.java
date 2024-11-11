@@ -29,6 +29,8 @@ import org.apache.uniffle.common.config.RssBaseConf;
 public class LocalFileWriteHandler extends LocalFileWriteWithoutLockHandler {
   private static final Logger LOG = LoggerFactory.getLogger(LocalFileWriteHandler.class);
 
+  public static final ThreadLocal<Long> LOCK_DURATION = ThreadLocal.withInitial(() -> 0L);
+
   public LocalFileWriteHandler(
       RssBaseConf rssBaseConf,
       String appId,
@@ -67,7 +69,9 @@ public class LocalFileWriteHandler extends LocalFileWriteWithoutLockHandler {
 
   @Override
   public void write(Collection<ShufflePartitionedBlock> shuffleBlocks) throws Exception {
+    long startLockTimeMs = System.currentTimeMillis();
     synchronized (this) {
+      LOCK_DURATION.set(System.currentTimeMillis() - startLockTimeMs);
       super.write(shuffleBlocks);
     }
   }

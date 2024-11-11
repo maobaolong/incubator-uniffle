@@ -37,6 +37,7 @@ import org.apache.uniffle.server.event.PurgeEvent;
 import org.apache.uniffle.storage.common.Storage;
 import org.apache.uniffle.storage.common.StorageWriteMetrics;
 import org.apache.uniffle.storage.handler.api.ShuffleWriteHandler;
+import org.apache.uniffle.storage.handler.impl.LocalFileWriteHandler;
 
 public abstract class SingleStorageManager implements StorageManager {
 
@@ -65,6 +66,10 @@ public abstract class SingleStorageManager implements StorageManager {
       handler.write(event.getShuffleBlocks());
       long writeTime = System.currentTimeMillis() - startWrite;
       updateWriteMetrics(event, writeTime);
+      if (handler instanceof LocalFileWriteHandler) {
+        ShuffleServerMetrics.counterTotalWriteLockDuration.inc(
+            LocalFileWriteHandler.LOCK_DURATION.get());
+      }
       return true;
     } catch (Exception e) {
       LOG.warn("Exception happened when write data for " + event + ", try again", e);

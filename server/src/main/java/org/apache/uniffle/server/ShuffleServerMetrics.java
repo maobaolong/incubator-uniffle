@@ -51,6 +51,7 @@ public class ShuffleServerMetrics {
   private static final String WRITE_BLOCK_SIZE = "write_block_size";
   private static final String TOTAL_WRITE_TIME = "total_write_time";
   private static final String HANDLER_WRITE_TIME_SUMMARY = "handler_write_time_summary";
+  private static final String TOTAL_WRITE_LOCK_DURATION = "total_write_lock_duration";
   private static final String TOTAL_WRITE_HANDLER = "total_write_handler";
   private static final String TOTAL_WRITE_EXCEPTION = "total_write_exception";
   private static final String TOTAL_WRITE_SLOW = "total_write_slow";
@@ -196,6 +197,7 @@ public class ShuffleServerMetrics {
   public static Histogram appHistogramWriteBlockSize;
   public static Counter.Child counterTotalWriteTime;
   public static Summary.Child summaryHandlerWriteTime;
+  public static Counter.Child counterTotalWriteLockDuration;
   public static Counter.Child counterWriteException;
   public static Counter.Child counterWriteSlow;
   public static Counter.Child counterWriteTotal;
@@ -389,6 +391,7 @@ public class ShuffleServerMetrics {
             METRICS_APP_LABEL_NAME);
     counterTotalWriteTime = metricsManager.addLabeledCounter(TOTAL_WRITE_TIME);
     summaryHandlerWriteTime = metricsManager.addLabeledSummary(HANDLER_WRITE_TIME_SUMMARY);
+    counterTotalWriteLockDuration = metricsManager.addLabeledCounter(TOTAL_WRITE_LOCK_DURATION);
     counterWriteException = metricsManager.addLabeledCounter(TOTAL_WRITE_EXCEPTION);
     counterWriteSlow = metricsManager.addLabeledCounter(TOTAL_WRITE_SLOW);
     counterWriteTotal = metricsManager.addLabeledCounter(TOTAL_WRITE_NUM);
