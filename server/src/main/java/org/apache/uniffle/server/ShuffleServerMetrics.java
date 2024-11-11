@@ -174,6 +174,8 @@ public class ShuffleServerMetrics {
   public static final String REPORTED_BLOCK_COUNT = "reported_block_count";
   public static final String CACHED_BLOCK_COUNT = "cached_block_count";
 
+  public static final String BITMAP_MEMORY_IN_BYTE = "bitmap_memory_in_byte";
+
   public static Counter.Child counterTotalAppNum;
   public static Counter.Child counterTotalAppWithHugePartitionNum;
   public static Counter.Child counterTotalPartitionNum;
