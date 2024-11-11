@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -43,6 +44,8 @@ public class LocalFileWriteWithoutLockHandler implements ShuffleWriteHandler {
   private String basePath;
   private final int dataBufferSize;
   private final int indexBufferSize;
+
+  public static final AtomicInteger WRITING_THREAD_NUM = new AtomicInteger(0);
 
   public LocalFileWriteWithoutLockHandler(
       RssBaseConf rssBaseConf,
@@ -106,45 +109,49 @@ public class LocalFileWriteWithoutLockHandler implements ShuffleWriteHandler {
       LOG.warn("{} don't exist, the app or shuffle may be deleted", baseFolder.getAbsolutePath());
       return;
     }
+    WRITING_THREAD_NUM.incrementAndGet();
+    try {
+      long accessTime = System.currentTimeMillis();
+      String dataFileName = ShuffleStorageUtils.generateDataFileName(fileNamePrefix);
+      String indexFileName = ShuffleStorageUtils.generateIndexFileName(fileNamePrefix);
 
-    long accessTime = System.currentTimeMillis();
-    String dataFileName = ShuffleStorageUtils.generateDataFileName(fileNamePrefix);
-    String indexFileName = ShuffleStorageUtils.generateIndexFileName(fileNamePrefix);
+      try (FileWriter dataWriter =
+              LocalFileWriterFactory.getLocalFileWriter(
+                  rssBaseConf, new File(basePath, dataFileName), dataBufferSize);
+          FileWriter indexWriter = createWriter(indexFileName, indexBufferSize)) {
 
-    try (FileWriter dataWriter =
-            LocalFileWriterFactory.getLocalFileWriter(
-                rssBaseConf, new File(basePath, dataFileName), dataBufferSize);
-        FileWriter indexWriter = createWriter(indexFileName, indexBufferSize)) {
+        long startTime = System.currentTimeMillis();
+        for (ShufflePartitionedBlock block : shuffleBlocks) {
+          long blockId = block.getBlockId();
+          long crc = block.getCrc();
+          long startOffset = dataWriter.nextOffset();
+          dataWriter.writeData(block.getData());
 
-      long startTime = System.currentTimeMillis();
-      for (ShufflePartitionedBlock block : shuffleBlocks) {
-        long blockId = block.getBlockId();
-        long crc = block.getCrc();
-        long startOffset = dataWriter.nextOffset();
-        dataWriter.writeData(block.getData());
-
-        FileBasedShuffleSegment segment =
-            new FileBasedShuffleSegment(
-                blockId,
-                startOffset,
-                block.getDataLength(),
-                block.getUncompressLength(),
-                crc,
-                block.getTaskAttemptId());
-        indexWriter.writeIndex(segment);
+          FileBasedShuffleSegment segment =
+              new FileBasedShuffleSegment(
+                  blockId,
+                  startOffset,
+                  block.getDataLength(),
+                  block.getUncompressLength(),
+                  crc,
+                  block.getTaskAttemptId());
+          indexWriter.writeIndex(segment);
+        }
+        if (LOG.isDebugEnabled()) {
+          LOG.debug(
+              "Write handler write {} blocks cost {} ms without file open close",
+              shuffleBlocks.size(),
+              (System.currentTimeMillis() - startTime));
+        }
       }
       if (LOG.isDebugEnabled()) {
         LOG.debug(
-            "Write handler write {} blocks cost {} ms without file open close",
+            "Write handler write {} blocks cost {} ms with file open close",
             shuffleBlocks.size(),
-            (System.currentTimeMillis() - startTime));
+            (System.currentTimeMillis() - accessTime));
       }
-    }
-    if (LOG.isDebugEnabled()) {
-      LOG.debug(
-          "Write handler write {} blocks cost {} ms with file open close",
-          shuffleBlocks.size(),
-          (System.currentTimeMillis() - accessTime));
+    } finally {
+      WRITING_THREAD_NUM.decrementAndGet();
     }
   }
 
@@ -157,5 +164,9 @@ public class LocalFileWriteWithoutLockHandler implements ShuffleWriteHandler {
   @VisibleForTesting
   protected String getBasePath() {
     return basePath;
+  }
+
+  public static int getWritingThreadNum() {
+    return WRITING_THREAD_NUM.get();
   }
 }

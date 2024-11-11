@@ -19,6 +19,7 @@ package org.apache.uniffle.storage.handler.impl;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -51,6 +52,8 @@ public class HadoopShuffleWriteHandler implements ShuffleWriteHandler {
   private FileSystem fileSystem;
   private final int dataBufferSize;
   private final int indexBufferSize;
+
+  public static final AtomicInteger WRITING_THREAD_NUM = new AtomicInteger(0);
 
   // Only for test cases when using non-kerberized dfs cluster.
   @VisibleForTesting
@@ -163,6 +166,7 @@ public class HadoopShuffleWriteHandler implements ShuffleWriteHandler {
           ShuffleStorageUtils.generateIndexFileName(fileNamePrefix + "_" + failTimes);
       try (HadoopFileWriter dataWriter = createWriter(dataFileName, dataBufferSize);
           HadoopFileWriter indexWriter = createWriter(indexFileName, indexBufferSize)) {
+        WRITING_THREAD_NUM.incrementAndGet();
         for (ShufflePartitionedBlock block : shuffleBlocks) {
           long blockId = block.getBlockId();
           long crc = block.getCrc();
@@ -196,6 +200,8 @@ public class HadoopShuffleWriteHandler implements ShuffleWriteHandler {
             e);
         failTimes++;
         throw new RssException(e);
+      } finally {
+        WRITING_THREAD_NUM.decrementAndGet();
       }
     } finally {
       writeLock.unlock();
@@ -226,5 +232,9 @@ public class HadoopShuffleWriteHandler implements ShuffleWriteHandler {
   @VisibleForTesting
   public void setFailTimes(int failTimes) {
     this.failTimes = failTimes;
+  }
+
+  public static int getWritingThreadNum() {
+    return WRITING_THREAD_NUM.get();
   }
 }

@@ -176,6 +176,9 @@ public class ShuffleServerMetrics {
 
   public static final String BITMAP_MEMORY_IN_BYTE = "bitmap_memory_in_byte";
 
+  public static final String LOCALFILE_WRITING_THREAD_NUM = "localfile_writing_thread_num";
+  public static final String HDFS_WRITING_THREAD_NUM = "hdfs_writing_thread_num";
+
   public static Counter.Child counterTotalAppNum;
   public static Counter.Child counterTotalAppWithHugePartitionNum;
   public static Counter.Child counterTotalPartitionNum;

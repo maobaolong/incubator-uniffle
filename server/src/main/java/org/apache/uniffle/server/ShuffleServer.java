@@ -68,6 +68,8 @@ import org.apache.uniffle.server.merge.ShuffleMergeManager;
 import org.apache.uniffle.server.netty.StreamServer;
 import org.apache.uniffle.server.storage.StorageManager;
 import org.apache.uniffle.server.storage.StorageManagerFactory;
+import org.apache.uniffle.storage.handler.impl.HadoopShuffleWriteHandler;
+import org.apache.uniffle.storage.handler.impl.LocalFileWriteWithoutLockHandler;
 import org.apache.uniffle.storage.util.StorageType;
 
 import static org.apache.uniffle.common.config.RssBaseConf.RSS_SECURITY_HADOOP_KERBEROS_ENABLE;
@@ -83,6 +85,8 @@ import static org.apache.uniffle.common.metrics.CommonMetrics.JVM_PAUSE_TOTAL_EX
 import static org.apache.uniffle.common.metrics.CommonMetrics.JVM_PAUSE_WARN_TIME_EXCEEDED;
 import static org.apache.uniffle.server.ShuffleServerConf.SERVER_DECOMMISSION_CHECK_INTERVAL;
 import static org.apache.uniffle.server.ShuffleServerConf.SERVER_DECOMMISSION_SHUTDOWN;
+import static org.apache.uniffle.server.ShuffleServerMetrics.HDFS_WRITING_THREAD_NUM;
+import static org.apache.uniffle.server.ShuffleServerMetrics.LOCALFILE_WRITING_THREAD_NUM;
 import static org.apache.uniffle.server.ShuffleServerMetrics.USED_DIRECT_MEMORY_SIZE;
 import static org.apache.uniffle.server.ShuffleServerMetrics.USED_DIRECT_MEMORY_SIZE_BY_GRPC_NETTY;
 import static org.apache.uniffle.server.ShuffleServerMetrics.USED_DIRECT_MEMORY_SIZE_BY_NETTY;
@@ -348,6 +352,11 @@ public class ShuffleServer {
     ShuffleServerMetrics.addLabeledGauge(
         JVM_PAUSE_WARN_TIME_EXCEEDED, jvmPauseMonitor::getNumGcWarnThresholdExceeded);
 
+    ShuffleServerMetrics.addLabeledGauge(
+        LOCALFILE_WRITING_THREAD_NUM, LocalFileWriteWithoutLockHandler::getWritingThreadNum);
+
+    ShuffleServerMetrics.addLabeledGauge(
+        HDFS_WRITING_THREAD_NUM, HadoopShuffleWriteHandler::getWritingThreadNum);
     setServer();
   }
 
