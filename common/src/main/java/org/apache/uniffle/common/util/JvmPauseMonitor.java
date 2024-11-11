@@ -74,6 +74,7 @@ public class JvmPauseMonitor implements Closeable {
   }
 
   public void start() {
+    LOG.info("JvmPauseMonitor start.");
     monitorThread = new Daemon(new Monitor());
     monitorThread.start();
   }

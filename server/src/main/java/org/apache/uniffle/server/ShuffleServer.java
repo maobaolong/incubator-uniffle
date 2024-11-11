@@ -224,6 +224,7 @@ public class ShuffleServer {
   }
 
   private void initialization() throws Exception {
+    LOG.info("Start to initialize shuffle server.");
     // setup jvm pause monitor
     final JvmPauseMonitor monitor = new JvmPauseMonitor(shuffleServerConf);
     monitor.start();
@@ -242,6 +243,7 @@ public class ShuffleServer {
     if (ip == null) {
       throw new RssException("Couldn't acquire host Ip");
     }
+    LOG.info("get host ip: {}", ip);
     grpcPort = shuffleServerConf.getInteger(ShuffleServerConf.RPC_SERVER_PORT);
     nettyPort = shuffleServerConf.getInteger(ShuffleServerConf.NETTY_SERVER_PORT);
 
