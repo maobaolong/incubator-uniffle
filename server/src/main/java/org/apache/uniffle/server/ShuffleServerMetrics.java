@@ -185,6 +185,8 @@ public class ShuffleServerMetrics {
       "flush_exceed_buffer_threshold_count";
   public static final String FLUSH_EXCEED_BLOCK_NUM_COUNT = "flush_exceed_block_num_count";
 
+  public static final String BITMAP_MEMORY_IN_BYTE = "bitmap_memory_in_byte";
+
   public static Counter.Child counterTotalAppNum;
   public static Counter.Child counterTotalAppWithHugePartitionNum;
   public static Counter.Child counterTotalPartitionNum;
