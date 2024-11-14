@@ -17,6 +17,7 @@
 
 package org.apache.uniffle.coordinator;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import org.apache.uniffle.common.filesystem.HadoopFilesystemProvider;
 import org.apache.uniffle.common.rpc.StatusCode;
@@ -151,8 +153,8 @@ public class CoordinatorServerTest {
   }
 
   @Test
-  public void testAppHistoryManager() throws Exception {
-    String pathStr = "file://./test_app_history.txt";
+  public void testAppHistoryManager(@TempDir File tempDir) throws Exception {
+    String pathStr = "file://" + tempDir.getAbsolutePath() + "/test_app_history.txt";
     CoordinatorConf coordinatorConf = new CoordinatorConf();
     coordinatorConf.setString(CoordinatorConf.COORDINATOR_APP_HISTORY_PATH, pathStr);
     coordinatorConf.setLong(CoordinatorConf.COORDINATOR_APP_HISTORY_FLUSH_INTERVAL_MS, 10);
