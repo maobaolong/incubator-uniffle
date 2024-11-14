@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Range;
@@ -42,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.uniffle.common.Application;
+import org.apache.uniffle.common.ReconfigurableRegistry;
 import org.apache.uniffle.common.RemoteStorageInfo;
 import org.apache.uniffle.common.rpc.StatusCode;
 import org.apache.uniffle.common.util.JavaUtils;
@@ -85,6 +87,8 @@ public class ApplicationManager implements Closeable {
 
   /* appId -> shuffleId -> shuffleInfo */
   private Map<String, Map<Integer, ShuffleInfo>> appToShuffleInfo;
+
+  private List<String> appConfExcludeList;
 
   public ApplicationManager(CoordinatorConf conf) {
     storageStrategy = conf.get(CoordinatorConf.COORDINATOR_REMOTE_STORAGE_SELECT_STRATEGY);
@@ -135,10 +139,24 @@ public class ApplicationManager implements Closeable {
         1000,
         conf.getLong(CoordinatorConf.COORDINATOR_REMOTE_STORAGE_SCHEDULE_TIME),
         TimeUnit.MILLISECONDS);
+
+    appConfExcludeList = conf.get(CoordinatorConf.COORDINATOR_APP_CONF_EXCLUDE_LIST);
+
+    ReconfigurableRegistry.register(
+        Sets.newHashSet(CoordinatorConf.COORDINATOR_APP_CONF_EXCLUDE_LIST.key()),
+        (coordinatorConf, changedProperties) -> {
+          if (changedProperties == null) {
+            return;
+          }
+          if (changedProperties.contains(CoordinatorConf.COORDINATOR_APP_CONF_EXCLUDE_LIST.key())) {
+            appConfExcludeList =
+                coordinatorConf.get(CoordinatorConf.COORDINATOR_APP_CONF_EXCLUDE_LIST);
+          }
+        });
   }
 
   public void registerApplicationInfo(String appId, String user) {
-    registerApplicationInfo(appId, user, "", "", null);
+    registerApplicationInfo(appId, user, "", "", Collections.emptyMap());
   }
 
   public void registerApplicationInfo(
@@ -153,6 +171,9 @@ public class ApplicationManager implements Closeable {
     if (!appAndTime.containsKey(appId)) {
       CoordinatorMetrics.counterTotalAppNum.inc();
       LOG.info("New application is registered: {}", appId);
+    }
+    if (appConf != null) {
+      appConfExcludeList.forEach(appConf::remove);
     }
     AppInfo appInfo =
         AppInfo.createAppInfo(appId, System.currentTimeMillis(), version, gitCommitId, appConf);

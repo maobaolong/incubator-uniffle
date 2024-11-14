@@ -288,11 +288,18 @@ public class CoordinatorConf extends RssBaseConf {
           .longType()
           .defaultValue(5000L)
           .withDescription("The flush interval for storing app history info.");
-  public static final ConfigOption<String> COORDINATOR_APP_CONF_SHOW_LIST =
+  public static final ConfigOption<List<String>> COORDINATOR_APP_CONF_SHOW_LIST =
       ConfigOptions.key("rss.coordinator.app.conf.show.list")
           .stringType()
-          .defaultValue("")
+          .asList()
+          .defaultValues()
           .withDescription("The list to display for application spark config.");
+  public static final ConfigOption<List<String>> COORDINATOR_APP_CONF_EXCLUDE_LIST =
+      ConfigOptions.key("rss.coordinator.app.conf.excludeList")
+          .stringType()
+          .asList()
+          .defaultValues()
+          .withDescription("Exclude app config list, separated by ','");
   public static final ConfigOption<Integer> COORDINATOR_APP_HISTORY_FILE_ROTATE_SIZE =
       ConfigOptions.key("rss.coordinator.app.history.file.rotate.size")
           .intType()

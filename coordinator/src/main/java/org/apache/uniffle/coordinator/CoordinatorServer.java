@@ -17,7 +17,6 @@
 
 package org.apache.uniffle.coordinator;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -212,12 +211,7 @@ public class CoordinatorServer {
     this.accessManager =
         new AccessManager(
             coordinatorConf, clusterManager, applicationManager.getQuotaManager(), hadoopConf);
-    this.appConfShowList =
-        Arrays.asList(
-            coordinatorConf
-                .getString(CoordinatorConf.COORDINATOR_APP_CONF_SHOW_LIST)
-                .trim()
-                .split(","));
+    appConfShowList = coordinatorConf.get(CoordinatorConf.COORDINATOR_APP_CONF_SHOW_LIST);
     CoordinatorFactory coordinatorFactory = new CoordinatorFactory(this);
     server = coordinatorFactory.getServer();
     jettyServer = new JettyServer(coordinatorConf);
