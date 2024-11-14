@@ -180,6 +180,13 @@ public class ShuffleServerMetrics {
   public static final String LOCALFILE_WRITING_THREAD_NUM = "localfile_writing_thread_num";
   public static final String HDFS_WRITING_THREAD_NUM = "hdfs_writing_thread_num";
 
+  public static final String FLUSH_EXCEED_HIGH_WATER_COUNT = "flush_exceed_high_water_count";
+  public static final String FLUSH_EXCEED_HIGH_WATER_EVENT_COUNT =
+      "flush_exceed_high_water_event_count";
+  public static final String FLUSH_EXCEED_BUFFER_THRESHOLD_COUNT =
+      "flush_exceed_buffer_threshold_count";
+  public static final String FLUSH_EXCEED_BLOCK_NUM_COUNT = "flush_exceed_block_num_count";
+
   public static Counter.Child counterTotalAppNum;
   public static Counter.Child counterTotalAppWithHugePartitionNum;
   public static Counter.Child counterTotalPartitionNum;
@@ -277,6 +284,11 @@ public class ShuffleServerMetrics {
   public static Counter counterHadoopEventFlush;
   public static Counter counterPreAllocatedBufferExpired;
   public static Counter counterAppNotFound;
+
+  public static Counter.Child counterFlushExceedHighWater;
+  public static Counter.Child counterFlushExceedHighWaterEvent;
+  public static Counter.Child counterFlushExceedBufferThreshold;
+  public static Counter.Child counterFlushExceedBlockNum;
 
   private static MetricsManager metricsManager;
   private static boolean isRegister = false;
@@ -515,6 +527,13 @@ public class ShuffleServerMetrics {
     summaryTotalRemoveResourceTime = metricsManager.addSummary(TOTAL_REMOVE_RESOURCE_TIME);
     summaryTotalRemoveResourceByShuffleIdsTime =
         metricsManager.addSummary(TOTAL_REMOVE_RESOURCE_BY_SHUFFLE_IDS_TIME);
+
+    counterFlushExceedHighWater = metricsManager.addLabeledCounter(FLUSH_EXCEED_HIGH_WATER_COUNT);
+    counterFlushExceedHighWaterEvent =
+        metricsManager.addLabeledCounter(FLUSH_EXCEED_HIGH_WATER_EVENT_COUNT);
+    counterFlushExceedBufferThreshold =
+        metricsManager.addLabeledCounter(FLUSH_EXCEED_BUFFER_THRESHOLD_COUNT);
+    counterFlushExceedBlockNum = metricsManager.addLabeledCounter(FLUSH_EXCEED_BLOCK_NUM_COUNT);
 
     gaugeTotalDataSizeUsage =
         Gauge.build()

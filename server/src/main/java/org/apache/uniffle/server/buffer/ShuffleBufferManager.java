@@ -373,6 +373,12 @@ public class ShuffleBufferManager {
     if ((isHugePartition || this.bufferFlushEnabled)
         && (buffer.getEncodedLength() > this.bufferFlushThreshold
             || buffer.getBlockCount() > bufferFlushBlocksNumThreshold)) {
+      if (buffer.getEncodedLength() > this.bufferFlushThreshold) {
+        ShuffleServerMetrics.counterFlushExceedBufferThreshold.inc(1);
+      }
+      if (buffer.getBlockCount() > this.bufferFlushBlocksNumThreshold) {
+        ShuffleServerMetrics.counterFlushExceedBlockNum.inc(1);
+      }
       if (LOG.isDebugEnabled()) {
         LOG.debug(
             "Start to flush single buffer. Details - shuffleId:{}, startPartition:{}, endPartition:{}, isHugePartition:{}, bufferSize:{}, blocksNum:{}",
@@ -390,7 +396,7 @@ public class ShuffleBufferManager {
   public void flushIfNecessary() {
     // if data size in buffer > highWaterMark, do the flush
     if (usedMemory.get() - preAllocatedSize.get() - inFlushSize.get() > highWaterMark) {
-      // todo: add a metric here to track how many times flush occurs.
+      ShuffleServerMetrics.counterFlushExceedHighWater.inc(1);
       LOG.info(
           "Start to flush with usedMemory[{}], preAllocatedSize[{}], inFlushSize[{}]",
           usedMemory.get(),
@@ -630,6 +636,7 @@ public class ShuffleBufferManager {
                   range.upperEndpoint(),
                   HugePartitionUtils.isHugePartition(
                       shuffleTaskManager, appId, shuffleId, range.lowerEndpoint()));
+              ShuffleServerMetrics.counterFlushExceedHighWaterEvent.inc(1);
               if (pickedFlushSize > expectedFlushSize) {
                 LOG.info("Already picked enough buffers to flush {} bytes", pickedFlushSize);
                 return;
