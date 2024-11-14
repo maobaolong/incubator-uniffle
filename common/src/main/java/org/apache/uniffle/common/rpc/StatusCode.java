@@ -39,6 +39,8 @@ public enum StatusCode {
   EXCEED_HUGE_PARTITION_HARD_LIMIT(12),
   APP_NOT_FOUND(13),
   INTERNAL_NOT_RETRY_ERROR(14),
+  REQUIRE_BUFFER_EXPIRED(15),
+  SHUFFLE_DATA_EMPTY(16),
   UNKNOWN(-1);
 
   static final Map<Integer, StatusCode> VALUE_MAP =

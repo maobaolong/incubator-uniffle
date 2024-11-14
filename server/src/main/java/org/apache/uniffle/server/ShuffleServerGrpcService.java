@@ -460,7 +460,7 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
           responseMessage = errorMsg;
           reply =
               SendShuffleDataResponse.newBuilder()
-                  .setStatus(StatusCode.INTERNAL_ERROR.toProto())
+                  .setStatus(StatusCode.REQUIRE_BUFFER_EXPIRED.toProto())
                   .setRetMsg(responseMessage)
                   .build();
           auditContext.withStatusCode(StatusCode.fromProto(reply.getStatus()));
@@ -568,7 +568,7 @@ public class ShuffleServerGrpcService extends ShuffleServerImplBase {
       } else {
         reply =
             SendShuffleDataResponse.newBuilder()
-                .setStatus(StatusCode.INTERNAL_ERROR.toProto())
+                .setStatus(StatusCode.SHUFFLE_DATA_EMPTY.toProto())
                 .setRetMsg("No data in request")
                 .build();
       }

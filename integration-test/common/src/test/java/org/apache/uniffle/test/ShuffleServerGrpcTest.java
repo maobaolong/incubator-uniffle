@@ -664,7 +664,7 @@ public class ShuffleServerGrpcTest extends IntegrationTestBase {
               .build();
       RssProtos.SendShuffleDataResponse response =
           grpcShuffleServerClient.getBlockingStub().sendShuffleData(rpcRequest);
-      assertEquals(RssProtos.StatusCode.INTERNAL_ERROR, response.getStatus());
+      assertEquals(RssProtos.StatusCode.REQUIRE_BUFFER_EXPIRED, response.getStatus());
       assertTrue(response.getRetMsg().contains("Can't find requireBufferId[10000]"));
     }
   }

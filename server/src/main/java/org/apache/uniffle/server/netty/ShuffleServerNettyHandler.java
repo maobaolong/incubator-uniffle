@@ -273,7 +273,8 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
                   + ShuffleServerConf.SERVER_PRE_ALLOCATION_EXPIRED.key()
                   + " in ShuffleServer's configuration";
           LOG.warn(errorMsg);
-          rpcResponse = new RpcResponse(req.getRequestId(), StatusCode.INTERNAL_ERROR, errorMsg);
+          rpcResponse =
+              new RpcResponse(req.getRequestId(), StatusCode.REQUIRE_BUFFER_EXPIRED, errorMsg);
           auditContext.withStatusCode(rpcResponse.getStatusCode());
           client.getChannel().writeAndFlush(rpcResponse);
           return;
@@ -375,7 +376,8 @@ public class ShuffleServerNettyHandler implements BaseMessageHandler {
         }
       } else {
         rpcResponse =
-            new RpcResponse(req.getRequestId(), StatusCode.INTERNAL_ERROR, "No data in request");
+            new RpcResponse(
+                req.getRequestId(), StatusCode.SHUFFLE_DATA_EMPTY, "No data in request");
       }
       auditContext.withStatusCode(rpcResponse.getStatusCode());
       client.getChannel().writeAndFlush(rpcResponse);
