@@ -94,7 +94,7 @@ public class ShuffleBufferManager {
   protected Map<String, Map<Integer, RangeMap<Integer, ShuffleBuffer>>> bufferPool;
   // appId -> shuffleId -> shuffle size in buffer
   protected Map<String, Map<Integer, AtomicLong>> shuffleSizeMap = JavaUtils.newConcurrentMap();
-  private final boolean appBlockSizeMetricEnabled;
+  private boolean appBlockSizeMetricEnabled;
   private int blockLengthTopNNum;
   private List<String> blockLengthBucket = new ArrayList<>();
   private DecimalFormat df = new DecimalFormat("0%");
@@ -197,7 +197,14 @@ public class ShuffleBufferManager {
     ReconfigurableRegistry.register(
         Sets.newHashSet(
             ShuffleServerConf.SERVER_MEMORY_SHUFFLE_HIGHWATERMARK_PERCENTAGE.key(),
-            ShuffleServerConf.SERVER_MEMORY_SHUFFLE_LOWWATERMARK_PERCENTAGE.key()),
+            ShuffleServerConf.SERVER_MEMORY_SHUFFLE_LOWWATERMARK_PERCENTAGE.key(),
+            ShuffleServerConf.SERVER_BUFFER_CAPACITY.key(),
+            ShuffleServerConf.SERVER_BUFFER_CAPACITY_RATIO.key(),
+            ShuffleServerConf.SERVER_READ_BUFFER_CAPACITY.key(),
+            ShuffleServerConf.SERVER_READ_BUFFER_CAPACITY_RATIO.key(),
+            ShuffleServerConf.SINGLE_BUFFER_FLUSH_BLOCKS_NUM_THRESHOLD.key(),
+            ShuffleServerConf.SERVER_SHUFFLE_FLUSH_THRESHOLD.key(),
+            ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_ENABLED.key()),
         (theConf, changedProperties) -> {
           if (changedProperties == null) {
             return;
@@ -208,7 +215,7 @@ public class ShuffleBufferManager {
                 (long)
                     (capacity
                         / 100.0
-                        * conf.get(
+                        * theConf.get(
                             ShuffleServerConf.SERVER_MEMORY_SHUFFLE_HIGHWATERMARK_PERCENTAGE));
           }
           if (changedProperties.contains(
@@ -217,8 +224,58 @@ public class ShuffleBufferManager {
                 (long)
                     (capacity
                         / 100.0
-                        * conf.get(
+                        * theConf.get(
                             ShuffleServerConf.SERVER_MEMORY_SHUFFLE_LOWWATERMARK_PERCENTAGE));
+          }
+          if (changedProperties.contains(ShuffleServerConf.SERVER_BUFFER_CAPACITY.key())
+              || changedProperties.contains(ShuffleServerConf.SERVER_BUFFER_CAPACITY_RATIO.key())) {
+            long newCapacity = theConf.getSizeAsBytes(ShuffleServerConf.SERVER_BUFFER_CAPACITY);
+            if (newCapacity < 0) {
+              this.capacity =
+                  nettyServerEnabled
+                      ? (long)
+                          (NettyUtils.getMaxDirectMemory()
+                              * theConf.getDouble(ShuffleServerConf.SERVER_BUFFER_CAPACITY_RATIO))
+                      : (long)
+                          (Runtime.getRuntime().maxMemory()
+                              * theConf.getDouble(ShuffleServerConf.SERVER_BUFFER_CAPACITY_RATIO));
+            } else {
+              this.capacity = newCapacity;
+            }
+          }
+          if (changedProperties.contains(ShuffleServerConf.SERVER_READ_BUFFER_CAPACITY.key())
+              || changedProperties.contains(
+                  ShuffleServerConf.SERVER_READ_BUFFER_CAPACITY_RATIO.key())) {
+            long newReadCapacity =
+                theConf.getSizeAsBytes(ShuffleServerConf.SERVER_READ_BUFFER_CAPACITY);
+            if (newReadCapacity < 0) {
+              this.readCapacity =
+                  nettyServerEnabled
+                      ? (long)
+                          (NettyUtils.getMaxDirectMemory()
+                              * theConf.getDouble(
+                                  ShuffleServerConf.SERVER_READ_BUFFER_CAPACITY_RATIO))
+                      : (long)
+                          (Runtime.getRuntime().maxMemory()
+                              * theConf.getDouble(
+                                  ShuffleServerConf.SERVER_READ_BUFFER_CAPACITY_RATIO));
+            } else {
+              this.readCapacity = newReadCapacity;
+            }
+          }
+          if (changedProperties.contains(
+              ShuffleServerConf.SINGLE_BUFFER_FLUSH_BLOCKS_NUM_THRESHOLD.key())) {
+            this.bufferFlushBlocksNumThreshold =
+                theConf.getInteger(ShuffleServerConf.SINGLE_BUFFER_FLUSH_BLOCKS_NUM_THRESHOLD);
+          }
+          if (changedProperties.contains(ShuffleServerConf.SERVER_SHUFFLE_FLUSH_THRESHOLD.key())) {
+            this.shuffleFlushThreshold =
+                theConf.getSizeAsBytes(ShuffleServerConf.SERVER_SHUFFLE_FLUSH_THRESHOLD);
+          }
+          if (changedProperties.contains(
+              ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_ENABLED.key())) {
+            this.appBlockSizeMetricEnabled =
+                theConf.getBoolean(ShuffleServerConf.APP_LEVEL_SHUFFLE_BLOCK_SIZE_METRIC_ENABLED);
           }
         });
   }
