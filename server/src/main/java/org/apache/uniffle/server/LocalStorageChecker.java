@@ -63,6 +63,7 @@ public class LocalStorageChecker extends Checker {
   private ExecutorService workers;
   private ReconfigurableConfManager.Reconfigurable<Long> diskCheckerExecutionTimeoutMs;
   private boolean markUnhealthyOnceDirCorrupted = false;
+  private ReconfigurableConfManager.Reconfigurable<Boolean> strictUsedSpace;
 
   public LocalStorageChecker(ShuffleServerConf conf, List<LocalStorage> storages) {
     super(conf);
@@ -90,6 +91,8 @@ public class LocalStorageChecker extends Checker {
         conf.getReconfigurableConf(ShuffleServerConf.HEALTH_CHECKER_LOCAL_STORAGE_EXECUTE_TIMEOUT);
     this.workers = Executors.newFixedThreadPool(basePaths.size());
 
+    this.strictUsedSpace =
+        conf.getReconfigurableConf(ShuffleServerConf.SERVER_LOCAL_STORAGE_USED_STRICT_ENABLED);
     this.markUnhealthyOnceDirCorrupted =
         conf.get(ShuffleServerConf.SERVER_UNHEALTHY_ONCE_STORAGE_CORRUPTION);
   }
@@ -120,7 +123,12 @@ public class LocalStorageChecker extends Checker {
                 totalSpace.addAndGet(total);
                 wholeDiskUsedSpace.addAndGet(total - availableBytes);
                 wholeDiskFreeSpace.addAndGet(availableBytes);
-                long usedBytes = getServiceUsedSpace(storageInfo.storageDir);
+                long usedBytes;
+                if (strictUsedSpace.get()) {
+                  usedBytes = getServiceUsedSpace(storageInfo.storageDir);
+                } else {
+                  usedBytes = total - availableBytes;
+                }
                 serviceUsedSpace.addAndGet(usedBytes);
                 storageInfo.updateServiceUsedBytes(usedBytes);
                 storageInfo.updateStorageFreeSpace(availableBytes);

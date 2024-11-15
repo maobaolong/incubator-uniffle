@@ -79,6 +79,7 @@ import org.apache.uniffle.storage.util.StorageType;
 
 import static org.apache.uniffle.server.ShuffleServerConf.DISK_CAPACITY_WATERMARK_CHECK_ENABLED;
 import static org.apache.uniffle.server.ShuffleServerConf.LOCAL_STORAGE_INITIALIZE_MAX_FAIL_NUMBER;
+import static org.apache.uniffle.server.ShuffleServerConf.SERVER_LOCAL_STORAGE_CLEAN_EXECUTION_TIMEOUT_MS;
 
 public class LocalStorageManager extends SingleStorageManager {
   private static final Logger LOG = LoggerFactory.getLogger(LocalStorageManager.class);
@@ -138,7 +139,9 @@ public class LocalStorageManager extends SingleStorageManager {
                       .ratio(ratio)
                       .lowWaterMarkOfWrite(lowWaterMarkOfWrite)
                       .highWaterMarkOfWrite(highWaterMarkOfWrite)
-                      .localStorageMedia(storageType);
+                      .localStorageMedia(storageType)
+                      .diskCleanExecutionTimeoutMs(
+                          conf.get(SERVER_LOCAL_STORAGE_CLEAN_EXECUTION_TIMEOUT_MS));
               if (isDiskCapacityWatermarkCheckEnabled) {
                 builder.enableDiskCapacityWatermarkCheck();
               }

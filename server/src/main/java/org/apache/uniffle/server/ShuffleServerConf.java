@@ -761,6 +761,18 @@ public class ShuffleServerConf extends RssBaseConf {
           .defaultValue(DefaultFlushEventHandler.class.getName())
           .withDescription("The flush event handler strategy class");
 
+  public static final ConfigOption<Boolean> SERVER_LOCAL_STORAGE_USED_STRICT_ENABLED =
+      ConfigOptions.key("rss.server.localStorageUsedStrictEnabled")
+          .booleanType()
+          .defaultValue(true)
+          .withDescription("Enabled to list file to calculate used space of local storage.");
+
+  public static final ConfigOption<Long> SERVER_LOCAL_STORAGE_CLEAN_EXECUTION_TIMEOUT_MS =
+      ConfigOptions.key("rss.server.localStorageCleanExecutionTimeoutMs")
+          .longType()
+          .defaultValue(0L)
+          .withDescription("The limit of clean directory operation in start.");
+
   public ShuffleServerConf() {}
 
   public ShuffleServerConf(String fileName) {

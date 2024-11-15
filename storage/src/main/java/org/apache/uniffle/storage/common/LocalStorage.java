@@ -24,6 +24,9 @@ import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
@@ -61,6 +64,7 @@ public class LocalStorage extends AbstractStorage {
   private final StorageMedia media;
   private boolean isSpaceEnough = true;
   private volatile boolean isCorrupted = false;
+  private final long diskCleanExecutionTimeoutMs;
 
   private LocalStorage(Builder builder) {
     this.basePath = builder.basePath;
@@ -69,13 +73,35 @@ public class LocalStorage extends AbstractStorage {
     this.capacity = builder.capacity;
     this.media = builder.media;
     this.enableDiskCapacityCheck = builder.enableDiskCapacityWatermarkCheck;
+    this.diskCleanExecutionTimeoutMs = builder.diskCleanExecutionTimeoutMs;
 
     File baseFolder = new File(basePath);
     try {
       // similar to mkdir -p, ensure the base folder is a dir
       FileUtils.forceMkdir(baseFolder);
       // clean the directory if it's data left from previous ran.
-      FileUtils.cleanDirectory(baseFolder);
+      if (diskCleanExecutionTimeoutMs > 0) {
+        FutureTask<Void> futureTask =
+            new FutureTask<>(
+                () -> {
+                  FileUtils.cleanDirectory(baseFolder);
+                  return null;
+                });
+        try {
+          new Thread(futureTask).start();
+          futureTask.get(diskCleanExecutionTimeoutMs, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+          LOG.warn("Clean directory {} over {}s", baseFolder, diskCleanExecutionTimeoutMs / 1000);
+        } catch (Exception e) {
+          LOG.error(
+              "Failed to clean directory {} in futureTask, will clean synchronously",
+              baseFolder,
+              e);
+          cleanDirectory(baseFolder);
+        }
+      } else {
+        cleanDirectory(baseFolder);
+      }
       FileStore store = Files.getFileStore(baseFolder.toPath());
       this.mountPoint = store.name();
     } catch (IOException ioe) {
@@ -298,6 +324,18 @@ public class LocalStorage extends AbstractStorage {
     isSpaceEnough = false;
   }
 
+  private void cleanDirectory(File baseFolder) {
+    try {
+      LOG.info("Start to clean directory {}", baseFolder);
+      long start = System.currentTimeMillis();
+      FileUtils.cleanDirectory(baseFolder);
+      LOG.info(
+          "Clean directory {} use {}s", baseFolder, (System.currentTimeMillis() - start) / 1000);
+    } catch (IOException e) {
+      LOG.error("Failed to cleanDirectory {}", baseFolder, e);
+    }
+  }
+
   public static class Builder {
     private long capacity;
     private double ratio;
@@ -306,6 +344,7 @@ public class LocalStorage extends AbstractStorage {
     private String basePath;
     private StorageMedia media;
     private boolean enableDiskCapacityWatermarkCheck;
+    private long diskCleanExecutionTimeoutMs;
 
     private Builder() {}
 
@@ -341,6 +380,11 @@ public class LocalStorage extends AbstractStorage {
 
     public Builder enableDiskCapacityWatermarkCheck() {
       this.enableDiskCapacityWatermarkCheck = true;
+      return this;
+    }
+
+    public Builder diskCleanExecutionTimeoutMs(long diskCleanExecutionTimeoutMs) {
+      this.diskCleanExecutionTimeoutMs = diskCleanExecutionTimeoutMs;
       return this;
     }
 
