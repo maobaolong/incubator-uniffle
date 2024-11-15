@@ -73,7 +73,6 @@ public class ShuffleFlushManager {
   private final StorageManager storageManager;
   private final long pendingEventTimeoutSec;
   private FlushEventHandler eventHandler;
-  private boolean withLock;
   private boolean isStorageAuditLogEnabled;
 
   public ShuffleFlushManager(
@@ -93,7 +92,6 @@ public class ShuffleFlushManager {
     eventHandler =
         FlushEventHandlerFactory.createFlushEventHandler(
             shuffleServerConf, storageManager, shuffleServer, this::processFlushEvent);
-    withLock = !(eventHandler instanceof HashFlushEventHandler);
     isStorageAuditLogEnabled =
         this.shuffleServerConf.getBoolean(ShuffleServerConf.SERVER_STORAGE_AUDIT_LOG_ENABLED);
 
@@ -185,7 +183,7 @@ public class ShuffleFlushManager {
               storageDataReplica,
               user,
               maxConcurrencyPerPartitionToWrite,
-              withLock);
+              eventHandler.isWithLock());
       ShuffleWriteHandlerWrapper handlerWrapper;
       try {
         handlerWrapper = storage.getOrCreateWriteHandler(request);

@@ -63,4 +63,9 @@ public class HashFlushEventHandler extends DefaultFlushEventHandler {
     ShuffleServerMetrics.gaugeLocalfileFlushThreadPoolQueueSize.inc();
     return localFileThreadPoolExecutors.get(index);
   }
+
+  @Override
+  public boolean isWithLock() {
+    return false;
+  }
 }

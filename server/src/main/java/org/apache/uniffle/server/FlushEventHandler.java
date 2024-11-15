@@ -23,4 +23,8 @@ public interface FlushEventHandler {
   int getEventNumInFlush();
 
   void stop();
+
+  default boolean isWithLock() {
+    return true;
+  }
 }
