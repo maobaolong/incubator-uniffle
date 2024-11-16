@@ -50,6 +50,7 @@ public class LocalStorage extends AbstractStorage {
   public static final String STORAGE_HOST = "local";
 
   private final long diskCapacity;
+  private final int id;
   private volatile long diskAvailableBytes;
   private volatile long serviceUsedBytes;
   // for test cases
@@ -74,6 +75,7 @@ public class LocalStorage extends AbstractStorage {
     this.media = builder.media;
     this.enableDiskCapacityCheck = builder.enableDiskCapacityWatermarkCheck;
     this.diskCleanExecutionTimeoutMs = builder.diskCleanExecutionTimeoutMs;
+    this.id = builder.id;
 
     File baseFolder = new File(basePath);
     try {
@@ -187,7 +189,8 @@ public class LocalStorage extends AbstractStorage {
         request.getPartitionId(),
         request.getPartitionNumPerRange(),
         request.getPartitionNum(),
-        basePath);
+        basePath,
+        id);
   }
 
   // only for tests.
@@ -336,6 +339,10 @@ public class LocalStorage extends AbstractStorage {
     }
   }
 
+  public int getId() {
+    return id;
+  }
+
   public static class Builder {
     private long capacity;
     private double ratio;
@@ -345,6 +352,7 @@ public class LocalStorage extends AbstractStorage {
     private StorageMedia media;
     private boolean enableDiskCapacityWatermarkCheck;
     private long diskCleanExecutionTimeoutMs;
+    private int id;
 
     private Builder() {}
 
@@ -385,6 +393,11 @@ public class LocalStorage extends AbstractStorage {
 
     public Builder diskCleanExecutionTimeoutMs(long diskCleanExecutionTimeoutMs) {
       this.diskCleanExecutionTimeoutMs = diskCleanExecutionTimeoutMs;
+      return this;
+    }
+
+    public Builder setId(int id) {
+      this.id = id;
       return this;
     }
 

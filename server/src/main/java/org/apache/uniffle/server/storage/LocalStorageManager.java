@@ -139,6 +139,7 @@ public class LocalStorageManager extends SingleStorageManager {
                       .ratio(ratio)
                       .lowWaterMarkOfWrite(lowWaterMarkOfWrite)
                       .highWaterMarkOfWrite(highWaterMarkOfWrite)
+                      .setId(idx)
                       .localStorageMedia(storageType)
                       .diskCleanExecutionTimeoutMs(
                           conf.get(SERVER_LOCAL_STORAGE_CLEAN_EXECUTION_TIMEOUT_MS));
