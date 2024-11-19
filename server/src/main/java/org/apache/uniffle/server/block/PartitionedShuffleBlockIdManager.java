@@ -38,7 +38,7 @@ public class PartitionedShuffleBlockIdManager implements ShuffleBlockIdManager {
   private static final Logger LOG = LoggerFactory.getLogger(PartitionedShuffleBlockIdManager.class);
 
   // appId -> shuffleId -> partitionId -> blockIds
-  private final Map<String, Map<Integer, Map<Integer, Roaring64NavigableMap>>> partitionsToBlockIds;
+  private Map<String, Map<Integer, Map<Integer, Roaring64NavigableMap>>> partitionsToBlockIds;
 
   public PartitionedShuffleBlockIdManager() {
     this.partitionsToBlockIds = new ConcurrentHashMap<>();
@@ -142,16 +142,7 @@ public class PartitionedShuffleBlockIdManager implements ShuffleBlockIdManager {
     return partitionsToBlockIds.values().stream()
         .flatMap(innerMap -> innerMap.values().stream())
         .flatMap(innerMap -> innerMap.values().stream())
-        .mapToLong(Roaring64NavigableMap::getLongCardinality)
-        .sum();
-  }
-
-  @Override
-  public long getTotalMemorySizeInBytes() {
-    return partitionsToBlockIds.values().stream()
-        .flatMap(innerMap -> innerMap.values().stream())
-        .flatMap(innerMap -> innerMap.values().stream())
-        .mapToLong(Roaring64NavigableMap::getLongSizeInBytes)
+        .mapToLong(roaringMap -> roaringMap.getLongCardinality())
         .sum();
   }
 

@@ -48,7 +48,7 @@ public class DefaultShuffleBlockIdManager implements ShuffleBlockIdManager {
   // but when get blockId, performance will degrade a little which can be optimized by client
   // configuration
   // appId -> shuffleId -> hashId -> blockIds
-  private final Map<String, Map<Integer, Roaring64NavigableMap[]>> partitionsToBlockIds;
+  private Map<String, Map<Integer, Roaring64NavigableMap[]>> partitionsToBlockIds;
 
   public DefaultShuffleBlockIdManager() {
     this.partitionsToBlockIds = JavaUtils.newConcurrentMap();
@@ -202,16 +202,6 @@ public class DefaultShuffleBlockIdManager implements ShuffleBlockIdManager {
         .flatMapToLong(
             arr ->
                 java.util.Arrays.stream(arr).mapToLong(Roaring64NavigableMap::getLongCardinality))
-        .sum();
-  }
-
-  @Override
-  public long getTotalMemorySizeInBytes() {
-    return partitionsToBlockIds.values().stream()
-        .flatMap(innerMap -> innerMap.values().stream())
-        .flatMapToLong(
-            arr ->
-                java.util.Arrays.stream(arr).mapToLong(Roaring64NavigableMap::getLongSizeInBytes))
         .sum();
   }
 

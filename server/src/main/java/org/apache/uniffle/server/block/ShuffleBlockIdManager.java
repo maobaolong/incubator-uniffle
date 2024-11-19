@@ -49,8 +49,6 @@ public interface ShuffleBlockIdManager {
 
   long getTotalBlockCount();
 
-  long getTotalMemorySizeInBytes();
-
   boolean contains(String testAppId);
 
   long getBitmapNum(String appId, int shuffleId);

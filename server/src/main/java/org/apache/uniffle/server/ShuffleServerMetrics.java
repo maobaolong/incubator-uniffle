@@ -175,8 +175,6 @@ public class ShuffleServerMetrics {
   public static final String REPORTED_BLOCK_COUNT = "reported_block_count";
   public static final String CACHED_BLOCK_COUNT = "cached_block_count";
 
-  public static final String BITMAP_MEMORY_IN_BYTE = "bitmap_memory_in_byte";
-
   public static final String LOCALFILE_WRITING_THREAD_NUM = "localfile_writing_thread_num";
   public static final String HDFS_WRITING_THREAD_NUM = "hdfs_writing_thread_num";
 
