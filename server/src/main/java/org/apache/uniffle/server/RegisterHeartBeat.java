@@ -18,9 +18,6 @@
 package org.apache.uniffle.server;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -31,11 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.uniffle.client.factory.CoordinatorClientFactory;
 import org.apache.uniffle.client.impl.grpc.CoordinatorGrpcRetryableClient;
 import org.apache.uniffle.client.request.RssSendHeartBeatRequest;
-import org.apache.uniffle.common.ServerStatus;
 import org.apache.uniffle.common.rpc.StatusCode;
-import org.apache.uniffle.common.storage.StorageInfo;
 import org.apache.uniffle.common.util.ThreadUtils;
-import org.apache.uniffle.proto.RssProtos;
 
 public class RegisterHeartBeat {
 
@@ -74,22 +68,28 @@ public class RegisterHeartBeat {
     Runnable runnable =
         () -> {
           try {
-            sendHeartBeat(
-                shuffleServer.getId(),
-                shuffleServer.getIp(),
-                shuffleServer.getGrpcPort(),
-                shuffleServer.getUsedMemory(),
-                shuffleServer.getPreAllocatedMemory(),
-                shuffleServer.getAvailableMemory(),
-                shuffleServer.getEventNumInFlush(),
-                shuffleServer.getTags(),
-                shuffleServer.getServerStatus(),
-                shuffleServer.getStorageManager().getStorageInfo(),
-                shuffleServer.getNettyPort(),
-                shuffleServer.getJettyPort(),
-                shuffleServer.getStartTimeMs(),
-                shuffleServer.getAppInfos(),
-                shuffleServer.getShuffleTaskManager().getShuffleTaskInfos().size());
+            // use `rss.server.heartbeat.interval` as the timeout option
+            RssSendHeartBeatRequest request =
+                new RssSendHeartBeatRequest(
+                    shuffleServer.getId(),
+                    shuffleServer.getIp(),
+                    shuffleServer.getGrpcPort(),
+                    shuffleServer.getUsedMemory(),
+                    shuffleServer.getPreAllocatedMemory(),
+                    shuffleServer.getAvailableMemory(),
+                    shuffleServer.getEventNumInFlush(),
+                    heartBeatInterval,
+                    shuffleServer.getTags(),
+                    shuffleServer.getServerStatus(),
+                    shuffleServer.getStorageManager().getStorageInfo(),
+                    shuffleServer.getNettyPort(),
+                    shuffleServer.getJettyPort(),
+                    shuffleServer.getStartTimeMs(),
+                    shuffleServer.getAppInfos(),
+                    shuffleServer.getDisplayMetrics(),
+                    Collections.emptyList(),
+                    shuffleServer.getShuffleTaskManager().getShuffleTaskInfos().size());
+            sendHeartBeat(request);
           } catch (Exception e) {
             LOG.warn("Error happened when send heart beat to coordinator");
           }
@@ -99,83 +99,15 @@ public class RegisterHeartBeat {
   }
 
   @VisibleForTesting
-  public boolean sendHeartBeat(
-      String id,
-      String ip,
-      int grpcPort,
-      long usedMemory,
-      long preAllocatedMemory,
-      long availableMemory,
-      int eventNumInFlush,
-      Set<String> tags,
-      ServerStatus serverStatus,
-      Map<String, StorageInfo> localStorageInfo,
-      int nettyPort,
-      int jettyPort,
-      long startTimeMs,
-      List<RssProtos.ApplicationInfo> appInfos,
-      int appWithNode) {
-    return sendHeartBeat(
-        id,
-        ip,
-        grpcPort,
-        usedMemory,
-        preAllocatedMemory,
-        availableMemory,
-        eventNumInFlush,
-        tags,
-        serverStatus,
-        localStorageInfo,
-        nettyPort,
-        jettyPort,
-        startTimeMs,
-        appInfos,
-        Collections.EMPTY_LIST,
-        appWithNode);
-  }
-
-  @VisibleForTesting
-  public boolean sendHeartBeat(
-      String id,
-      String ip,
-      int grpcPort,
-      long usedMemory,
-      long preAllocatedMemory,
-      long availableMemory,
-      int eventNumInFlush,
-      Set<String> tags,
-      ServerStatus serverStatus,
-      Map<String, StorageInfo> localStorageInfo,
-      int nettyPort,
-      int jettyPort,
-      long startTimeMs,
-      List<RssProtos.ApplicationInfo> appInfos,
-      List<String> blockLengthTopN,
-      int appWithNode) {
-    RssSendHeartBeatRequest request =
-        new RssSendHeartBeatRequest(
-            id,
-            ip,
-            grpcPort,
-            usedMemory,
-            preAllocatedMemory,
-            availableMemory,
-            eventNumInFlush,
-            heartBeatInterval,
-            tags,
-            serverStatus,
-            localStorageInfo,
-            nettyPort,
-            jettyPort,
-            startTimeMs,
-            appInfos,
-            blockLengthTopN,
-            appWithNode);
-
+  public boolean sendHeartBeat(RssSendHeartBeatRequest request) {
     if (coordinatorClient.sendHeartBeat(request).getStatusCode() == StatusCode.SUCCESS) {
       return true;
     }
     return false;
+  }
+
+  public long getHeartBeatInterval() {
+    return heartBeatInterval;
   }
 
   public void shutdown() {

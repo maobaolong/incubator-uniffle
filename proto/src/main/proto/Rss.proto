@@ -317,6 +317,7 @@ message ShuffleServerHeartBeatRequest {
   repeated ApplicationInfo appInfos = 25;
   repeated string blockTopN = 26;
   int32 appWithNode = 27;
+  map<string, string> displayMetrics = 30;
 }
 
 message ShuffleServerHeartBeatResponse {

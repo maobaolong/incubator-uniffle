@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
+import org.apache.uniffle.client.request.RssSendHeartBeatRequest;
 import org.apache.uniffle.common.Arguments;
 import org.apache.uniffle.common.ReconfigurableConfManager;
 import org.apache.uniffle.common.ServerStatus;
@@ -631,23 +633,27 @@ public class ShuffleServer {
   @VisibleForTesting
   public void sendHeartbeat() {
     ShuffleServer shuffleServer = this;
-    registerHeartBeat.sendHeartBeat(
-        shuffleServer.getId(),
-        shuffleServer.getIp(),
-        shuffleServer.getGrpcPort(),
-        shuffleServer.getUsedMemory(),
-        shuffleServer.getPreAllocatedMemory(),
-        shuffleServer.getAvailableMemory(),
-        shuffleServer.getEventNumInFlush(),
-        shuffleServer.getTags(),
-        shuffleServer.getServerStatus(),
-        shuffleServer.getStorageManager().getStorageInfo(),
-        shuffleServer.getNettyPort(),
-        shuffleServer.getJettyPort(),
-        shuffleServer.getStartTimeMs(),
-        shuffleServer.getAppInfos(),
-        shuffleServer.getBlockLengthTopN(),
-        shuffleServer.getShuffleTaskManager().getShuffleTaskInfos().size());
+    RssSendHeartBeatRequest request =
+        new RssSendHeartBeatRequest(
+            shuffleServer.getId(),
+            shuffleServer.getIp(),
+            shuffleServer.getGrpcPort(),
+            shuffleServer.getUsedMemory(),
+            shuffleServer.getPreAllocatedMemory(),
+            shuffleServer.getAvailableMemory(),
+            shuffleServer.getEventNumInFlush(),
+            registerHeartBeat.getHeartBeatInterval(),
+            shuffleServer.getTags(),
+            shuffleServer.getServerStatus(),
+            shuffleServer.getStorageManager().getStorageInfo(),
+            shuffleServer.getNettyPort(),
+            shuffleServer.getJettyPort(),
+            shuffleServer.getStartTimeMs(),
+            shuffleServer.getAppInfos(),
+            shuffleServer.getDisplayMetrics(),
+            shuffleServer.getBlockLengthTopN(),
+            shuffleServer.getShuffleTaskManager().getShuffleTaskInfos().size());
+    registerHeartBeat.sendHeartBeat(request);
   }
 
   public ShuffleMergeManager getShuffleMergeManager() {
@@ -656,6 +662,17 @@ public class ShuffleServer {
 
   public boolean isRemoteMergeEnable() {
     return remoteMergeEnable;
+  }
+
+  public Map<String, String> getDisplayMetrics() {
+    List<String> list = shuffleServerConf.get(ShuffleServerConf.SERVER_DISPLAY_METRICS_LIST);
+    return list.stream()
+        .map(metric -> metric.split(":", 2))
+        .filter(parts -> parts.length == 2)
+        .collect(
+            Collectors.toMap(
+                parts -> parts[0], // 使用第一部分作为键
+                parts -> String.valueOf(ShuffleServerMetrics.getMetricsValue(parts[1]))));
   }
 
   public List<String> getBlockLengthTopN() {

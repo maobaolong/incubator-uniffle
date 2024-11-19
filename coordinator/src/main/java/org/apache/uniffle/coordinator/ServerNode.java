@@ -209,6 +209,7 @@ public class ServerNode implements Comparable<ServerNode> {
         "",
         "",
         Collections.emptyList(),
+        Collections.emptyMap(),
         Collections.emptyList(),
         0);
   }
@@ -230,6 +231,7 @@ public class ServerNode implements Comparable<ServerNode> {
       String version,
       String gitCommitId,
       List<RssProtos.ApplicationInfo> appInfos,
+      Map<String, String> displayMetrics,
       List<String> blockTopN,
       int appWithNode) {
     this.serverNodeVO =
@@ -249,6 +251,7 @@ public class ServerNode implements Comparable<ServerNode> {
             startTime,
             version,
             gitCommitId,
+            displayMetrics,
             blockTopN,
             appWithNode);
     this.appIdToInfos = new ConcurrentHashMap<>();

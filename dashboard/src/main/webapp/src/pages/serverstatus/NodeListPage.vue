@@ -124,7 +124,13 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="appWithNode" label="appWithNode" min-width="80" sortable />
+      <el-table-column prop="displayMetrics" label="DisplayMetrics" min-width="120">
+        <template v-slot="{ row }">
+          <div v-for="(value, key) in row.displayMetrics" :key="key">
+            <span>{{ key }}:{{ value }}</span>
+          </div>
+        </template>
+      </el-table-column>
     </el-table>
     <el-dialog v-model="showLogDialog" fullscreen>
       <LogFileList

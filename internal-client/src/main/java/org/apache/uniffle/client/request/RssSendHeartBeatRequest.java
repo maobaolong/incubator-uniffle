@@ -17,6 +17,7 @@
 
 package org.apache.uniffle.client.request;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +46,7 @@ public class RssSendHeartBeatRequest {
   private final List<RssProtos.ApplicationInfo> appInfos;
   private final List<String> blockLengthTopN;
   private int appWithNode;
+  private final Map<String, String> displayMetrics;
 
   public RssSendHeartBeatRequest(
       String shuffleServerId,
@@ -62,6 +64,7 @@ public class RssSendHeartBeatRequest {
       int jettyPort,
       long startTimeMs,
       List<RssProtos.ApplicationInfo> appInfos,
+      Map<String, String> displayMetrics,
       List<String> blockLengthTopN,
       int appWithNode) {
     this.shuffleServerId = shuffleServerId;
@@ -79,6 +82,7 @@ public class RssSendHeartBeatRequest {
     this.jettyPort = jettyPort;
     this.startTimeMs = startTimeMs;
     this.appInfos = appInfos;
+    this.displayMetrics = displayMetrics;
     this.blockLengthTopN = blockLengthTopN;
     this.appWithNode = appWithNode;
   }
@@ -141,6 +145,10 @@ public class RssSendHeartBeatRequest {
 
   public List<RssProtos.ApplicationInfo> getAppInfos() {
     return appInfos;
+  }
+
+  public Map<String, String> getDisplayMetrics() {
+    return displayMetrics == null ? Collections.emptyMap() : displayMetrics;
   }
 
   public List<String> getBlockLengthTopN() {
