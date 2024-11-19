@@ -47,7 +47,7 @@ import static org.apache.uniffle.server.ShuffleServerMetrics.EVENT_QUEUE_SIZE;
 public class DefaultFlushEventHandler implements FlushEventHandler {
   private static final Logger LOG = LoggerFactory.getLogger(DefaultFlushEventHandler.class);
 
-  private final ShuffleServerConf shuffleServerConf;
+  protected final ShuffleServerConf shuffleServerConf;
   private final StorageManager storageManager;
   private Executor localFileThreadPoolExecutor;
   private Executor hadoopThreadPoolExecutor;
