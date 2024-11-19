@@ -25,7 +25,6 @@ import org.apache.uniffle.common.config.ConfigOption;
 import org.apache.uniffle.common.config.ConfigOptions;
 import org.apache.uniffle.common.config.ConfigUtils;
 import org.apache.uniffle.common.config.RssBaseConf;
-import org.apache.uniffle.server.block.DefaultShuffleBlockIdManager;
 import org.apache.uniffle.server.buffer.ShuffleBufferType;
 
 public class ShuffleServerConf extends RssBaseConf {
@@ -737,11 +736,6 @@ public class ShuffleServerConf extends RssBaseConf {
           .booleanType()
           .defaultValue(false)
           .withDescription("Whether to enable app detail log");
-  public static final ConfigOption<String> SERVER_BLOCK_ID_STRATEGY_CLASS =
-      ConfigOptions.key("rss.server.blockIdStrategyClass")
-          .stringType()
-          .defaultValue(DefaultShuffleBlockIdManager.class.getName())
-          .withDescription("The block id strategy class");
 
   public static final ConfigOption<Integer> RSS_BLOCK_SIZE_STATISTIC_TOP_N =
       ConfigOptions.key("rss.server.block.size.statistic.top.n")
