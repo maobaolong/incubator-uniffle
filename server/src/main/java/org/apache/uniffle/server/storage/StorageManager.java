@@ -39,7 +39,7 @@ public interface StorageManager {
 
   Storage selectStorage(ShuffleDataReadEvent event);
 
-  default Storage selectStorageForIndex(ShuffleDataReadEvent event) {
+  default Storage selectStorageById(ShuffleDataReadEvent event) {
     return selectStorage(event);
   }
 
